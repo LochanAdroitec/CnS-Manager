@@ -1,0 +1,46 @@
+<div th:fragment="nav-bar" xmlns:th="http://www.w3.org/1999/xhtml" xmlns:sec="http://www.w3.org/1999/xhtml">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" th:href="@{/users}">UserManagement System</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" th:href="@{/add}">Add User</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" th:href="@{/users}">List User</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" th:href="@{/profile}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" th:href="@{/logout}">Logout</a>
+                    </li>
+                    <!-- Viewer Links -->
+                    <li class="nav-item" sec:authorize="hasAuthority('Viewer')">
+                        <a class="nav-link" th:href="@{/viewer}">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="hasAuthority('Viewer')">
+                        <a class="nav-link" th:href="@{/viewer/documents}">
+                            <i class="fas fa-file-pdf"></i> View Documents
+                        </a>
+                    </li>
+
+                    <li class="nav-item" sec:authorize="hasAuthority('Viewer')">
+                        <a class="nav-link" th:href="@{/viewer/my-bookmarks}">
+                            <i class="fas fa-bookmark"></i> My Bookmarks
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>

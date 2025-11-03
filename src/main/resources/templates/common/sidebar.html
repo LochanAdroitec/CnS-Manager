@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- Sidebar Fragment -->
+<div th:fragment="sidebar" id="sidebar" class="text-white p-3" style="min-width:250px; max-width:250px; min-height: calc(100vh - 56px); background-color: #1e3a5f;">
+    <!-- Browse Section -->
+    <div class="mb-4">
+        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Browse</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item mb-2">
+                <a th:href="@{/documents}" class="nav-link text-white">
+                    <i class="bi bi-folder me-2"></i> Document Library
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a th:href="@{/my-bookmarks}" class="nav-link text-white">
+                    <i class="bi bi-bookmark me-2"></i> My Bookmarks
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- Management Section (Admin & Manager) -->
+    <div class="mb-4" sec:authorize="hasAnyAuthority('Admin', 'Manager')">
+        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Management</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item mb-2">
+                <a th:href="@{/upload}" class="nav-link text-white">
+                    <i class="bi bi-upload me-2"></i> Upload Document
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a th:href="@{/tags}" class="nav-link text-white">
+                    <i class="bi bi-tags me-2"></i> Tags Management
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a th:href="@{/classifications}" class="nav-link text-white">
+                    <i class="bi bi-diagram-3 me-2"></i> Classifications Management
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- Administration Section (Admin only) -->
+    <div sec:authorize="hasAuthority('Admin')">
+        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Administration</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item mb-2">
+                <a th:href="@{/users}" class="nav-link text-white">
+                    <i class="bi bi-people me-2"></i> User Management
+                </a>
+            </li>
+            <li class="nav-item mb-2">
+                <a th:href="@{/activity-logs}" class="nav-link text-white">
+                    <i class="bi bi-clock-history me-2"></i> Activity Logs
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
+<!-- Sidebar Styles Fragment -->
+<style th:fragment="sidebar-styles">
+    #sidebar {
+        background-color: #1e3a5f;
+    }
+    #sidebar .nav-link:hover {
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 5px;
+    }
+    #sidebar .nav-link.active {
+        background-color: #2563eb;
+        border-radius: 5px;
+    }
+</style>
+</body>
+</html>

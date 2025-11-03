@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        .tag-container {
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 8px;
+            min-height: 80px;
+            background: #f8f9fa;
+            margin-top: 5px;
+        }
+
+        .tag-chip {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 3px;
+            font-size: 14px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .tag-chip .remove-tag {
+            margin-left: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .tag-chip .remove-tag:hover {
+            opacity: 1;
+        }
+
+        .classification-chip {
+            background: #28a745;
+        }
+
+        .tag-input-wrapper {
+            position: relative;
+        }
+
+        .tag-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+
+        .existing-tags {
+            margin-top: 8px;
+            padding: 8px;
+            background: #e9ecef;
+            border-radius: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .existing-tag-item {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 3px;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .existing-tag-item:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .existing-classification-item:hover {
+            background: #28a745;
+            border-color: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+<div th:replace="~{common/nav :: nav-bar}"></div>
+
+
+
+
+
+
+<div class="container">
+    <div class="card">
+        <div th:if="${error}" class="alert alert-danger">
+            <p th:text="${error}"></p>
+        </div>
+        <div class="card-header">
+            <h2 class="text-center">Upload Document</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" th:action="@{/manager/upload}" th:object="${document}" enctype="multipart/form-data" id="uploadForm">
+
+                <div class="row">
+                    <!-- Title -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Title*</label>
+                            <input class="form-control" th:field="*{title}" type="text" required />
+                            <p th:errors="*{title}" class="text-danger"></p>
+                        </div>
+                    </div>
+
+                    <!-- Product Code -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Product Code *</label>
+                            <input class="form-control" th:field="*{productCode}" type="text" required />
+                            <p th:errors="*{productCode}" class="text-danger"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Edition -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Edition</label>
+                            <input class="form-control" th:field="*{edition}" type="text" />
+                        </div>
+                    </div>
+
+                    <!-- Publish Date -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Publish Date</label>
+                            <input class="form-control" th:field="*{publishDate}" type="date" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Number of Pages -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Number of Pages</label>
+                            <input class="form-control" th:field="*{noOfPages}" type="number" min="1" />
+                        </div>
+                    </div>
+
+                    <!-- File Upload -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Select PDF File *</label>
+                            <input class="form-control" type="file" name="file" accept=".pdf" required />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tags Field -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tags"></i> Tags (Optional)
+                            </label>
+                            <div class="tag-input-wrapper">
+                                <input
+                                        class="form-control"
+                                        type="text"
+                                        id="tagInput"
+                                        placeholder="Type a tag and press Enter"
+                                        onkeypress="handleTagInput(event, 'tags')"
+                                />
+                                <small class="tag-hint">
+                                    <i class="fas fa-info-circle"></i> Press Enter to add tags
+                                </small>
+                            </div>
+
+                            <!-- Existing tags (clickable) - FIXED VERSION -->
+                            <div class="existing-tags" th:if="${allTags != null and !allTags.isEmpty()}">
+                                <small class="text-muted">Click to add existing tags:</small>
+                                <div th:each="tag : ${allTags}">
+                                    <span class="existing-tag-item"
+                                          th:text="${tag.tagName}"
+                                          th:attr="data-tag-name=${tag.tagName}"
+                                          onclick="addExistingTagFromData(this)">
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="tag-container" id="tagsContainer"></div>
+                            <!-- Hidden field to store tag names -->
+                            <input type="hidden" name="tagNames" id="tagNamesField" />
+                        </div>
+                    </div>
+
+                    <!-- Classifications Field -->
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-folder"></i> Classifications (Optional)
+                            </label>
+                            <div class="tag-input-wrapper">
+                                <input
+                                        class="form-control"
+                                        type="text"
+                                        id="classificationInput"
+                                        placeholder="Type a classification and press Enter"
+                                        onkeypress="handleTagInput(event, 'classifications')"
+                                />
+                                <small class="tag-hint">
+                                    <i class="fas fa-info-circle"></i> Press Enter to add classifications
+                                </small>
+                            </div>
+
+                            <!-- Existing classifications (clickable) - FIXED VERSION -->
+                            <div class="existing-tags" th:if="${allClassifications != null and !allClassifications.isEmpty()}">
+                                <small class="text-muted">Click to add existing classifications:</small>
+                                <div th:each="classification : ${allClassifications}">
+                                    <span class="existing-tag-item existing-classification-item"
+                                          th:text="${classification.classificationName}"
+                                          th:attr="data-classification-name=${classification.classificationName}"
+                                          onclick="addExistingClassificationFromData(this)">
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="tag-container" id="classificationsContainer"></div>
+                            <!-- Hidden field to store classification names -->
+                            <input type="hidden" name="classificationNames" id="classificationNamesField" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" th:field="*{notes}" rows="4"></textarea>
+                </div>
+
+                <div class="form-group mb-3">
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-upload"></i> Upload Document
+                    </button>
+                    <a th:href="@{/manager}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Store tags and classifications
+    let tags = [];
+    let classifications = [];
+
+    // Handle tag/classification input
+    function handleTagInput(event, type) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            const inputId = type === 'tags' ? 'tagInput' : 'classificationInput';
+            const input = document.getElementById(inputId);
+            const value = input.value.trim();
+
+            if (value) {
+                if (type === 'tags') {
+                    if (!tags.includes(value)) {
+                        tags.push(value);
+                        renderTags();
+                    }
+                } else {
+                    if (!classifications.includes(value)) {
+                        classifications.push(value);
+                        renderClassifications();
+                    }
+                }
+                input.value = '';
+            }
+        }
+    }
+
+    // FIXED: Add existing tag by clicking (reads from data attribute)
+    function addExistingTagFromData(element) {
+        const tagName = element.getAttribute('data-tag-name');
+        if (tagName && !tags.includes(tagName)) {
+            tags.push(tagName);
+            renderTags();
+        }
+    }
+
+    // FIXED: Add existing classification by clicking (reads from data attribute)
+    function addExistingClassificationFromData(element) {
+        const classificationName = element.getAttribute('data-classification-name');
+        if (classificationName && !classifications.includes(classificationName)) {
+            classifications.push(classificationName);
+            renderClassifications();
+        }
+    }
+
+    // Render tags
+    function renderTags() {
+        const container = document.getElementById('tagsContainer');
+        container.innerHTML = '';
+
+        tags.forEach((tag, index) => {
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip';
+            chip.innerHTML = `
+                ${tag}
+                <span class="remove-tag" onclick="removeTag(${index})">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+            container.appendChild(chip);
+        });
+
+        // Update hidden field (comma-separated)
+        document.getElementById('tagNamesField').value = tags.join(',');
+    }
+
+    // Render classifications
+    function renderClassifications() {
+        const container = document.getElementById('classificationsContainer');
+        container.innerHTML = '';
+
+        classifications.forEach((classification, index) => {
+            const chip = document.createElement('span');
+            chip.className = 'tag-chip classification-chip';
+            chip.innerHTML = `
+                ${classification}
+                <span class="remove-tag" onclick="removeClassification(${index})">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+            container.appendChild(chip);
+        });
+
+        // Update hidden field (comma-separated)
+        document.getElementById('classificationNamesField').value = classifications.join(',');
+    }
+
+    // Remove tag
+    function removeTag(index) {
+        tags.splice(index, 1);
+        renderTags();
+    }
+
+    // Remove classification
+    function removeClassification(index) {
+        classifications.splice(index, 1);
+        renderClassifications();
+    }
+</script>
+</body>
+
+</html>

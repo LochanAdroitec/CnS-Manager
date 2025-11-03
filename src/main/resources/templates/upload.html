@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document - Codes & Standards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+    <!-- Include Sidebar Styles -->
+    <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          background-color: #f4f6f9;
+          padding-top: 70px;
+        }
+
+        .page-header {
+          margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+          font-size: 28px;
+          font-weight: 600;
+          color: #1a2332;
+          margin-bottom: 5px;
+        }
+
+        .page-header p {
+          color: #6b7a99;
+          font-size: 14px;
+        }
+
+        .back-link {
+          color: #6b7a99;
+          text-decoration: none;
+          font-size: 14px;
+          display: inline-flex;
+          align-items: center;
+          margin-bottom: 15px;
+          transition: color 0.3s;
+        }
+
+        .back-link:hover {
+          color: #2563eb;
+        }
+
+        .back-link i {
+          margin-right: 8px;
+        }
+
+        /* Alert Messages */
+        .alert {
+          border-radius: 8px;
+          padding: 15px 20px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .alert i {
+          font-size: 20px;
+        }
+
+        /* Upload Container */
+        .upload-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+          margin-bottom: 30px;
+        }
+
+        .upload-section, .metadata-section {
+          background: white;
+          border-radius: 8px;
+          padding: 25px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1a2332;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+        }
+
+        .section-title i {
+          margin-right: 10px;
+          color: #6b7a99;
+        }
+
+        /* Drag & Drop Area */
+        .drop-zone {
+          border: 2px dashed #d1d5db;
+          border-radius: 8px;
+          padding: 60px 20px;
+          text-align: center;
+          background-color: #fafbfc;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .drop-zone:hover {
+          border-color: #2563eb;
+          background-color: #f0f7ff;
+        }
+
+        .drop-zone.dragover {
+          border-color: #2563eb;
+          background-color: #e0f2fe;
+          border-style: solid;
+        }
+
+        .drop-zone-icon {
+          width: 60px;
+          height: 60px;
+          margin: 0 auto 20px;
+          color: #6b7a99;
+        }
+
+        .drop-zone-text {
+          font-size: 16px;
+          color: #1a2332;
+          margin-bottom: 8px;
+          font-weight: 500;
+        }
+
+        .drop-zone-info {
+          font-size: 13px;
+          color: #6b7a99;
+          margin-bottom: 20px;
+        }
+
+        .required-indicator {
+          color: #ef4444;
+          margin-left: 2px;
+        }
+
+        .browse-btn {
+          background-color: white;
+          border: 1px solid #d1d5db;
+          color: #374151;
+          padding: 10px 24px;
+          border-radius: 6px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .browse-btn:hover {
+          background-color: #f9fafb;
+          border-color: #9ca3af;
+        }
+
+        .file-preview {
+          display: none;
+          padding: 15px;
+          background-color: #f0f7ff;
+          border: 1px solid #bfdbfe;
+          border-radius: 6px;
+          margin-top: 15px;
+        }
+
+        .file-preview.show {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .file-info {
+          display: flex;
+          align-items: center;
+        }
+
+        .file-icon {
+          width: 40px;
+          height: 40px;
+          background-color: #2563eb;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          margin-right: 12px;
+        }
+
+        .file-details h6 {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1a2332;
+          margin: 0 0 4px 0;
+        }
+
+        .file-details p {
+          font-size: 12px;
+          color: #6b7a99;
+          margin: 0;
+        }
+
+        .remove-file {
+          background: none;
+          border: none;
+          color: #ef4444;
+          cursor: pointer;
+          padding: 5px;
+          transition: opacity 0.3s;
+        }
+
+        .remove-file:hover {
+          opacity: 0.7;
+        }
+
+        /* Form Styles */
+        .form-label {
+          font-size: 14px;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 8px;
+        }
+
+        .form-control {
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          padding: 10px 14px;
+          font-size: 14px;
+          transition: all 0.3s;
+        }
+
+        .form-control:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        textarea.form-control {
+          min-height: 100px;
+          resize: vertical;
+        }
+
+        /* Tags & Classifications */
+        .tag-container {
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          padding: 10px;
+          min-height: 80px;
+          background: #f8f9fa;
+          margin-top: 5px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          align-items: flex-start;
+        }
+
+        .tag-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #007bff;
+          color: white;
+          padding: 5px 12px;
+          border-radius: 20px;
+          font-size: 13px;
+          animation: fadeIn 0.3s;
+        }
+
+        .classification-chip {
+          background: #28a745;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .tag-chip .remove-tag {
+          cursor: pointer;
+          font-weight: bold;
+          opacity: 0.8;
+          margin-left: 4px;
+          display: inline-flex;
+          align-items: center;
+        }
+
+        .tag-chip .remove-tag:hover {
+          opacity: 1;
+        }
+
+        .tag-hint {
+          font-size: 12px;
+          color: #6c757d;
+          margin-top: 3px;
+        }
+
+        .existing-tags {
+          margin-top: 8px;
+          padding: 8px;
+          background: #e9ecef;
+          border-radius: 5px;
+          max-height: 120px;
+          overflow-y: auto;
+        }
+
+        .existing-tag-item {
+          display: inline-block;
+          padding: 4px 10px;
+          margin: 3px;
+          background: white;
+          border: 1px solid #dee2e6;
+          border-radius: 15px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+        }
+
+        .existing-tag-item:hover {
+          background: #007bff;
+          color: white;
+          border-color: #007bff;
+        }
+
+        .existing-classification-item:hover {
+          background: #28a745;
+          border-color: #28a745;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          padding: 20px 0;
+          border-top: 1px solid #e5e7eb;
+          margin-top: 30px;
+        }
+
+        .btn-cancel {
+          background-color: white;
+          border: 1px solid #d1d5db;
+          color: #374151;
+          padding: 10px 24px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+          background-color: #f9fafb;
+        }
+
+        .btn-save {
+          background-color: #2563eb;
+          border: none;
+          color: white;
+          padding: 10px 32px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .btn-save:hover {
+          background-color: #1d4ed8;
+        }
+
+        .btn-save:disabled {
+          background-color: #9ca3af;
+          cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+          .upload-container {
+            grid-template-columns: 1fr;
+          }
+        }
+    </style>
+</head>
+<body>
+<!-- Include Top Navbar -->
+<div th:replace="~{common/navbar :: navbar}"></div>
+
+<!-- Sidebar + Content -->
+<div class="d-flex">
+    <!-- Include Sidebar -->
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-4">
+        <!-- Breadcrumb -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Upload Document</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="javascript:void(0);"
+                               onclick="goBack()"
+                               class="text-decoration-none">
+                                <i class="bi bi-arrow-left me-1"></i> Back
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/documents}" class="text-decoration-none">
+                                <i class="bi bi-house me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Upload Document</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${success}">Document uploaded successfully!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span th:text="${error}">Error uploading document!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Upload Form -->
+        <form id="uploadForm" th:action="@{/upload}" method="post" enctype="multipart/form-data" th:object="${document}">
+
+            <input type="hidden" name="tagNames" id="tagNamesField" />
+            <input type="hidden" name="classificationNames" id="classificationNamesField" />
+
+            <div class="upload-container">
+                <!-- File Upload Section -->
+                <div class="upload-section">
+                    <div class="section-title">
+                        <i class="bi bi-upload"></i> File Upload
+                    </div>
+
+                    <div class="drop-zone" id="dropZone">
+                        <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <div class="drop-zone-text">Drag & drop files here</div>
+                        <div class="drop-zone-info">
+                            Supported format: PDF (Max 50MB)
+                        </div>
+                        <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                            Browse Files
+                        </button>
+                        <input type="file" id="fileInput" name="file" accept=".pdf" style="display:none;" required />
+                    </div>
+
+                    <div class="file-preview" id="filePreview">
+                        <div class="file-info">
+                            <div class="file-icon">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            </div>
+                            <div class="file-details">
+                                <h6 id="fileName">document.pdf</h6>
+                                <p id="fileSize">2.5 MB</p>
+                            </div>
+                        </div>
+                        <button type="button" class="remove-file" id="removeFile">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Document Metadata Section -->
+                <div class="metadata-section">
+                    <div class="section-title">
+                        <i class="bi bi-file-text"></i> Document Metadata
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title <span class="required-indicator">*</span></label>
+                        <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="productCode" class="form-label">Product Code <span class="required-indicator">*</span></label>
+                        <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edition" class="form-label">Edition</label>
+                        <input type="text" class="form-control" id="edition" th:field="*{edition}" placeholder="e.g., 1.0, 2.1">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="publishDate" class="form-label">Publication Date</label>
+                        <input type="date" class="form-control" id="publishDate" th:field="*{publishDate}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="noOfPages" class="form-label">Number of Pages</label>
+                        <input type="number" class="form-control" id="noOfPages" th:field="*{noOfPages}" placeholder="e.g., 150" min="1">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" th:field="*{notes}" placeholder="Add any additional notes or description..."></textarea>
+                    </div>
+
+                    <!-- Tags Field -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-tags"></i> Tags (Optional)
+                        </label>
+                        <input class="form-control" type="text" id="tagInput" placeholder="Type a tag and press Enter" onkeypress="handleTagInput(event, 'tags')"/>
+                        <small class="tag-hint">
+                            <i class="bi bi-info-circle"></i> Press Enter to add tags
+                        </small>
+
+                        <!-- Existing tags (clickable) -->
+                        <div class="existing-tags" th:if="${allTags != null and !allTags.isEmpty()}">
+                            <small class="text-muted">Click to add existing tags:</small>
+                            <div th:each="tag : ${allTags}">
+                                <span class="existing-tag-item" th:text="${tag.tagName}" th:attr="data-tag-name=${tag.tagName}" onclick="addExistingTagFromData(this)"></span>
+                            </div>
+                        </div>
+
+                        <div class="tag-container" id="tagsContainer"></div>
+                    </div>
+
+                    <!-- Classifications Field -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-folder"></i> Classifications (Optional)
+                        </label>
+                        <input class="form-control" type="text" id="classificationInput" placeholder="Type a classification and press Enter" onkeypress="handleTagInput(event, 'classifications')"/>
+                        <small class="tag-hint">
+                            <i class="bi bi-info-circle"></i> Press Enter to add classifications
+                        </small>
+
+                        <!-- Existing classifications (clickable) -->
+                        <div class="existing-tags" th:if="${allClassifications != null and !allClassifications.isEmpty()}">
+                            <small class="text-muted">Click to add existing classifications:</small>
+                            <div th:each="classification : ${allClassifications}">
+                                <span class="existing-tag-item existing-classification-item" th:text="${classification.classificationName}" th:attr="data-classification-name=${classification.classificationName}" onclick="addExistingClassificationFromData(this)"></span>
+                            </div>
+                        </div>
+
+                        <div class="tag-container" id="classificationsContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons at Bottom -->
+            <div class="action-buttons">
+                <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn-save" id="submitBtn">
+                    <i class="bi bi-check-circle me-2"></i>Save Document
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-circle text-warning me-2"></i>
+                    Unsaved Changes
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">You have unsaved changes. Are you sure you want to cancel?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Include Navbar JavaScript -->
+<div th:replace="~{common/navbar :: navbar-js}"></div>
+<script>
+    // Store tags and classifications
+    let tags = [];
+    let classifications = [];
+    let formChanged = false;
+
+    // Track form changes
+    document.getElementById('uploadForm').addEventListener('input', function() {
+        formChanged = true;
+    });
+
+    // Drag and Drop Functionality
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const removeFile = document.getElementById('removeFile');
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      fileInput.files = files;
+      handleFiles(files);
+      formChanged = true;
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
+        formChanged = true;
+    });
+
+    function handleFiles(files) {
+  if (files.length > 0) {
+    const file = files[0];
+
+    if (file.type !== 'application/pdf') {
+      alert('Please upload only PDF files');
+      fileInput.value = '';
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      alert('File size must be less than 50MB');
+      fileInput.value = '';
+      return;
+    }
+
+    displayFilePreview(file);
+
+    // ⬇️ Extract PDF metadata here
+    extractPdfMetadata(file);
+  }
+}
+
+async function extractPdfMetadata(file) {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Load PDF document
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    // 🔹 Fetch number of pages
+    const pageCount = pdf.numPages;
+    document.getElementById('noOfPages').value = pageCount;
+
+    const match = file.name.match(/(PM-\d+)/i);
+    if (match) {
+         document.getElementById('productCode').value = match[1];
+    }
+
+
+    // 🔹 Try to read metadata (like Title, Author, etc.)
+    const metadata = await pdf.getMetadata().catch(() => null);
+
+    if (metadata && metadata.info && metadata.info.Title) {
+      document.getElementById('title').value = metadata.info.Title;
+    } else {
+      // If no title found, use filename (without extension)
+      const defaultTitle = file.name.replace(/\.[^/.]+$/, '');
+      document.getElementById('title').value = defaultTitle;
+    }
+
+    console.log("PDF Metadata:", metadata);
+  } catch (error) {
+    console.error("Error reading PDF metadata:", error);
+  }
+}
+
+    function displayFilePreview(file) {
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = formatFileSize(file.size);
+      filePreview.classList.add('show');
+      dropZone.style.display = 'none'; // Hide drop zone when file is selected
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+    removeFile.addEventListener('click', () => {
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      dropZone.style.display = 'block'; // Show drop zone again
+    });
+
+    // Handle tag/classification input
+    function handleTagInput(event, type) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const inputId = type === 'tags' ? 'tagInput' : 'classificationInput';
+        const input = document.getElementById(inputId);
+        const value = input.value.trim();
+
+        if (value) {
+          if (type === 'tags') {
+            if (!tags.includes(value)) {
+              tags.push(value);
+              renderTags();
+              formChanged = true;
+            }
+          } else {
+            if (!classifications.includes(value)) {
+              classifications.push(value);
+              renderClassifications();
+              formChanged = true;
+            }
+          }
+          input.value = '';
+        }
+      }
+    }
+
+    // Add existing tag by clicking
+    function addExistingTagFromData(element) {
+      const tagName = element.getAttribute('data-tag-name');
+      if (tagName && !tags.includes(tagName)) {
+        tags.push(tagName);
+        renderTags();
+        formChanged = true;
+      }
+    }
+
+    // Add existing classification by clicking
+    function addExistingClassificationFromData(element) {
+      const classificationName = element.getAttribute('data-classification-name');
+      if (classificationName && !classifications.includes(classificationName)) {
+        classifications.push(classificationName);
+        renderClassifications();
+        formChanged = true;
+      }
+    }
+
+    // Render tags
+    function renderTags() {
+      const container = document.getElementById('tagsContainer');
+      container.innerHTML = '';
+      tags.forEach((tag, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `${tag} <span class="remove-tag" onclick="removeTag(${index})"><i class="bi bi-x"></i></span>`;
+        container.appendChild(chip);
+      });
+      document.getElementById('tagNamesField').value = tags.join(',');
+    }
+
+    // Render classifications
+    function renderClassifications() {
+      const container = document.getElementById('classificationsContainer');
+      container.innerHTML = '';
+      classifications.forEach((classification, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip classification-chip';
+        chip.innerHTML = `${classification} <span class="remove-tag" onclick="removeClassification(${index})"><i class="bi bi-x"></i></span>`;
+        container.appendChild(chip);
+      });
+      document.getElementById('classificationNamesField').value = classifications.join(',');
+    }
+
+    // Remove tag
+    function removeTag(index) {
+      tags.splice(index, 1);
+      renderTags();
+    }
+
+    // Remove classification
+    function removeClassification(index) {
+      classifications.splice(index, 1);
+      renderClassifications();
+    }
+
+    // Cancel Button - Show confirmation if there are changes
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+      if (formChanged || fileInput.files.length > 0 || tags.length > 0 || classifications.length > 0) {
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        modal.show();
+      } else {
+        window.location.href = '/upload';
+      }
+    });
+
+    // Confirm Cancel - Clear form and redirect
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+      formChanged = false;
+      // Close modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+      modal.hide();
+      // Redirect
+      window.location.href = '/upload';
+    });
+
+    // Form Submission
+    document.getElementById('uploadForm').addEventListener('submit', (e) => {
+      if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Please select a file to upload');
+        return false;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading...';
+      formChanged = false;
+      return true;
+    });
+
+    // Auto-dismiss alerts and reset form if success message is shown
+    window.addEventListener('load', function() {
+      const successAlert = document.querySelector('.alert-success');
+      const errorAlert = document.querySelector('.alert-error');
+
+      if (successAlert) {
+        // Reset form after successful upload
+        setTimeout(() => {
+          resetForm();
+        }, 100);
+      }
+
+      // Auto-dismiss alerts after 5 seconds
+      setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+          if (bsAlert) bsAlert.close();
+        });
+      }, 5000);
+    });
+
+    // Reset form function
+    function resetForm() {
+      document.getElementById('uploadForm').reset();
+      fileInput.value = '';
+      filePreview.classList.remove('show');
+      dropZone.style.display = 'block';
+      tags = [];
+      classifications = [];
+      renderTags();
+      renderClassifications();
+      formChanged = false;
+    }
+</script>
+<script>
+    function goBack() {
+        if (document.referrer && document.referrer !== window.location.href) {
+            // Go to the referring page if available
+            window.history.back();
+        } else {
+            // Fallback if there's no referrer (like direct load)
+            window.location.href = '/documents';
+        }
+    }
+</script>
+</body>
+</html>

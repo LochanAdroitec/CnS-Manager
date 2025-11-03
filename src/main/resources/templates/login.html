@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Codes & Standards Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f7ff 0%, #87ceeb 50%, #4a90e2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            padding: 40px 50px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .login-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #4a90e2 0%, #2196F3 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 16px rgba(74, 144, 226, 0.3);
+        }
+
+        .login-icon svg {
+            width: 45px;
+            height: 45px;
+            fill: white;
+        }
+
+        .login-header h2 {
+            color: #2c3e50;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .login-header p {
+            color: #050708;
+            font-size: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .welcome-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid #90caf9;
+        }
+
+        .welcome-box h5 {
+            color: #1976d2;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 18px;
+        }
+
+        .welcome-box p {
+            color: #5e92c4;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .form-label {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .form-control:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.15);
+            background-color: #f8fcff;
+        }
+
+        .form-control::placeholder {
+            color: #b0b0b0;
+            font-size: 14px;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #7f8c8d;
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: #4a90e2;
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #8be7fa 0%, #2a81a3 100%);
+            border: none;
+            padding: 14px;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 10px;
+            color: white;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(135deg, #8be7fa 0%, #2a81a3 100%);
+        }
+
+        .alert {
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .shake {
+            animation: shake 1.0s;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <!-- Icon -->
+    <div class="login-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+            <path d="M8 15h8v2H8zm0-4h8v2H8zm0-4h5v2H8z"/>
+        </svg>
+    </div>
+
+    <!-- Header -->
+    <div class="login-header">
+        <h2>Codes and Standards Manager</h2>
+        <p>Sign in to access your documents</p>
+    </div>
+    <div class="login-container d-flex flex-column justify-content-center">
+        <!-- Welcome Box -->
+        <div class="welcome-box">
+            <h5>Welcome Back</h5>
+            <p>Enter your credentials to continue</p>
+        </div>
+
+        <!-- Logout Success Message -->
+        <div th:if="${param.logout}" class="alert alert-success" role="alert">
+            You have been logged out successfully.
+        </div>
+
+        <!-- Login Form (connected to backend) -->
+        <form method="post" th:action="@{/login}">
+            <!-- User ID -->
+            <div class="mb-3">
+                <label for="username" class="form-label shake">User ID</label>
+                <input
+                        type="text"
+                        class="form-control shake"
+                        id="username"
+                        name="username"
+                        placeholder="Enter your user ID"
+                        autocomplete="username"
+                        required
+                >
+            </div>
+
+            <!-- Password with Eye Icon -->
+            <div class="mb-4 shake">
+                <label for="password" class="form-label shake">Password</label>
+                <div class="password-wrapper ">
+                    <input
+                            type="password"
+                            class="form-control shake"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                    >
+                    <span class="password-toggle" onclick="togglePassword()">
+                    <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                    </svg>
+                </span>
+                </div>
+            </div>
+
+            <!-- Sign In Button -->
+            <button type="submit" class="btn btn-primary btn-login w-100">
+                Sign In
+            </button>
+            <!-- Error Message (from backend) -->
+            <div th:if="${param.error}" class="alert alert-danger shake" role="alert">
+                <strong>Login Failed!</strong> Invalid user ID or password.
+            </div>
+        </form>
+    </div>
+    <div class="login-header" style="margin-top: 20px; text-align: center; ">
+
+        <p style="color: #2c3e50;">© 2025 Codes and Standards Manager<br>
+
+            Your role will be determined automatically based on your credentials</p>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Password toggle function
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            // Change to eye-slash icon
+            eyeIcon.innerHTML = '<path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>';
+        } else {
+            passwordInput.type = 'password';
+            // Change back to eye icon
+            eyeIcon.innerHTML = '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>';
+        }
+    }
+</script>
+</body>
+</html>

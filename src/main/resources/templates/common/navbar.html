@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<!-- Top Navbar Fragment -->
+<nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f;">
+    <div class="container-fluid d-flex align-items-center">
+        <!-- Left side: Toggle + Logo -->
+        <div class="d-flex align-items-center">
+            <button class="btn btn-outline-light me-2" id="toggleBtn">
+                <i class="bi bi-list"></i>
+            </button>
+            <a th:href="@{/documents}">
+                <img src="/images/adroitec-logo.png"
+                     alt="Adroitec Company Logo"
+                     class="me-3"
+                     style="height: 70px; width: auto; cursor: pointer;">
+            </a>
+
+        </div>
+
+
+        <!-- Center: Title -->
+        <span class="navbar-brand mb-0 h1 mx-auto">
+            <i class="bi bi-book"></i> Codes & Standards Manager
+        </span>
+
+        <!-- Right side: Profile dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button"
+                    id="profileDropdown" data-bs-toggle="dropdown">
+                <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center me-2"
+                     style="width: 35px; height: 35px; font-weight: bold;">
+                    <span th:text="${#strings.substring(#authentication.name, 0, 2).toUpperCase()}">DM</span>
+                </div>
+                <div class="text-start">
+                    <div style="font-size: 0.9rem;" sec:authentication="name"></div>
+                    <div style="font-size: 0.75rem; opacity: 0.8;"
+                         th:text="${#authentication.principal.authorities.iterator().next().authority}">
+                    </div>
+                </div>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" th:href="@{/logout}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- JavaScript for Sidebar Toggle -->
+<script th:fragment="navbar-js">
+    document.getElementById('toggleBtn')?.addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+        }
+    });
+</script>
+</body>
+</html>

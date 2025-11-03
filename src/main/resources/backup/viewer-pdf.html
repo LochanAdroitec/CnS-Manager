@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer (View Only)</title>
+
+    <script th:if="${documentId}" th:inline="javascript">
+        window.documentId = /*[[${documentId}]]*/ null;
+        window.isViewer = true; // Flag to hide download button
+    </script>
+
+    <link rel="stylesheet" th:href="@{/css/viewer.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<div class="viewer-container">
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </button>
+            <div class="document-info">
+                <h3 id="documentTitle">Loading...</h3>
+            </div>
+        </div>
+
+        <div class="toolbar-center">
+            <div class="page-controls">
+                <button class="btn" onclick="previousPage()" id="prevBtn">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="page-info">
+                    <input type="number" id="pageInput" min="1" onchange="goToPage()">
+                    <span id="pageCount">/ --</span>
+                </div>
+                <button class="btn" onclick="nextPage()" id="nextBtn">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <!-- Bookmark Button -->
+            <button class="btn bookmark-btn" id="bookmarkBtn" onclick="toggleBookmark()">
+                <i class="far fa-bookmark"></i>
+                <span class="bookmark-text">Bookmark</span>
+            </button>
+
+            <!-- NO DOWNLOAD BUTTON FOR VIEWERS -->
+            <div class="alert alert-info" style="display: inline-block; margin: 0 10px; padding: 5px 10px; font-size: 12px;">
+                <i class="fas fa-info-circle"></i> View Only Mode
+            </div>
+
+            <div class="zoom-controls">
+                <button class="btn" onclick="zoomOut()">
+                    <i class="fas fa-search-minus"></i>
+                </button>
+                <select id="zoomSelect" onchange="changeZoom()">
+                    <option value="0.5">50%</option>
+                    <option value="0.75">75%</option>
+                    <option value="1" selected>100%</option>
+                    <option value="1.25">125%</option>
+                    <option value="1.5">150%</option>
+                    <option value="2">200%</option>
+                    <option value="fit">Fit Width</option>
+                    <option value="auto">Fit Page</option>
+                </select>
+                <button class="btn" onclick="zoomIn()">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+            </div>
+            <button class="btn" onclick="toggleFullscreen()">
+                <i class="fas fa-expand"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- PDF Content -->
+    <div class="pdf-container">
+        <div class="pdf-content" id="pdfContent">
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <span>Loading PDF...</span>
+    </div>
+
+    <!-- Bookmark Modal (same as before) -->
+    <div id="bookmarkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Bookmarks</h2>
+                <span class="close" onclick="closeBookmarkModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="bookmarkModalBody">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/viewer-role.js}"></script>
+</body>
+</html>

@@ -1,0 +1,1246 @@
+package codesAndStandards.springboot.userApp.controller;
+
+import codesAndStandards.springboot.userApp.dto.*;
+import codesAndStandards.springboot.userApp.entity.Document;
+import codesAndStandards.springboot.userApp.entity.User;
+import codesAndStandards.springboot.userApp.entity.Role;
+import codesAndStandards.springboot.userApp.repository.RoleRepository;
+import codesAndStandards.springboot.userApp.repository.UserRepository;
+import codesAndStandards.springboot.userApp.service.*;
+import codesAndStandards.springboot.userApp.service.Impl.UserServiceImpl;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.util.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import org.springframework.http.ResponseEntity;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
+@Controller
+public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
+    private final UserService userService;
+    private final UserServiceImpl userServiceImpl; // For fallback method
+    private final RoleRepository roleRepository;
+    private final DocumentService documentService;
+    private final ActivityLogService activityLogService; // ADD THIS
+
+    public AuthController(UserService userService, UserServiceImpl userServiceImpl,
+                          RoleRepository roleRepository, DocumentService documentService,ActivityLogService activityLogService) {
+        this.userService = userService;
+        this.userServiceImpl = userServiceImpl;
+        this.roleRepository = roleRepository;
+        this.documentService = documentService;
+        this.activityLogService = activityLogService;
+    }
+
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/login";
+    }
+
+    @GetMapping("/login")
+    public String loginForm() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getPrincipal())) {
+            return "redirect:/users";
+        }
+
+        return "login";
+    }
+
+    //NOT REQUIRED
+    @GetMapping("/register")
+    public String showRegistrationForm(Model model) {
+        model.addAttribute("user", new UserDto());
+        // Add roles to the model for dropdown
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("roles", roles);
+        return "register";
+    }
+
+    //NOT REQUIRED
+    @PostMapping("/register/save")
+    public String registration(@Valid @ModelAttribute("user") UserDto userDto,
+                               BindingResult result,
+                               Model model,
+                               RedirectAttributes redirectAttributes) {
+
+        logger.info("Registration attempt for username: {}", userDto.getUsername());
+
+        // Basic validation first
+        if (userDto.getPassword().length() < 1) {
+            result.rejectValue("password", null, "Password should have at least 1 characters");
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("user", userDto);
+            List<Role> roles = roleRepository.findAll();
+            model.addAttribute("roles", roles);
+            return "register";
+        }
+
+        try {
+            // Try stored procedure first
+            userService.saveUserWithStoredProcedure(userDto);
+            logger.info("User registered successfully using stored procedure: {}", userDto.getUsername());
+            redirectAttributes.addFlashAttribute("success", "Registration successful! You can now login.");
+            return "redirect:/register?success=true";
+        } catch (RuntimeException e) {
+            logger.warn("Stored procedure failed for registration, trying fallback: {}", e.getMessage());
+            try {
+                // Fallback to JPA method
+                userServiceImpl.saveUserFallback(userDto);
+                logger.info("User registered successfully using fallback method: {}", userDto.getUsername());
+                redirectAttributes.addFlashAttribute("success", "Registration successful! You can now login.");
+                return "redirect:/register?success=true";
+            } catch (RuntimeException fallbackError) {
+                logger.error("Both stored procedure and fallback failed for registration", fallbackError);
+                if (fallbackError.getMessage().contains("Username already exists")) {
+                    result.rejectValue("username", null, fallbackError.getMessage());
+                } else if (fallbackError.getMessage().contains("Email already exists")) {
+                    result.rejectValue("email", null, fallbackError.getMessage());
+                } else {
+                    result.rejectValue("username", null, "Registration failed: " + fallbackError.getMessage());
+                }
+                model.addAttribute("user", userDto);
+                List<Role> roles = roleRepository.findAll();
+                model.addAttribute("roles", roles);
+                return "register";
+            }
+        }
+    }
+
+    // ================== ADMIN ONLY ==================
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/users")
+    public String users(Model model) {
+        List<UserDto> users = userService.findAllUsers();
+        List<Role> roles = roleRepository.findAll();
+
+        // Calculate statistics
+        long totalUsers = users.size();
+        long adminCount = users.stream().filter(u -> "Admin".equals(u.getRoleName())).count();
+        long managerCount = users.stream().filter(u -> "Manager".equals(u.getRoleName())).count();
+        long viewerCount = users.stream().filter(u -> "Viewer".equals(u.getRoleName())).count();
+
+        model.addAttribute("users", users);
+        model.addAttribute("roles", roles);
+        model.addAttribute("user", new UserDto());
+
+
+        // Add statistics to model
+        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("adminCount", adminCount);
+        model.addAttribute("managerCount", managerCount);
+        model.addAttribute("viewerCount", viewerCount);
+
+        return "users";
+    }
+
+    // FIXED: Changed to work with modal in users.html
+    @PreAuthorize("hasAuthority('Admin')")
+    @PostMapping("/add/save")
+    public String addUser(@Valid @ModelAttribute("user") UserDto userDto,
+                          BindingResult result,
+                          Model model,
+                          Principal principal,
+                          RedirectAttributes redirectAttributes) {
+
+        String adminUsername = principal != null ? principal.getName() : "Unknown";
+
+        logger.info("Admin attempting to add user: {}", userDto.getUsername());
+
+        // Set createdBy to current logged-in user
+        if (principal != null) {
+            userDto.setCreatedByUsername(adminUsername);
+        }
+
+        // Basic validation first
+        if (userDto.getPassword().length() < 1) {
+            result.rejectValue("password", null, "Password should have at least 1 characters");
+        }
+
+        if (result.hasErrors()) {
+            logger.warn("Validation errors for user: {}", userDto.getUsername());
+
+            // LOG ACTIVITY - USER_CREATE_FAILED due to validation
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_CREATE_FAILED,
+                    "Validation failed while creating user: " + userDto.getUsername()
+                            + " (Errors: " + result.getAllErrors() + ")"
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Validation failed. Please check your input.");
+            return "redirect:/users?error=true";
+        }
+
+        try {
+            // Try stored procedure first
+            userService.saveUserWithStoredProcedure(userDto);
+            logger.info("User added successfully using stored procedure: {}", userDto.getUsername());
+
+            // LOG ACTIVITY - USER_CREATED
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_CREATE,
+                    "Created user: " + userDto.getUsername() +
+                            " (Email: " + userDto.getEmail() + ", created by: " + userDto.getCreatedByUsername() + ")"
+            );
+
+            redirectAttributes.addFlashAttribute("success",
+                    "User '" + userDto.getUsername() + "' has been added successfully!");
+            return "redirect:/users?success=true";
+
+        } catch (RuntimeException e) {
+            logger.warn("Stored procedure failed for add user, trying fallback: {}", e.getMessage());
+
+            try {
+                // Fallback to JPA method
+                userServiceImpl.saveUserFallback(userDto);
+                logger.info("User added successfully using fallback method: {}", userDto.getUsername());
+
+                // LOG ACTIVITY - USER_CREATED
+                activityLogService.logByUsername(
+                        adminUsername,
+                        ActivityLogService.USER_CREATE,
+                        "Created user: " + userDto.getUsername() +
+                                " (Email: " + userDto.getEmail() + ", created by: " + userDto.getCreatedByUsername() + ")"
+                );
+
+                redirectAttributes.addFlashAttribute("success",
+                        "User '" + userDto.getUsername() + "' has been added successfully!");
+                return "redirect:/users?success=true";
+
+            } catch (RuntimeException fallbackError) {
+                logger.error("Both stored procedure and fallback failed for add user", fallbackError);
+
+                // LOG ACTIVITY - USER_CREATE_FAILED due to exception
+                activityLogService.logByUsername(
+                        adminUsername,
+                        ActivityLogService.USER_CREATE_FAILED,
+                        "Failed to create user: " + userDto.getUsername()
+                                + " | Reason: " + fallbackError.getMessage()
+                );
+
+                if (fallbackError.getMessage().contains("Username already exists")) {
+                    redirectAttributes.addFlashAttribute("error", "Username already exists");
+                } else if (fallbackError.getMessage().contains("Email already exists")) {
+                    redirectAttributes.addFlashAttribute("error", "Email already exists");
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Failed to add user: " + fallbackError.getMessage());
+                }
+                return "redirect:/users?error=true";
+            }
+        }
+    }
+
+
+
+    //Abhay Code
+//    @PreAuthorize("hasAuthority('Admin')")
+//    @GetMapping("/users")
+//    public String users(Model model) {
+//        List<UserDto> users = userService.findAllUsers();
+//        model.addAttribute("users", users);
+//        return "user"; // Admin dashboard
+//    }
+// pavan
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/edit/{id}")
+    public String editUser(@PathVariable Long id, Model model) {
+        UserDto user = userService.findUserById(id);
+        if (user == null) {
+            return "redirect:/users?error=userNotFound";
+        }
+        model.addAttribute("user", user);
+        // Add roles to the model for dropdown
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("roles", roles);
+        return "edit";
+    }
+    @PreAuthorize("hasAuthority('Admin')")
+    @PostMapping("/edit/{id}")
+    public String updateUserById(@Valid @ModelAttribute("user") UserDto updatedUserDto,
+                                 BindingResult result,
+                                 @PathVariable Long id,
+                                 Model model,
+                                 Principal principal,
+                                 RedirectAttributes redirectAttributes) {
+
+        String adminUsername = principal != null ? principal.getName() : "Unknown";
+
+        // Validation errors
+        if (result.hasErrors()) {
+            // LOG ACTIVITY - USER_EDIT_FAILED due to validation
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_EDIT_FAILED,
+                    "Validation failed while editing user ID: " + id
+                            + " | Errors: " + result.getAllErrors()
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Validation failed. Please check your input.");
+            return "redirect:/users?error=true";
+        }
+
+        try {
+            UserDto currentUser = userService.findUserById(id);
+            if (currentUser == null) {
+                // LOG ACTIVITY - USER_EDIT_FAILED due to user not found
+                activityLogService.logByUsername(
+                        adminUsername,
+                        ActivityLogService.USER_EDIT_FAILED,
+                        "Failed to edit user: User not found with ID " + id
+                );
+
+                redirectAttributes.addFlashAttribute("error", "User not found");
+                return "redirect:/users?error=true";
+            }
+
+            String username = currentUser.getUsername();
+
+            try {
+                // Try stored procedure first
+                userService.editUserByAdminWithStoredProcedure(username, updatedUserDto);
+                logger.info("User updated using stored procedure: {}", username);
+            } catch (RuntimeException e) {
+                logger.warn("Stored procedure failed, using fallback: {}", e.getMessage());
+
+                try {
+                    // Fallback to JPA method
+                    userService.editUser(updatedUserDto, id);
+                    logger.info("User updated successfully using fallback: {}", username);
+                } catch (RuntimeException fallbackError) {
+                    // LOG ACTIVITY - USER_EDIT_FAILED due to exception
+                    activityLogService.logByUsername(
+                            adminUsername,
+                            ActivityLogService.USER_EDIT_FAILED,
+                            "Failed to edit user: " + username + " | Reason: " + fallbackError.getMessage()
+                    );
+
+                    redirectAttributes.addFlashAttribute("error", "Failed to update user: " + fallbackError.getMessage());
+                    return "redirect:/users?error=true";
+                }
+            }
+
+            // LOG ACTIVITY - USER_EDIT (success)
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_EDIT,
+                    "Edited user: " + username + " (By: " + currentUser.getCreatedByUsername() + ")"
+            );
+
+            redirectAttributes.addFlashAttribute("success", "User updated successfully!");
+            return "redirect:/users?success=true";
+
+        } catch (Exception e) {
+            // LOG ACTIVITY - USER_EDIT_FAILED due to general exception
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_EDIT_FAILED,
+                    "Failed to edit user ID: " + id + " | Reason: " + e.getMessage()
+            );
+
+            logger.error("Failed to update user", e);
+            redirectAttributes.addFlashAttribute("error", "Failed to update user: " + e.getMessage());
+            return "redirect:/users?error=true";
+        }
+    }
+
+
+    // Show profile page
+    @GetMapping("/profile")
+    public String showProfilePage(Model model, Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        if (user == null) {
+
+
+            return "redirect:/login?error=userNotFound";
+        }
+        UserDto userDto = userService.findUserById(user.getId());
+        model.addAttribute("user", userDto);
+        // Add roles to the model for dropdown (if user can change role in profile)
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("roles", roles);
+        return "profile";
+    }
+
+    // Handle profile update
+    @PostMapping("/profile/update")
+    public String updateProfile(@Valid @ModelAttribute("user") UserDto userDto,
+                                BindingResult result,
+                                Principal principal,
+                                Model model,
+                                RedirectAttributes redirectAttributes) {
+
+        String username = principal != null ? principal.getName() : "Unknown";
+
+        // Validation failure
+        if (result.hasErrors()) {
+            model.addAttribute("user", userDto);
+            List<Role> roles = roleRepository.findAll();
+            model.addAttribute("roles", roles);
+
+            // LOG FAILURE - EDIT_PROFILE_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.EDIT_PROFILE_FAILED,
+                    "Validation failed while editing own profile"
+            );
+
+            return "profile";
+        }
+
+        User loggedInUser = userService.findUserByUsername(username);
+        if (loggedInUser == null) {
+            return "redirect:/login?error=userNotFound";
+        }
+
+        try {
+            // Try stored procedure first
+            try {
+                userService.editUserProfileWithStoredProcedure(username, userDto);
+                logger.info("Profile updated using stored procedure: {}", username);
+
+                // LOG SUCCESS - EDIT_PROFILE
+                activityLogService.logByUsername(
+                        username,
+                        ActivityLogService.EDIT_PROFILE,
+                        "Updated own profile successfully"
+                );
+
+                redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
+            } catch (RuntimeException e) {
+                logger.warn("Stored procedure failed, using fallback: {}", e.getMessage());
+
+                // Fallback to standard edit
+                userService.editUser(userDto, loggedInUser.getId());
+
+                // LOG SUCCESS - EDIT_PROFILE
+                activityLogService.logByUsername(
+                        username,
+                        ActivityLogService.EDIT_PROFILE,
+                        "Updated own profile successfully (via fallback method)"
+                );
+
+                redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to update profile", e);
+
+            // LOG FAILURE - EDIT_PROFILE_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.EDIT_PROFILE_FAILED,
+                    "Failed to update own profile: " + e.getMessage()
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Failed to update profile: " + e.getMessage());
+        }
+
+        return "redirect:/profile";
+    }
+
+
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/delete/{id}")
+    public String deleteUser(@PathVariable Long id,
+                             Principal principal,
+                             RedirectAttributes redirectAttributes) {
+
+        String adminUsername = principal != null ? principal.getName() : "Unknown";
+        System.out.println("=== DELETE METHOD CALLED FOR ID: " + id + " ===");
+
+        User loggedInUser = userService.findUserByUsername(adminUsername);
+
+        // Prevent self-deletion
+        if (loggedInUser != null && loggedInUser.getId().equals(id)) {
+            System.out.println("=== BLOCKED: User trying to delete themselves ===");
+
+            // LOG ACTIVITY - USER_DELETE_FAILED
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_DELETE_FAILED,
+                    "Attempted to delete self (user ID: " + id + ")"
+            );
+
+            redirectAttributes.addFlashAttribute("error", "You cannot delete yourself.");
+            return "redirect:/users";
+        }
+
+        // Check if user exists
+        if (!userService.doesUserExist(id)) {
+            System.out.println("=== BLOCKED: User does not exist ===");
+
+            // LOG ACTIVITY - USER_DELETE_FAILED
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_DELETE_FAILED,
+                    "Attempted to delete non-existent user (ID: " + id + ")"
+            );
+
+            redirectAttributes.addFlashAttribute("error", "User does not exist");
+            return "redirect:/users";
+        }
+
+        try {
+            UserDto userToDelete = userService.findUserById(id);
+            String usernameToDelete = userToDelete.getUsername();
+            String emailToDelete = userToDelete.getEmail();
+            System.out.println("=== Attempting to delete user: " + usernameToDelete + " ===");
+
+            try {
+                // Try stored procedure first
+                userService.deleteUserWithStoredProcedure(usernameToDelete);
+                System.out.println("=== SUCCESS: Deleted via stored procedure ===");
+
+                // LOG ACTIVITY - USER_DELETE (success)
+                activityLogService.logByUsername(
+                        adminUsername,
+                        ActivityLogService.USER_DELETE,
+                        "Deleted user: " + usernameToDelete + " (Email: " + emailToDelete + ")"
+                );
+
+                redirectAttributes.addFlashAttribute("success", "User has been deleted successfully");
+
+            } catch (RuntimeException e) {
+                System.out.println("=== Stored procedure failed: " + e.getMessage() + " ===");
+                System.out.println("=== Attempting JPA fallback ===");
+
+                try {
+                    // Fallback to JPA
+                    userService.deleteUserById(id);
+                    System.out.println("=== SUCCESS: Deleted via JPA ===");
+
+                    // LOG ACTIVITY - USER_DELETE (success)
+                    activityLogService.logByUsername(
+                            adminUsername,
+                            ActivityLogService.USER_DELETE,
+                            "Deleted user: " + usernameToDelete + " (Email: " + emailToDelete + ")"
+                    );
+
+                    redirectAttributes.addFlashAttribute("success", "User has been deleted successfully");
+
+                } catch (RuntimeException fallbackError) {
+                    // LOG ACTIVITY - USER_DELETE_FAILED
+                    activityLogService.logByUsername(
+                            adminUsername,
+                            ActivityLogService.USER_DELETE_FAILED,
+                            "Failed to delete user: " + usernameToDelete + " | Reason: " + fallbackError.getMessage()
+                    );
+
+                    System.out.println("=== FAILED: " + fallbackError.getMessage() + " ===");
+                    fallbackError.printStackTrace();
+                    redirectAttributes.addFlashAttribute("error",
+                            "Failed to delete user: " + fallbackError.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            // LOG ACTIVITY - USER_DELETE_FAILED
+            activityLogService.logByUsername(
+                    adminUsername,
+                    ActivityLogService.USER_DELETE_FAILED,
+                    "Failed to delete user ID: " + id + " | Reason: " + e.getMessage()
+            );
+
+            System.out.println("=== FAILED: " + e.getMessage() + " ===");
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("error", "Failed to delete user: " + e.getMessage());
+        }
+
+        return "redirect:/users";
+    }
+
+
+    // MANAGER
+
+    @PreAuthorize("hasAuthority('Manager')")
+    @GetMapping("/manager")
+    public String managerPage(Model model, Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        if (user == null) {
+            return "redirect:/login?error=userNotFound";
+        }
+        model.addAttribute("user", userService.findUserById(user.getId()));
+        return "manager";
+    }
+
+    @Autowired
+    private TagService tagService;
+
+    @Autowired
+    private ClassificationService classificationService;
+
+    // Load upload page
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/upload")
+    public String showUploadForm(Model model) {
+        model.addAttribute("document", new DocumentDto());
+        // Add existing tags and classifications for the dropdown
+        List<TagDto> allTags = tagService.getAllTags();
+        List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
+
+        // Limit to only 3 most recent
+        List<TagDto> limitedTags = allTags.stream()
+                .limit(3)
+                .collect(Collectors.toList());
+
+        List<ClassificationDto> limitedClassifications = allClassifications.stream()
+                .limit(3)
+                .collect(Collectors.toList());
+
+        model.addAttribute("allTags", limitedTags);
+        model.addAttribute("allClassifications", limitedClassifications);
+
+        return "upload";
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @PostMapping("/upload")
+    public String uploadDocument(@Valid @ModelAttribute("document") DocumentDto documentDto,
+                                 BindingResult result,
+                                 @RequestParam("file") MultipartFile file,
+                                 @RequestParam(value = "tagNames", required = false) String tagNames,
+                                 @RequestParam(value = "classificationNames", required = false) String classificationNames,
+                                 Principal principal,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+
+        String username = principal != null ? principal.getName() : "Unknown";
+
+        // Validation errors
+        if (result.hasErrors()) {
+            model.addAttribute("document", documentDto);
+
+            // Reload tags and classifications
+            List<TagDto> allTags = tagService.getAllTags();
+            List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
+            List<TagDto> limitedTags = allTags.stream().limit(3).collect(Collectors.toList());
+            List<ClassificationDto> limitedClassifications = allClassifications.stream().limit(3).collect(Collectors.toList());
+
+            model.addAttribute("allTags", limitedTags);
+            model.addAttribute("allClassifications", limitedClassifications);
+
+            // LOG FAILURE - DOCUMENT_UPLOAD_FAILED due to validation
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_UPLOAD_FAILED,
+                    "Validation failed while uploading document: '" + documentDto.getTitle() + "'"
+            );
+
+            return "upload";
+        }
+
+        try {
+            // Set tag and classification names in DTO
+            documentDto.setTagNames(tagNames);
+            documentDto.setClassificationNames(classificationNames);
+
+            // Save document
+            documentService.saveDocument(documentDto, file, username);
+
+            // LOG SUCCESS - DOCUMENT_UPLOAD
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_UPLOAD,
+                    String.format("Uploaded document: '%s' (File: %s)",
+                            documentDto.getTitle(),
+                            file.getOriginalFilename())
+            );
+
+            redirectAttributes.addFlashAttribute("success", "Document uploaded successfully!");
+            return "redirect:/upload";
+
+        } catch (Exception e) {
+            logger.error("Failed to upload document", e);
+
+            // LOG FAILURE - DOCUMENT_UPLOAD_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_UPLOAD_FAILED,
+                    String.format("Failed to upload document: '%s' (File: %s) - Error: %s",
+                            documentDto.getTitle(),
+                            file.getOriginalFilename(),
+                            e.getMessage())
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Failed to upload document: " + e.getMessage());
+            model.addAttribute("document", documentDto);
+
+            return "redirect:/upload";
+        }
+    }
+
+
+    // Helper method to format file size (add to your controller)
+    private String formatFileSize(long size) {
+        if (size <= 0) return "0 B";
+        final String[] units = new String[] { "B", "KB", "MB", "GB" };
+        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
+        return String.format("%.2f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
+    }
+
+    // API to get all tags
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/tags")
+    @ResponseBody
+    public ResponseEntity<List<TagDto>> getAllTags() {
+        return ResponseEntity.ok(tagService.getAllTags());
+    }
+
+    // API to get all classifications
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/classifications")
+    @ResponseBody
+    public ResponseEntity<List<ClassificationDto>> getAllClassifications() {
+        return ResponseEntity.ok(classificationService.getAllClassifications());
+    }
+    // ================== DOCUMENT LIST - SHOW ALL DOCUMENTS ==================
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents")
+    public String listDocuments(Model model, Principal principal) {
+        // Get ALL documents uploaded by ANY manager
+        List<DocumentDto> allDocuments = documentService.findAllDocuments();
+
+        // Get all tags for filter dropdown
+        List<TagDto> allTags = tagService.getAllTags();
+        model.addAttribute("allTags", allTags);
+
+        model.addAttribute("documents", allDocuments);
+        model.addAttribute("currentUsername", principal.getName());
+
+        // Get user role and pass to template (same as DocViewer method)
+        User user = userRepository.findByUsername(principal.getName());
+        String userRole = user.getRole().getRoleName();
+        model.addAttribute("userRole", userRole);
+
+        return "document-list";
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents/DocView/{id}")
+    public ResponseEntity<Resource> viewDocument(@PathVariable Long id) {
+        try {
+            String filePath = documentService.getFilePath(id);
+            Path path = Paths.get(filePath);
+            Resource resource = new UrlResource(path.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } else {
+                throw new RuntimeException("File not found or not readable");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to view document", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Show edit form
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/document/edit/{id}")
+    public String showEditForm(@PathVariable("id") Long id, Model model) {
+        DocumentDto document = documentService.findDocumentById(id);
+        if (document == null) {
+            return "redirect:/documents?error=Document not found";
+        }
+
+        logger.info("Loading edit form for document ID: {}", id);
+        logger.info("Current tags: {}", document.getTagNames());
+        logger.info("Current classifications: {}", document.getClassificationNames());
+
+        model.addAttribute("document", document);
+        model.addAttribute("allTags", tagService.getAllTags());
+        model.addAttribute("allClassifications", classificationService.getAllClassifications());
+
+        return "edit-document";
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @PostMapping("/document/edit/{id}")
+    public String updateDocument(@PathVariable("id") Long id,
+                                 @Valid @ModelAttribute("document") DocumentDto documentDto,
+                                 BindingResult result,
+                                 @RequestParam(value = "file", required = false) MultipartFile file,
+                                 @RequestParam(value = "tagNames", required = false) String tagNames,
+                                 @RequestParam(value = "classificationNames", required = false) String classificationNames,
+                                 Principal principal,
+                                 Model model,
+                                 RedirectAttributes redirectAttributes) {
+
+        String username = principal != null ? principal.getName() : "Unknown";
+
+        // Validation errors
+        if (result.hasErrors()) {
+            model.addAttribute("document", documentDto);
+            model.addAttribute("allTags", tagService.getAllTags());
+            model.addAttribute("allClassifications", classificationService.getAllClassifications());
+
+            // LOG FAILURE - DOCUMENT_EDIT_FAILED due to validation
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_EDIT_FAILED,
+                    "Validation failed while editing document ID: " + id + " ('" + documentDto.getTitle() + "')"
+            );
+
+            return "edit-document";
+        }
+
+        try {
+            // Get OLD document details BEFORE updating
+            DocumentDto oldDoc = documentService.findDocumentById(id);
+            String oldTitle = oldDoc.getTitle();
+            String oldProductCode = oldDoc.getProductCode();
+
+            // Set tag and classification names
+            documentDto.setTagNames(tagNames);
+            documentDto.setClassificationNames(classificationNames);
+
+            // Update document
+            documentService.updateDocument(id, documentDto);
+
+            // Build change log
+            StringBuilder changes = new StringBuilder();
+            changes.append("Edited document: '").append(documentDto.getTitle()).append("'");
+
+            if (!oldTitle.equals(documentDto.getTitle())) {
+                changes.append(" | Title: '").append(oldTitle).append("' → '").append(documentDto.getTitle()).append("'");
+            }
+            if (!oldProductCode.equals(documentDto.getProductCode())) {
+                changes.append(" | Product Code: '").append(oldProductCode).append("' → '").append(documentDto.getProductCode()).append("'");
+            }
+            if (file != null && !file.isEmpty()) {
+                changes.append(" | File updated: ").append(file.getOriginalFilename());
+            }
+
+            // LOG SUCCESS - DOCUMENT_EDIT
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_EDIT,
+                    changes.toString()
+            );
+
+            redirectAttributes.addFlashAttribute("success", "Document updated successfully!");
+            return "redirect:/documents";
+
+        } catch (Exception e) {
+            logger.error("Failed to update document", e);
+
+            // LOG FAILURE - DOCUMENT_EDIT_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_EDIT_FAILED,
+                    String.format("Failed to edit document ID: %d ('%s') - Error: %s",
+                            id, documentDto.getTitle(), e.getMessage())
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Failed to update document: " + e.getMessage());
+            model.addAttribute("document", documentDto);
+            model.addAttribute("allTags", tagService.getAllTags());
+            model.addAttribute("allClassifications", classificationService.getAllClassifications());
+            return "edit-document";
+        }
+    }
+
+
+
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/documents/delete/{id}")
+    public String deleteDocument(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+        String username = principal != null ? principal.getName() : "Unknown";
+
+        try {
+            // Get document details BEFORE deleting
+            DocumentDto document = documentService.findDocumentById(id);
+            String title = document.getTitle();
+            String productCode = document.getProductCode();
+
+            // Delete document
+            documentService.deleteDocument(id);
+
+            // LOG SUCCESS - DOCUMENT_DELETE
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_DELETE,
+                    String.format("Deleted document: '%s' (Product Code: %s)", title, productCode)
+            );
+
+            redirectAttributes.addFlashAttribute("success", "Document deleted successfully");
+
+        } catch (Exception e) {
+            logger.error("Failed to delete document ID: {}", id, e);
+
+            // LOG FAILURE - DOCUMENT_DELETE_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_DELETE_FAILED,
+                    String.format("Failed to delete document ID: %d - Error: %s", id, e.getMessage())
+            );
+
+            redirectAttributes.addFlashAttribute("error", "Failed to delete document: " + e.getMessage());
+        }
+
+        return "redirect:/documents";
+    }
+
+
+    @Autowired
+    private NetworkFileService networkFileService;
+
+    @Autowired
+    private WatermarkService watermarkService;
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents/DocViewer-view/{id}")
+    public ResponseEntity<byte[]> viewDocumentForViewer(@PathVariable Long id, Principal principal) {
+        try {
+            DocumentDto document = documentService.findDocumentById(id);
+
+            String filePath = documentService.getFilePath(id);
+            logger.info("Loading PDF from network share: {}", filePath);
+
+            byte[] pdfBytes = networkFileService.readFileFromNetworkShare(filePath);
+
+            logger.info("Successfully loaded PDF, size: {} bytes", pdfBytes.length);
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(pdfBytes.length))
+                    .body(pdfBytes);
+
+        } catch (Exception e) {
+            logger.error("Failed to view document for viewer", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(("Error loading PDF: " + e.getMessage()).getBytes());
+        }
+    }
+
+// ================== SECURE PDF VIEWER API ==================
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/DocViewer")
+    public String showPdfViewer(@RequestParam Long id, Model model, Principal principal) {
+        logger.info("===== VIEWER METHOD CALLED =====");
+        logger.info("Document ID: " + id);
+        logger.info("User: " + principal.getName());
+
+        try {
+            DocumentDto document = documentService.findDocumentById(id);
+            logger.info("Document found: " + document.getTitle());
+
+            User user = userRepository.findByUsername(principal.getName());
+
+            String userRole = user.getRole().getRoleName(); // "Admin", "Manager", or "Viewer"
+
+            logger.info("User role: " + userRole);
+            // ✅ CHANGE 4: Pass ALL required attributes to model
+            model.addAttribute("documentId", id);
+            model.addAttribute("document", document); // Pass document object
+            model.addAttribute("userRole", userRole); // Pass user role
+
+            logger.info("Document title: " + document.getTitle());
+            logger.info("Document product code: " + document.getProductCode());
+            logger.info("Document tags: " + document.getTagNames());
+            model.addAttribute("documentId", id);
+            logger.info("Returning viewer template");
+
+            // Add username safely
+            model.addAttribute("username", user.getUsername());
+
+            return "DocViewer";
+        } catch (Exception e) {
+            logger.error("Failed to load viewer", e);
+            return "redirect:/documents?error=notfound";
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents/info/{id}")
+    public ResponseEntity<?> getDocumentInfo(@PathVariable Long id, Principal principal) {
+        try {
+            DocumentDto document = documentService.findDocumentById(id);
+
+            // Verify the document belongs to the logged-in user
+//            if (!document.getUploadedByUsername().equals(principal.getName())) {
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+//            }
+
+            Map<String, Object> info = new HashMap<>();
+            info.put("id", document.getId());
+            info.put("title", document.getTitle());
+            info.put("productCode", document.getProductCode());
+            info.put("edition", document.getEdition());
+            info.put("publishDate", document.getPublishDate());
+            info.put("noOfPages", document.getNoOfPages());
+            info.put("notes", document.getNotes());
+            info.put("tagNames", document.getTagNames());
+            return ResponseEntity.ok(info);
+        } catch (Exception e) {
+            logger.error("Failed to get document info", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/documents/download/{id}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id, Principal principal) {
+        String username = principal != null ? principal.getName() : "Unknown";
+
+        try {
+            DocumentDto document = documentService.findDocumentById(id);
+            String filePath = documentService.getFilePath(id);
+            logger.info("Downloading and watermarking document: {} for user: {}", document.getTitle(), username);
+
+            // Read original PDF from network share
+            byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
+            logger.info("Original PDF loaded, size: {} bytes", originalPdfBytes.length);
+
+            // Add watermark
+            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(originalPdfBytes, username);
+
+            // Prepare filename
+            String filename = "WATERMARKED_" + document.getTitle() + ".pdf";
+
+            logger.info("Downloaded PDF with watermark successfully, size: {} bytes", watermarkedPdfBytes.length);
+
+            // LOG SUCCESS - DOCUMENT_DOWNLOAD
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_DOWNLOAD,
+                    String.format("Downloaded document: '%s' (Uploaded By: %s)",
+                            document.getTitle(),
+                            document.getUploadedByUsername())
+            );
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
+                    .body(watermarkedPdfBytes);
+
+        } catch (Exception e) {
+            logger.error("Failed to download and watermark document", e);
+
+            // LOG FAILURE - DOCUMENT_DOWNLOAD_FAILED
+            activityLogService.logByUsername(
+                    username,
+                    ActivityLogService.DOCUMENT_DOWNLOAD_FAILED,
+                    String.format("Failed to download document ID: %d - Error: %s", id, e.getMessage())
+            );
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(("Error downloading document: " + e.getMessage()).getBytes());
+        }
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    @GetMapping("/documents/download-watermarked/{id}")
+    public ResponseEntity<byte[]> downloadWatermarkedDocument(@PathVariable Long id, Principal principal) {
+        try {
+            DocumentDto document = documentService.findDocumentById(id);
+
+            String filePath = documentService.getFilePath(id);
+            logger.info("Downloading watermarked document from viewer: {} for user: {}",
+                    document.getTitle(), principal.getName());
+
+            // Read original PDF from network share
+            byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
+
+            // Add watermark
+            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(
+                    originalPdfBytes,
+                    principal.getName()
+            );
+
+            String watermarkedFilename = "WATERMARKED_" + document.getTitle() + ".pdf";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + watermarkedFilename + "\"")
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
+                    .body(watermarkedPdfBytes);
+
+        } catch (Exception e) {
+            logger.error("Failed to download watermarked document from viewer", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.TEXT_PLAIN)
+                    .body(("Error downloading document: " + e.getMessage()).getBytes());
+        }
+    }
+
+    @Autowired
+    private BookmarkService bookmarkService;
+
+//    @Autowired
+//    private UserService userService;
+
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/my-bookmarks")
+    public String showBookmarksPage(Principal principal) {
+//        User user = userService.findUserByUsername(principal.getName());
+//        model.addAttribute("user", user);
+        return "bookmarks";
+    }
+// ================== BOOKMARK ENDPOINTS ==================
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @PostMapping("/documents/bookmark/{id}")
+    public ResponseEntity<?> saveBookmark(@PathVariable Long id,
+//                                          @RequestParam int page,
+                                          @RequestParam(required = false) String name,
+                                          Principal principal) {
+        try {
+            User user = userService.findUserByUsername(principal.getName());
+
+            // Generate bookmark name if not provided
+//            String bookmarkName = (name != null && !name.isEmpty()) ? name : "Page " + page;
+            String bookmarkName = (name != null && !name.isEmpty()) ? name : "Document Bookmark";
+
+            // Save bookmark (now allows multiple per document)
+            BookmarkDto bookmark = bookmarkService.saveBookmark(
+                    user.getId(),
+                    id,
+//                    page,
+                    bookmarkName
+            );
+
+//            logger.info("Bookmark saved for user: {} on document: {} at page: {}",
+//                    principal.getName(), id, page);
+            logger.info("Bookmark saved for user: {} on document: {}",
+                    principal.getName(), id);
+
+            return ResponseEntity.ok(bookmark);
+
+        } catch (RuntimeException e) {
+//            if (e.getMessage().contains("already bookmarked")) {
+//                return ResponseEntity.status(HttpStatus.CONFLICT)
+//                        .body(Map.of("error", "This page is already bookmarked"));
+//            }
+            if (e.getMessage().contains("already bookmarked")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(Map.of("error", "This document is already bookmarked"));
+            }
+            logger.error("Error saving bookmark", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to save bookmark: " + e.getMessage()));
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents/bookmarks/{id}")
+    public ResponseEntity<?> getDocumentBookmarks(@PathVariable Long id, Principal principal) {
+        try {
+            User user = userService.findUserByUsername(principal.getName());
+
+            // Get ALL bookmarks for this document
+            List<BookmarkDto> bookmarks = bookmarkService.getDocumentBookmarks(user.getId(), id);
+
+            return ResponseEntity.ok(bookmarks);
+
+        } catch (Exception e) {
+            logger.error("Error retrieving document bookmarks", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve bookmarks"));
+        }
+    }
+    @GetMapping("/bookmark/check/{documentId}")
+    public ResponseEntity<Boolean> checkIfBookmarked(@PathVariable Long documentId, Principal principal) {
+        User user = userService.findUserByUsername(principal.getName());
+        boolean isBookmarked = bookmarkService.isDocumentBookmarked(user.getId(), documentId);
+        return ResponseEntity.ok(isBookmarked);
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @DeleteMapping("/bookmarks/{id}")
+    public ResponseEntity<String> deleteBookmark(@PathVariable Long id) {
+        try {
+            bookmarkService.deleteBookmark(id);
+            return ResponseEntity.ok("Bookmark deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete bookmark: " + e.getMessage());
+        }
+    }
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/bookmarks")
+    public ResponseEntity<?> getAllUserBookmarks(Principal principal) {
+        try {
+            User user = userService.findUserByUsername(principal.getName());
+
+            List<BookmarkDto> bookmarks = bookmarkService.getUserBookmarks(user.getId());
+
+            return ResponseEntity.ok(bookmarks);
+
+        } catch (Exception e) {
+            logger.error("Error retrieving user bookmarks", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to retrieve bookmarks"));
+        }
+    }
+
+
+
+
+
+
+    // ================== VIEWER ROLE ==================
+
+
+//    @PreAuthorize("hasAnyAuthority('Viewer')")
+//    @GetMapping("/viewer")
+//    public String viewerPage(Model model, Principal principal) {
+//        User user = userService.findUserByUsername(principal.getName());
+//        if (user == null) {
+//            return "redirect:/login?error=userNotFound";
+//        }
+//        model.addAttribute("user", userService.findUserById(user.getId()));
+//        return "view";
+//    }
+
+}

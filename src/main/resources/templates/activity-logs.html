@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Activity Logs</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Include Sidebar Styles -->
+
+    <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+    <style>
+        :root{
+            --bg: #f4f6f9;
+            --card: #fff;
+            --muted: #6c757d;
+            --border: #e9eef5;
+            --shadow: 0 6px 18px rgba(18,38,63,0.06);
+        }
+        body {
+
+            background-color: #f4f6f9;
+
+            padding-top: 70px;
+        }
+
+        /* Page container — place this inside your app's main content area so top/side nav remain intact */
+        .page-container{
+            padding: 28px 32px;
+        }
+
+        /* Header row with Back/Home and title */
+        .page-header {
+            display:flex;
+            align-items:center;
+            gap:16px;
+            margin-bottom:18px;
+        }
+        .btn-back, .btn-home {
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+        .page-title {
+            font-size:22px;
+            font-weight:600;
+            color:#1f2d3d;
+        }
+
+        /* Stat cards */
+        .stats-row {
+            display:flex;
+            gap:18px;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+        }
+        .stat-card {
+            min-width:160px;
+            flex:1 1 160px;
+            padding:22px;
+            border-radius:10px;
+            color:#fff;
+            box-shadow: var(--shadow);
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:flex-start;
+            gap:6px;
+        }
+        .stat-number {
+            font-size:28px;
+            font-weight:700;
+        }
+        .stat-label {
+            font-size:13px;
+            opacity:0.95;
+        }
+
+        .stat-purple { background: linear-gradient(90deg,#7c3aed,#6b21a8); }
+        .stat-blue   { background: linear-gradient(90deg,#2b6ef6,#2563eb); }
+        .stat-green  { background: linear-gradient(90deg,#16a34a,#059669); }
+        .stat-red    { background: linear-gradient(90deg,#ef4444,#dc2626); }
+        .stat-amber  { background: linear-gradient(90deg,#f59e0b,#d97706); }
+
+        /* Toolbar / filters */
+        .toolbar {
+            margin: 18px 0 22px 0;
+            display:flex;
+            gap:12px;
+            align-items:center;
+            justify-content:space-between;
+            flex-wrap:wrap;
+        }
+        .filter-left {
+            display:flex;
+            gap:12px;
+            align-items:center;
+            flex:1 1 600px;
+        }
+        .search-input {
+            min-width: 420px;
+            flex:1;
+        }
+        .filter-right {
+            display:flex;
+            gap:8px;
+            align-items:center;
+        }
+
+        .filter-select {
+            min-width:160px;
+        }
+
+        /* Card containing table */
+        .logs-card {
+            background: var(--card);
+            border-radius:10px;
+            padding:20px;
+            box-shadow: var(--shadow);
+        }
+        .activity-row {
+            border-bottom:1px solid var(--border);
+            padding:18px 0;
+            display:flex;
+            gap:14px;
+            align-items:flex-start;
+        }
+        .activity-icon {
+            min-width:44px;
+            min-height:44px;
+            border-radius:50%;
+            background:#e6f4ea;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#2d7a3a;
+            font-weight:700;
+        }
+        .activity-body {
+            flex:1;
+        }
+        .activity-meta {
+            color:var(--muted);
+            font-size:13px;
+            margin-top:6px;
+        }
+
+        /* Authentication */
+        .badge-login { background-color: #28a745; color: #fff; }              /* Green - Success */
+        .badge-login-failed { background-color: #dc3545; color: #fff; }       /* Red - Failed login */
+        .badge-logout { background-color: #6c757d; color: #fff; }             /* Gray - Logout */
+
+        /* User Actions */
+        .badge-user-create { background-color: #007bff; color: #fff; }        /* Blue - Create user */
+        .badge-user-create-failed { background-color: #ff6f61; color: #fff; } /* Coral - Failed create */
+
+        .badge-user-edit { background-color: #ffc107; color: #000; }          /* Yellow - Edit user */
+        .badge-user-edit-failed { background-color: #ffb703; color: #000; }   /* Dark yellow - Failed edit */
+
+        .badge-user-delete { background-color: #dc3545; color: #fff; }        /* Red - Delete user */
+        .badge-user-delete-failed { background-color: #ff7675; color: #fff; } /* Light red - Failed delete */
+
+        /* Document Actions */
+        .badge-document-upload { background-color: #20c997; color: #fff; }           /* Teal - Upload */
+        .badge-document-upload-failed { background-color: #198754; color: #fff; }    /* Darker green - Failed upload */
+
+        .badge-document-edit { background-color: #ffc107; color: #000; }             /* Yellow - Edit */
+        .badge-document-edit-failed { background-color: #ffb703; color: #000; }      /* Dark yellow - Failed edit */
+
+        .badge-document-delete { background-color: #dc3545; color: #fff; }           /* Red - Delete */
+        .badge-document-delete-failed { background-color: #ff7675; color: #fff; }    /* Light red - Failed delete */
+
+        .badge-document-download { background-color: #007bff; color: #fff; }         /* Blue - Download */
+        .badge-document-download-failed { background-color: #0d6efd; color: #fff; }  /* Dark blue - Failed download */
+
+        /* Profile Actions */
+        .badge-edit-profile { background-color: #17a2b8; color: #fff; }              /* Cyan - Edit profile */
+        .badge-edit-profile-failed { background-color: #ff6f61; color: #fff; }       /* Coral - Failed profile edit */
+
+        /* Small utilities */
+        .muted-small { color:var(--muted); font-size:13px; }
+        .user-pill { font-weight:600; margin-right:8px; }
+        .role-pill { font-size:12px; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#334155; margin-left:8px; }
+
+        /* Right aligned controls used for download/datepickers */
+        .controls-inline { display:flex; gap:10px; align-items:center; }
+
+        /* Make page responsive */
+        @media (max-width: 900px){
+            .search-input { min-width: 160px; }
+            .stat-card { min-width:48%; flex-basis:48%; }
+        }
+    </style>
+</head>
+<body>
+<!-- Include Top Navbar -->
+<div th:replace="~{common/navbar :: navbar}"></div>
+
+<!-- Sidebar + Content -->
+<div class="d-flex">
+    <!-- Include Sidebar -->
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-4">
+        <!-- Breadcrumb -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">Activity Logs</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="javascript:void(0);"
+                               onclick="goBack()"
+                               class="text-decoration-none">
+                                <i class="bi bi-arrow-left me-1"></i> Back
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/documents}" class="text-decoration-none">
+                                <i class="bi bi-house me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Activity Logs</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Stat cards row -->
+        <div class="stats-row">
+            <div class="stat-card stat-purple">
+                <div class="stat-number" th:text="${totalLogs}">0</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+
+            <div class="stat-card stat-blue">
+                <div class="stat-number" th:text="${todayCount}">0</div>
+                <div class="stat-label">Today</div>
+            </div>
+
+            <div class="stat-card stat-green">
+                <div class="stat-number" th:text="${countSuccessLogs}">0</div>
+                <div class="stat-label">Success</div>
+            </div>
+
+            <div class="stat-card stat-red">
+                <div class="stat-number" th:text="${countFailedLogs}">0</div>
+                <div class="stat-label">Failures</div>
+            </div>
+
+
+        </div>
+
+        <!-- Toolbar with search, filters and date download controls (replaced Export CSV/JSON) -->
+        <div class="toolbar">
+            <div class="filter-left">
+                <div class="input-group search-input">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="Search activities..." id="searchInput">
+                </div>
+            </div>
+
+            <!-- Right side: Date pickers + Download button (replaces Export CSV/JSON) -->
+            <div class="filter-right controls-inline">
+                <input type="date" id="startDate" class="form-control" style="width:160px;" />
+                <span class="muted-small">to</span>
+                <input type="date" id="endDate" class="form-control" style="width:160px;" />
+                <button class="btn btn-primary" onclick="downloadLogsAsCSV()">
+                    <i class="bi bi-download me-1"></i> Download
+                </button>
+            </div>
+        </div>
+
+        <!-- Activity list card -->
+        <div class="logs-card mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0">Activity Log <small class="text-muted">(<span th:text="${totalLogs}">0</span>)</small></h5>
+                <div class="muted-small">Showing recent activity</div>
+            </div>
+
+            <!-- If you're already rendering a table with thymeleaf, we'll keep your table structure.
+                 The UI in the image shows a list; we'll render a table for simplicity (keeps your existing code). -->
+
+            <div class="table-responsive">
+                <table class="table align-middle" id="activityLogsTable">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="width:80px">ID</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
+                        <th style="width:160px">Time</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${logs == null or logs.isEmpty()}">
+                        <td colspan="5" class="text-center py-4">No logs found</td>
+                    </tr>
+
+                    <tr th:each="log : ${logs}">
+                        <td th:text="${log.logId}">1</td>
+
+                        <td>
+                            <div>
+                                <span class="user-pill" th:text="${log.user != null ? log.user.username : 'Deleted User'}">User</span>
+                                <small class="muted-small d-block" th:text="${log.user != null ? log.user.email : 'N/A'}">email</small>
+                            </div>
+                        </td>
+
+                        <td>
+                        <span class="badge"
+                              th:classappend="${log.action == 'LOGIN' ? 'badge-login' :
+                      log.action == 'LOGIN_FAILED' ? 'badge-login-failed' :
+                      log.action == 'LOGOUT' ? 'badge-logout' :
+                      log.action == 'USER_CREATE' ? 'badge-user-create' :
+                      log.action == 'USER_CREATE_FAILED' ? 'badge-user-create-failed' :
+                      log.action == 'USER_EDIT' ? 'badge-user-edit' :
+                      log.action == 'USER_EDIT_FAILED' ? 'badge-user-edit-failed' :
+                      log.action == 'USER_DELETE' ? 'badge-user-delete' :
+                      log.action == 'USER_DELETE_FAILED' ? 'badge-user-delete-failed' :
+                      log.action == 'DOCUMENT_UPLOAD' ? 'badge-document-upload' :
+                      log.action == 'DOCUMENT_UPLOAD_FAILED' ? 'badge-document-upload-failed' :
+                      log.action == 'DOCUMENT_EDIT' ? 'badge-document-edit' :
+                      log.action == 'DOCUMENT_EDIT_FAILED' ? 'badge-document-edit-failed' :
+                      log.action == 'DOCUMENT_DELETE' ? 'badge-document-delete' :
+                      log.action == 'DOCUMENT_DELETE_FAILED' ? 'badge-document-delete-failed' :
+                      log.action == 'DOCUMENT_DOWNLOAD' ? 'badge-document-download' :
+                      log.action == 'DOCUMENT_DOWNLOAD_FAILED' ? 'badge-document-download-failed' :
+                      log.action == 'EDIT_PROFILE' ? 'badge-edit-profile' :
+                      log.action == 'EDIT_PROFILE_FAILED' ? 'badge-edit-profile-failed' : ''}"
+                              th:text="${log.action}">
+    ACTION
+</span>
+                        </td>
+
+                        <td th:text="${log.details}">Details</td>
+
+                        <td>
+                            <div th:text="${#temporals.format(log.timestamp, 'dd MMM yyyy')}">14 Oct 2025</div>
+                            <div class="muted-small" th:text="${#temporals.format(log.timestamp, 'HH:mm:ss')}">10:30</div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer controls -->
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <a th:href="@{/users}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Users
+                </a>
+            </div>
+            <div class="muted-small">Last updated: <span th:text="${lastUpdated}">—</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Include Navbar JavaScript -->
+<div th:replace="~{common/navbar :: navbar-js}"></div>
+<!-- Your existing download script (adapted to table IDs used above) -->
+<script>
+    // Keep your existing logic but ensure date parsing is robust for the thymeleaf-rendered date format
+    function downloadLogsAsCSV() {
+        const table = document.querySelector("#activityLogsTable");
+        if (!table) {
+            alert("No logs table found!");
+            return;
+        }
+
+        const startDate = document.querySelector("#startDate").value;
+        const endDate = document.querySelector("#endDate").value;
+
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        if (end) end.setHours(23, 59, 59, 999);
+
+        let csvContent = "";
+        const rows = table.querySelectorAll("tr");
+
+        rows.forEach((row, index) => {
+            const cols = row.querySelectorAll("th, td");
+            if (cols.length === 0) return;
+
+            // header row
+            if (index === 0) {
+                const header = Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",");
+                csvContent += header + "\n";
+                return;
+            }
+
+            // Skip empty or placeholder rows
+            const idCell = cols[0]?.textContent.trim();
+            if (!idCell || idCell.toLowerCase().includes('no logs')) return;
+
+            // The date is in the 5th column (index 4), first line is date, second line is time
+            const dateText = cols[4]?.children[0]?.textContent?.trim() || cols[4]?.textContent?.trim();
+            if (!dateText) return;
+
+            // Try to parse date of format "14 Oct 2025"
+            let logDate = new Date(dateText);
+            if (isNaN(logDate)) {
+                // fallback parsing for 'dd MMM yyyy'
+                const parts = dateText.split(" ");
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+                    const monthIndex = monthNames.indexOf(parts[1]);
+                    const year = parseInt(parts[2], 10);
+                    if (!isNaN(day) && monthIndex >= 0 && !isNaN(year)) {
+                        logDate = new Date(year, monthIndex, day);
+                    }
+                }
+            }
+
+            // Filter by dates (inclusive)
+            if (
+                (!start || logDate >= start) &&
+                (!end || logDate <= end)
+            ) {
+                const rowData = Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",");
+                csvContent += rowData + "\n";
+            }
+        });
+
+        if (csvContent.trim() === "") {
+            alert("No logs found for the selected date range!");
+            return;
+        }
+
+        // Trigger download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const s = startDate || 'All';
+        const e = endDate || 'All';
+        link.href = url;
+        link.download = `Activity_Logs_${s}_to_${e}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Optional: very simple client-side search/filter to help the UI (works on the current table)
+    document.getElementById('searchInput').addEventListener('input', function(e){
+        const q = e.target.value.trim().toLowerCase();
+        const rows = document.querySelectorAll('#activityLogsTable tbody tr[th\\:each]');
+        // Thymeleaf repeats rows so they won't have a specific attribute after rendering.
+        // Use a generic approach:
+        const allRows = document.querySelectorAll('#activityLogsTable tbody tr');
+        allRows.forEach(r=>{
+            if (r.querySelectorAll('td').length === 0) return;
+            const text = r.textContent.toLowerCase();
+            r.style.display = text.includes(q) ? '' : 'none';
+        });
+    });
+
+    // Optional: you can wire action/user/status selects to filter the rendered rows.
+</script>
+<script>
+    function goBack() {
+        if (document.referrer && document.referrer !== window.location.href) {
+            // Go to the referring page if available
+            window.history.back();
+        } else {
+            // Fallback if there's no referrer (like direct load)
+            window.location.href = '/documents';
+        }
+    }
+</script>
+</body>
+</html>

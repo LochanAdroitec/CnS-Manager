@@ -31,19 +31,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for development; enable in production
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**") // Disable CSRF for API endpoints
+                )
                 .authorizeHttpRequests(authorize -> authorize
 
                                 //Granting Permissions based on roles
                                 .requestMatchers("/upload").hasAnyAuthority("Admin", "Manager")
-                                .requestMatchers("/tags").hasAnyAuthority("Admin","Manager")
-                                .requestMatchers("/classifications").hasAnyAuthority("Admin","Manager")
+//                                .requestMatchers("/tags").hasAnyAuthority("Admin","Manager")
+//                                .requestMatchers("/classifications").hasAnyAuthority("Admin","Manager")
                                 .requestMatchers("/documents").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/documents/**").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/my-bookmarks").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/DocViewer").hasAnyAuthority("Admin","Manager","Viewer")
 //                        .requestMatchers("/viewer").hasAnyAuthority("Viewer")
                                 .requestMatchers("/activity-logs").hasAuthority("Admin")
+                                .requestMatchers("/tags-management","/classifications-management").hasAnyAuthority("Admin","Manager")
+                                .requestMatchers("/api/tags/**","/api/classifications/**").hasAnyAuthority("Admin","Manager")
 
                         // Public endpoints
                         .requestMatchers("/register/**").permitAll()

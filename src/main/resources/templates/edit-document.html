@@ -3,348 +3,516 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Details - Codes & Standards</title>
+    <title>Edit Document - Codes & Standards</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
     <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f5f7fa;
+            background-color: #f4f6f9;
             padding-top: 70px;
         }
 
-        .page-header-section {
+        /* ============== CONTAINER STYLES ============== */
+        .edit-container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
             border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        .page-title {
+        .edit-header {
+            background-color: #1e3a5f;
+            padding: 30px;
+            color: white;
+        }
+
+        .edit-header h2 {
+            margin: 0;
             font-size: 24px;
             font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 4px;
         }
 
-        .page-subtitle {
+        .edit-header p {
+            margin: 5px 0 0;
+            opacity: 0.9;
             font-size: 14px;
-            color: #718096;
         }
 
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 320px;
-            gap: 24px;
+        /* ============== FORM CONTENT ============== */
+        .edit-content {
+            padding: 40px 50px;
         }
 
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-            border: none;
+        .form-section {
+            margin-bottom: 30px;
         }
 
-        .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e2e8f0;
-            background: white;
-            border-radius: 12px 12px 0 0;
-        }
-
-        .card-title {
-            font-size: 16px;
+        .form-section-title {
+            font-size: 18px;
             font-weight: 600;
-            color: #1a202c;
+            color: #1a2332;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .form-section-title i {
+            color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .required-indicator {
+            color: #ef4444;
+        }
+
+        .form-control {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        .form-control:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .form-control[readonly] {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ============== TAGS & CLASSIFICATIONS ============== */
+        .selection-area-flex {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9fafb;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            min-height: 100px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar styling */
+        .selection-area-flex::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .selection-area-flex::-webkit-scrollbar-track {
+            background: #e5e7eb;
+            border-radius: 10px;
+        }
+
+        .selection-area-flex::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 10px;
+        }
+
+        .selection-area-flex::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        .selection-item-flex {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .selection-item-flex:hover {
+            border-color: #667eea;
+            background: #f0f7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .selection-item-flex.selected {
+            border-color: #667eea;
+            background: #e0f2fe;
+            color: #667eea;
+        }
+
+        .selection-item-flex.blink {
+            animation: blinkAnimation 0.6s ease 3;
+        }
+
+        @keyframes blinkAnimation {
+            0%, 100% { border-color: #e5e7eb; background: white; }
+            50% { border-color: #fbbf24; background: #fef3c7; transform: scale(1.05); }
+        }
+
+        .selected-items-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            min-height: 80px;
+            background: white;
+            margin-top: 10px;
+        }
+
+        .selected-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            animation: chipFadeIn 0.3s;
+        }
+
+        .classification-chip {
+            background: #10b981;
+        }
+
+        @keyframes chipFadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .chip-remove {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.2s;
+        }
+
+        .chip-remove:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .error-message {
+            display: none;
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 5px;
+            animation: fadeIn 0.3s;
+            padding: 8px 12px;
+            background: #fee2e2;
+            border-radius: 6px;
+            border-left: 3px solid #ef4444;
+        }
+
+        .error-message.show {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ============== FORM NAVIGATION ============== */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 50px 30px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .btn-custom {
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary-custom {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary-custom {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
+            background: #5568d3;
+        }
+
+        .btn-primary-custom:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        /* ============== CUSTOM MODALS ============== */
+        .custom-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .custom-modal-overlay.show {
+            display: flex;
+        }
+
+        .custom-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s;
+            overflow: hidden;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-header-custom {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .modal-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .modal-title-custom {
+            flex: 1;
+        }
+
+        .modal-title-custom h3 {
             margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-title-custom p {
+            margin: 5px 0 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .modal-close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body-custom {
+            padding: 30px;
+        }
+
+        .modal-body-custom p {
+            margin: 0;
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+
+        .modal-footer-custom {
+            padding: 20px 30px;
+            background: #f9fafb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-secondary {
+            background: white;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        .modal-btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .modal-btn-danger:hover {
+            background: #dc2626;
+        }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .card-body {
-            padding: 24px;
+        .alert i {
+            font-size: 20px;
         }
 
-        .form-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
-        .form-control {
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 14px;
-        }
-
-        .form-control:focus {
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
-        }
-
-        .form-hint {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 4px;
-        }
-
-        .info-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        }
-
-        .info-section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 16px;
-        }
-
-        .info-item {
-            margin-bottom: 16px;
-        }
-
-        .info-label {
-            font-size: 12px;
-            color: #718096;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .info-value {
-            font-size: 14px;
-            color: #2d3748;
-            font-weight: 500;
-        }
-        /* Tags & Classifications */
-        .tag-container {
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          padding: 10px;
-          min-height: 30px;
-          background: #f8f9fa;
-          margin-top: 5px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          align-items: flex-start;
-        }
-
-        .tag-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #007bff;
-          color: white;
-          padding: 5px 12px;
-          border-radius: 20px;
-          font-size: 13px;
-          animation: fadeIn 0.3s;
-        }
-
-        .classification-chip {
-          background: #28a745;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
-
-        .tag-chip .remove-tag {
-          cursor: pointer;
-          font-weight: bold;
-          opacity: 0.8;
-          margin-left: 4px;
-          display: inline-flex;
-          align-items: center;
-        }
-
-        .tag-chip .remove-tag:hover {
-          opacity: 1;
-        }
-
-        .tag-hint {
-          font-size: 12px;
-          color: #6c757d;
-          margin-top: 3px;
-        }
-
-        .existing-tags {
-  margin-top: 8px;
-  padding: 8px;
-  background: #e9ecef;
-  border-radius: 5px;
-  max-height: 50px;
-  overflow-y: auto;
-
-  display: flex;           /* enables flexbox layout */
-  flex-wrap: wrap;         /* allows wrapping to next line if too many tags */
-  gap: 6px;                /* spacing between tags */
-  align-items: center;     /* vertically centers tags */
-}
-
-
-        .existing-tag-item {
-          display: inline-block;
-          padding: 4px 10px;
-          margin: 3px;
-          background: white;
-          border: 1px solid #dee2e6;
-          border-radius: 15px;
-          cursor: pointer;
-          font-size: 13px;
-          transition: all 0.2s;
-        }
-
-        .existing-tag-item:hover {
-          background: #007bff;
-          color: white;
-          border-color: #007bff;
-        }
-
-        .existing-classification-item:hover {
-          background: #28a745;
-          border-color: #28a745;
-        }
-
-        /* Tag System */
-        .tag-input-wrapper {
-            position: relative;
-        }
-
-        .tags-display {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            min-height: 80px;
-            background: #f7fafc;
-            margin-top: 8px;
-        }
-
-        .tag-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            background: #4299e1;
-            color: white;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 500;
-            animation: slideIn 0.2s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .tag-chip.classification {
-            background: #48bb78;
-        }
-
-        .tag-remove {
-            cursor: pointer;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-        }
-
-        .tag-remove:hover {
-            opacity: 1;
-        }
-
-        .existing-tags-list {
-            margin-top: 12px;
-            padding: 12px;
-            background: #edf2f7;
-            border-radius: 6px;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-
-        .existing-tags-list small {
-            display: block;
-            font-size: 11px;
-            color: #718096;
-            margin-bottom: 8px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .existing-tag {
-            display: inline-block;
-            padding: 5px 12px;
-            margin: 4px;
-            background: white;
-            border: 1px solid #cbd5e0;
-            border-radius: 12px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .existing-tag:hover {
-            background: #4299e1;
-            color: white;
-            border-color: #4299e1;
-        }
-
-        .existing-tag.classification:hover {
-            background: #48bb78;
-            border-color: #48bb78;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            padding-top: 24px;
-            border-top: 1px solid #e2e8f0;
-            margin-top: 24px;
-        }
-
-        .btn-primary-custom {
-            background: #4299e1;
-            color: white;
-            border: none;
-        }
-
-        .btn-primary-custom:hover {
-            background: #3182ce;
+        @keyframes slideOutRight {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
-            .content-grid {
+        @media (max-width: 992px) {
+            .edit-content {
+                padding: 30px 30px;
+            }
+
+            .form-navigation {
+                padding: 15px 30px 20px;
+            }
+
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
-        /* Animation for new tags/classifications */
-        @keyframes fadeHighlight {
-          0% { background-color: #fff3cd; transform: scale(1.05); }
-          100% { background-color: inherit; transform: scale(1); }
-        }
-
-        .animate-added {
-          animation: fadeHighlight 0.5s ease-in-out;
-        }
-
     </style>
 </head>
 <body>
@@ -358,169 +526,205 @@
 
     <!-- Main Content -->
     <div class="flex-grow-1 p-4">
-        <!-- Breadcrumb -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-1">Document Details</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="javascript:void(0);"
-                               onclick="goBack()"
-                               class="text-decoration-none">
-                                <i class="bi bi-arrow-left me-1"></i> Back
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item">
-                            <a th:href="@{/documents}" class="text-decoration-none">
-                                <i class="bi bi-house me-1"></i> Home
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active">Edit Document Details</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-
         <!-- Alert Messages -->
-        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            <span th:text="${error}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span th:text="${success}"></span>
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${success}">Document updated successfully!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- Content Grid -->
-        <div>
-            <!-- Main Form -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span th:text="${error}">Error updating document!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
-            <form method="post" th:action="@{/document/edit/{id}(id=${document.id})}"
-                  th:object="${document}" id="editForm">
+        <!-- Edit Container -->
+        <div class="edit-container">
+            <!-- Header -->
+            <div class="edit-header">
+                <h2><i class="bi bi-pencil-square me-2"></i>Edit Document</h2>
+                <p>Update document information and metadata</p>
+            </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="bi bi-file-text text-primary"></i>
-                            Document Information
-                        </h3>
+            <!-- Form -->
+            <form id="editForm" method="post" th:action="@{/document/edit/{id}(id=${document.id})}" th:object="${document}">
+                <input type="hidden" name="tagNames" id="tagNamesField" />
+                <input type="hidden" name="classificationNames" id="classificationNamesField" />
+                <input type="hidden" name="publishMonth" id="publishMonthField" />
+                <input type="hidden" name="publishYear" id="publishYearField" />
+
+                <!-- Content Area -->
+                <div class="edit-content">
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="bi bi-info-circle"></i>
+                            Basic Information
+                        </div>
+
+                        <div class="form-group">
+                            <label for="title" class="form-label">
+                                Document Title <span class="required-indicator">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="productCode" class="form-label">
+                                    Product Code <span class="required-indicator">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edition" class="form-label">Edition</label>
+                                <input type="text" class="form-control" id="edition" th:field="*{edition}" placeholder="e.g., 1.0, 2.1">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="publishMonth" class="form-label">Publication Month</label>
+                                <select class="form-control" id="publishMonth">
+                                    <option value="">Select Month (Optional)</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i> Optional - Select the publication month
+                                </p>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="publishYear" class="form-label">
+                                    Publication Year <span class="required-indicator">*</span>
+                                </label>
+                                <select class="form-control" id="publishYear" required>
+                                    <option value="">Select Year</option>
+                                </select>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i> Required - Select the publication year
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="noOfPages" class="form-label">Number of Pages</label>
+                            <input type="number" class="form-control" id="noOfPages" th:field="*{noOfPages}" placeholder="Number of pages" min="1" readonly>
+                            <p class="info-text">
+                                <i class="bi bi-lock"></i> Page count cannot be changed
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes" class="form-label">Notes / Description</label>
+                            <textarea class="form-control" id="notes" th:field="*{notes}" placeholder="Add any additional notes, description, or comments about this document..."></textarea>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <!-- Title , Product Code  and Edition -->
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Title <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="title" name="title"
-                                       th:value="${document.title}" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
 
-                                <div class="form-hint text-muted">Title cannot be changed</div>
-                                <p th:errors="*{title}" class="text-danger form-hint"></p>
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Product Code <span class="text-danger">*</span></label>
-                                <input class="form-control" th:field="*{productCode}" type="text" required/>
-                                <p th:errors="*{productCode}" class="text-danger form-hint"></p>
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label">Edition</label>
-                                <input class="form-control" th:field="*{edition}" type="text"/>
-                            </div>
+                    <!-- Tags Section -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="bi bi-tags"></i>
+                            Tags (Optional)
                         </div>
 
-                        <!-- Publish Date ,  Number of Pages-->
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Publication Date</label>
-                                <input class="form-control" th:field="*{publishDate}" type="date"/>
+                        <div class="form-group">
+                            <label class="form-label">Create New Tag</label>
+                            <p class="info-text">
+                                <i class="bi bi-info-circle"></i>
+                                Enter a tag name (lowercase, no spaces) and press Enter or click Add
+                            </p>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" class="form-control" id="newTagInput" placeholder="Enter tag name (e.g., manual, technical)" style="flex: 1;">
+                                <button type="button" class="btn-custom btn-primary-custom" id="addTagBtn" style="padding: 12px 24px;">
+                                    <i class="bi bi-plus-circle"></i> Add
+                                </button>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Number of Pages</label>
-                                <input class="form-control" th:field="*{noOfPages}" type="number" min="1"/>
-                            </div>
+                            <div class="error-message" id="tagErrorMessage"></div>
                         </div>
 
-                        <!-- Notes -->
-                        <div class="row">
-                            <div class="mb-3">
-                                <label class="form-label">Notes</label>
-                                <textarea class="form-control" th:field="*{notes}" rows="2"
-                                          placeholder="Add any additional notes about this document..."></textarea>
-                            </div>
-                        </div>
-
-
-                        <div class="d-flex flex-row gap-5">
-                            <!-- Tags Field -->
-                            <div class="col-md-6 mb-3 ">
-                                <label class="form-label">
-                                    <i class="bi bi-tags"></i> Tags (Optional)
-                                </label>
-                                <input class="form-control" type="text" id="tagInput"
-                                       placeholder="Type a tag and press Enter"
-                                       onkeypress="handleTagInput(event, 'tags')"/>
-                                <small class="tag-hint">
-                                    <i class="bi bi-info-circle"></i> Press Enter to add tags
-                                </small>
-
-                                <!-- Existing tags (clickable) -->
-                                <div class="existing-tags" th:if="${allTags != null and !allTags.isEmpty()}">
-                                    <small class="text-muted">Click to add existing tags:</small>
-                                    <div th:each="tag, iterStat : ${allTags}" th:if="${iterStat.index < 5}">
-        <span class="existing-tag-item"
-              th:text="${tag.tagName}"
-              th:attr="data-tag-name=${tag.tagName}"
-              onclick="addExistingTagFromData(this)"></span>
-                                    </div>
+                        <div class="form-group">
+                            <label class="form-label">Select Existing Tags</label>
+                            <p class="info-text">
+                                <i class="bi bi-info-circle"></i>
+                                Click on tags to select/deselect them
+                            </p>
+                            <div class="selection-area-flex" id="tagsSelectionArea">
+                                <div th:if="${allTags == null or allTags.isEmpty()}" class="empty-state">
+                                    No existing tags available
                                 </div>
-
-
-                                <div class="tag-container" id="tagsContainer"></div>
-                            </div>
-
-                            <!-- Classifications Field -->
-                            <div class=" col-md-6 mb-3">
-                                <label class="form-label">
-                                    <i class="bi bi-folder"></i> Classifications (Optional)
-                                </label>
-                                <input class="form-control" type="text" id="classificationInput"
-                                       placeholder="Type a classification and press Enter"
-                                       onkeypress="handleClassificationInput(event)"/>
-                                <small class="tag-hint">
-                                    <i class="bi bi-info-circle"></i> Press Enter to add classifications
-                                </small>
-
-                                <!-- Existing classifications (clickable) -->
-                                <div class="existing-tags"
-                                     th:if="${allClassifications != null and !allClassifications.isEmpty()}">
-                                    <small class="text-muted">Click to add existing classifications:</small>
-                                    <div th:each="classification, iterStat : ${allClassifications}" th:if="${iterStat.index < 5}">
-        <span class="existing-tag-item existing-classification-item"
-              th:text="${classification.classificationName}"
-              th:attr="data-classification-name=${classification.classificationName}"
-              onclick="addExistingClassificationFromData(this)"></span>
-                                    </div>
+                                <div th:each="tag : ${allTags}" class="selection-item-flex" th:attr="data-tag-name=${tag.tagName}">
+                                    <input type="checkbox" class="selection-checkbox tag-checkbox" th:attr="data-tag-name=${tag.tagName}" style="display: none;">
+                                    <span class="selection-label" th:text="${tag.tagName}">Tag Name</span>
                                 </div>
-
-
-                                <div class="tag-container" id="classificationsContainer"></div>
                             </div>
                         </div>
 
-                        <!-- Form Actions -->
-                        <div class="form-actions">
-                            <button class="btn btn-primary-custom btn-primary" type="submit">
-                                <i class="bi bi-save me-2"></i> Save Changes
-                            </button>
-                            <a th:href="@{/documents}" class="btn btn-secondary">
-                                <i class="bi bi-x-circle me-2"></i> Cancel
-                            </a>
+                        <div class="form-group">
+                            <label class="form-label">Selected Tags</label>
+                            <div class="selected-items-container" id="selectedTagsContainer">
+                                <div class="empty-state">No tags selected</div>
+                            </div>
                         </div>
+                    </div>
+
+                    <!-- Classifications Section -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="bi bi-folder"></i>
+                            Classifications (Optional)
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Select Existing Classifications</label>
+                            <p class="info-text">
+                                <i class="bi bi-info-circle"></i>
+                                Click on classifications to select/deselect them
+                            </p>
+                            <div class="selection-area-flex" id="classificationsSelectionArea">
+                                <div th:if="${allClassifications == null or allClassifications.isEmpty()}" class="empty-state">
+                                    No existing classifications available
+                                </div>
+                                <div th:each="classification : ${allClassifications}" class="selection-item-flex" th:attr="data-classification-name=${classification.classificationName}">
+                                    <input type="checkbox" class="selection-checkbox classification-checkbox" th:attr="data-classification-name=${classification.classificationName}" style="display: none;">
+                                    <span class="selection-label" th:text="${classification.classificationName}">Classification Name</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Selected Classifications</label>
+                            <div class="selected-items-container" id="selectedClassificationsContainer">
+                                <div class="empty-state">No classifications selected</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Navigation -->
+                <div class="form-navigation">
+                    <div>
+                        <button type="button" class="btn-custom btn-secondary-custom" id="cancelBtn">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-custom btn-primary-custom" id="saveBtn">
+                            <i class="bi bi-save"></i> Save Changes
+                        </button>
                     </div>
                 </div>
             </form>
@@ -528,45 +732,119 @@
     </div>
 </div>
 
+<!-- Unsaved Changes Confirmation Modal -->
+<div class="custom-modal-overlay" id="confirmationModal">
+    <div class="custom-modal">
+        <div class="modal-header-custom">
+            <div class="modal-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="modal-title-custom">
+                <h3>Unsaved Changes</h3>
+                <p>You have unsaved changes that will be lost</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeConfirmationModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="modal-body-custom">
+            <p>Are you sure you want to leave this page? All your changes will be lost if you continue.</p>
+        </div>
+        <div class="modal-footer-custom">
+            <button type="button" class="modal-btn modal-btn-secondary" onclick="closeConfirmationModal()">
+                Continue Editing
+            </button>
+            <button type="button" class="modal-btn modal-btn-danger" id="confirmCancelBtn">
+                Yes, Discard Changes
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
 <script th:inline="javascript">
-    // ====== Store tags and classifications ======
-    let tags = [];
-    let classifications = [];
-    const documentId = /*[[${document.id}]]*/ null;
+    // ============== STATE MANAGEMENT ==============
+    let formChanged = false;
+    let selectedTags = [];
+    let selectedClassifications = [];
+    let allExistingTags = [];
+    let originalFormData = {};
 
-    // ====== Load existing data on page load ======
-    window.addEventListener('load', function () {
+    // ============== INITIALIZATION ==============
+    window.addEventListener('load', function() {
+        // Populate year dropdown
+        populateYearDropdown();
+
+        // Load existing tags from database
         const existingTagsStr = /*[[${document.tagNames}]]*/ '';
         const existingClassificationsStr = /*[[${document.classificationNames}]]*/ '';
+        const publishDate = /*[[${document.publishDate}]]*/ '';
 
         console.log('=== PAGE LOAD ===');
-        console.log('Document ID:', documentId);
         console.log('Existing tags:', existingTagsStr);
         console.log('Existing classifications:', existingClassificationsStr);
+        console.log('Publish date:', publishDate);
+
+        // Parse publish date if exists
+        if (publishDate && publishDate.trim() !== '') {
+            const dateObj = new Date(publishDate);
+            if (!isNaN(dateObj.getTime())) {
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const year = dateObj.getFullYear();
+                document.getElementById('publishMonth').value = month;
+                document.getElementById('publishYear').value = year;
+            }
+        }
 
         // Load existing tags
         if (existingTagsStr && existingTagsStr.trim() !== '') {
-            tags = existingTagsStr.split(',')
+            selectedTags = existingTagsStr.split(',')
                 .map(tag => tag.trim())
                 .filter(tag => tag !== '');
-            console.log('Loaded tags array:', tags);
+            console.log('Loaded tags:', selectedTags);
         }
 
         // Load existing classifications
         if (existingClassificationsStr && existingClassificationsStr.trim() !== '') {
-            classifications = existingClassificationsStr.split(',')
+            selectedClassifications = existingClassificationsStr.split(',')
                 .map(c => c.trim())
                 .filter(c => c !== '');
-            console.log('Loaded classifications array:', classifications);
+            console.log('Loaded classifications:', selectedClassifications);
         }
 
-        renderTags();
-        renderClassifications();
+        // Store all existing tags for validation
+        document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+            allExistingTags.push(checkbox.getAttribute('data-tag-name').toLowerCase());
+        });
+
+        // Mark selected tags in UI
+        selectedTags.forEach(tag => {
+            const item = document.querySelector(`.selection-item-flex[data-tag-name="${tag}"]`);
+            if (item) {
+                item.classList.add('selected');
+                const checkbox = item.querySelector('.tag-checkbox');
+                if (checkbox) checkbox.checked = true;
+            }
+        });
+
+        // Mark selected classifications in UI
+        selectedClassifications.forEach(classification => {
+            const item = document.querySelector(`.selection-item-flex[data-classification-name="${classification}"]`);
+            if (item) {
+                item.classList.add('selected');
+                const checkbox = item.querySelector('.classification-checkbox');
+                if (checkbox) checkbox.checked = true;
+            }
+        });
+
+        renderSelectedTags();
+        renderSelectedClassifications();
+
+        // Store original form data
+        captureOriginalFormData();
 
         // Auto-dismiss alerts after 5 seconds
         setTimeout(() => {
@@ -578,133 +856,468 @@
         }, 5000);
     });
 
-    // ====== Handle manual tag input ======
-    function handleTagInput(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const input = document.getElementById('tagInput');
-            const value = input.value.trim();
-            if (value && !tags.includes(value)) {
-                tags.push(value);
-                renderTags();
-                input.value = '';
-                console.log('Added tag:', value, '| All tags:', tags);
-            }
+    function captureOriginalFormData() {
+        originalFormData = {
+            title: document.getElementById('title').value,
+            productCode: document.getElementById('productCode').value,
+            edition: document.getElementById('edition').value,
+            publishMonth: document.getElementById('publishMonth').value,
+            publishYear: document.getElementById('publishYear').value,
+            notes: document.getElementById('notes').value,
+            tags: [...selectedTags],
+            classifications: [...selectedClassifications]
+        };
+    }
+
+    function hasFormChanged() {
+        const currentData = {
+            title: document.getElementById('title').value,
+            productCode: document.getElementById('productCode').value,
+            edition: document.getElementById('edition').value,
+            publishMonth: document.getElementById('publishMonth').value,
+            publishYear: document.getElementById('publishYear').value,
+            notes: document.getElementById('notes').value,
+            tags: [...selectedTags],
+            classifications: [...selectedClassifications]
+        };
+
+        return JSON.stringify(originalFormData) !== JSON.stringify(currentData);
+    }
+
+    // Populate year dropdown
+    function populateYearDropdown() {
+        const yearSelect = document.getElementById('publishYear');
+        const currentYear = new Date().getFullYear();
+
+        // Add years from current year down to 1900, then from current year up to 2100
+        // This puts recent years first for better UX
+        for (let year = currentYear; year >= 1900; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        }
+
+        for (let year = currentYear + 1; year <= 2100; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
         }
     }
 
-    // ====== Handle manual classification input ======
-    function handleClassificationInput(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            const input = document.getElementById('classificationInput');
-            const value = input.value.trim();
-            if (value && !classifications.includes(value)) {
-                classifications.push(value);
-                renderClassifications();
-                input.value = '';
-                console.log('Added classification:', value, '| All classifications:', classifications);
-            }
+    // ============== TAGS HANDLING ==============
+    const newTagInput = document.getElementById('newTagInput');
+    const addTagBtn = document.getElementById('addTagBtn');
+    const tagErrorMessage = document.getElementById('tagErrorMessage');
+
+    addTagBtn.addEventListener('click', addNewTag);
+
+    newTagInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addNewTag();
         }
-    }
-
-    // ====== Add existing tag/classification by clicking ======
-    function addExistingTagFromData(element) {
-        const tagName = element.getAttribute('data-tag-name');
-        if (tagName && !tags.includes(tagName)) {
-            tags.push(tagName);
-            renderTags();
-        }
-    }
-
-    function addExistingClassificationFromData(element) {
-        const classificationName = element.getAttribute('data-classification-name');
-        if (classificationName && !classifications.includes(classificationName)) {
-            classifications.push(classificationName);
-            renderClassifications();
-        }
-    }
-
-    // ====== Render Tags ======
-    function renderTags() {
-        const container = document.getElementById('tagsContainer');
-        container.innerHTML = '';
-
-        tags.forEach(tag => {
-            const chip = document.createElement('span');
-            chip.className = 'tag-chip animate-added';
-            chip.innerHTML = `${tag} <span class="remove-tag" onclick="removeTag('${tag}')">&times;</span>`;
-            container.appendChild(chip);
-            setTimeout(() => chip.classList.remove('animate-added'), 500);
-        });
-
-        // hidden input for form submission
-        let hidden = document.getElementById('tagNamesField');
-        if (!hidden) {
-            hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.id = 'tagNamesField';
-            hidden.name = 'tagNames';
-            document.getElementById('editForm').appendChild(hidden);
-        }
-        hidden.value = tags.join(',');
-    }
-
-    // ====== Render Classifications ======
-    function renderClassifications() {
-        const container = document.getElementById('classificationsContainer');
-        container.innerHTML = '';
-
-        classifications.forEach(c => {
-            const chip = document.createElement('span');
-            chip.className = 'tag-chip classification animate-added';
-            chip.innerHTML = `${c} <span class="remove-tag" onclick="removeClassification('${c}')">&times;</span>`;
-            container.appendChild(chip);
-            setTimeout(() => chip.classList.remove('animate-added'), 500);
-        });
-
-        // hidden input for form submission
-        let hidden = document.getElementById('classificationNamesField');
-        if (!hidden) {
-            hidden = document.createElement('input');
-            hidden.type = 'hidden';
-            hidden.id = 'classificationNamesField';
-            hidden.name = 'classificationNames';
-            document.getElementById('editForm').appendChild(hidden);
-        }
-        hidden.value = classifications.join(',');
-    }
-
-    // ====== Remove Tag / Classification ======
-    function removeTag(tag) {
-        tags = tags.filter(t => t !== tag);
-        renderTags();
-    }
-
-    function removeClassification(c) {
-        classifications = classifications.filter(x => x !== c);
-        renderClassifications();
-    }
-
-    // ====== Ensure hidden fields updated before submit ======
-    document.getElementById('editForm').addEventListener('submit', function (e) {
-        renderTags();
-        renderClassifications();
-        console.log('=== FORM SUBMIT ===');
-        console.log('Final tags:', document.getElementById('tagNamesField').value);
-        console.log('Final classifications:', document.getElementById('classificationNamesField').value);
     });
-</script>
-<script>
-    function goBack() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
-            window.history.back();
+
+    newTagInput.addEventListener('input', function() {
+        hideTagError();
+    });
+
+    function addNewTag() {
+        let tagName = newTagInput.value.trim();
+
+        if (!tagName) {
+            showTagError('<i class="bi bi-exclamation-circle"></i> Please enter a tag name');
+            return;
+        }
+
+        // Check for spaces
+        if (tagName.includes(' ')) {
+            showTagError('<i class="bi bi-exclamation-circle"></i> Spaces are not allowed in tag names');
+            return;
+        }
+
+        // Convert to lowercase
+        tagName = tagName.toLowerCase();
+
+        // Check if tag exists
+        if (allExistingTags.includes(tagName)) {
+            const existingItem = Array.from(document.querySelectorAll('.selection-item-flex[data-tag-name]')).find(
+                item => item.getAttribute('data-tag-name').toLowerCase() === tagName
+            );
+
+            if (existingItem) {
+                blinkItem(existingItem);
+                showTagError('<i class="bi bi-info-circle"></i> Tag already exists in available tags');
+
+                const checkbox = existingItem.querySelector('.tag-checkbox');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    if (!selectedTags.includes(tagName)) {
+                        selectedTags.push(tagName);
+                        existingItem.classList.add('selected');
+                        renderSelectedTags();
+                        formChanged = true;
+                    }
+                }
+            }
+            newTagInput.value = '';
+            return;
+        }
+
+        // Check if already selected
+        if (selectedTags.some(t => t.toLowerCase() === tagName)) {
+            const selectedChip = Array.from(document.querySelectorAll('#selectedTagsContainer .selected-chip')).find(
+                chip => chip.textContent.trim().replace('×', '').trim().toLowerCase() === tagName
+            );
+            if (selectedChip) {
+                blinkItem(selectedChip);
+                showTagError('<i class="bi bi-info-circle"></i> Tag is already selected');
+            }
+            newTagInput.value = '';
+            return;
+        }
+
+        // Add new tag
+        selectedTags.push(tagName);
+        allExistingTags.push(tagName);
+
+        const tagsArea = document.getElementById('tagsSelectionArea');
+        const emptyState = tagsArea.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        const newTagItem = document.createElement('div');
+        newTagItem.className = 'selection-item-flex selected';
+        newTagItem.setAttribute('data-tag-name', tagName);
+        newTagItem.innerHTML = `
+            <input type="checkbox" class="selection-checkbox tag-checkbox" data-tag-name="${tagName}" checked style="display: none;">
+            <span class="selection-label">${tagName}</span>
+        `;
+
+        newTagItem.addEventListener('click', function() {
+            const checkbox = this.querySelector('.tag-checkbox');
+            const tagName = this.getAttribute('data-tag-name');
+
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                this.classList.remove('selected');
+                selectedTags = selectedTags.filter(t => t !== tagName);
+            } else {
+                checkbox.checked = true;
+                this.classList.add('selected');
+                if (!selectedTags.includes(tagName)) {
+                    selectedTags.push(tagName);
+                }
+            }
+            renderSelectedTags();
+            formChanged = true;
+        });
+
+        tagsArea.appendChild(newTagItem);
+        renderSelectedTags();
+        newTagInput.value = '';
+        formChanged = true;
+
+        setTimeout(() => {
+            newTagItem.style.animation = 'chipFadeIn 0.5s';
+        }, 0);
+    }
+
+    function showTagError(message) {
+        tagErrorMessage.innerHTML = message;
+        tagErrorMessage.classList.add('show');
+        setTimeout(() => {
+            hideTagError();
+        }, 3000);
+    }
+
+    function hideTagError() {
+        tagErrorMessage.classList.remove('show');
+    }
+
+    document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item => {
+        item.addEventListener('click', function() {
+            const checkbox = this.querySelector('.tag-checkbox');
+            const tagName = this.getAttribute('data-tag-name');
+
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                this.classList.remove('selected');
+                selectedTags = selectedTags.filter(t => t !== tagName);
+            } else {
+                checkbox.checked = true;
+                this.classList.add('selected');
+                if (!selectedTags.includes(tagName)) {
+                    selectedTags.push(tagName);
+                }
+            }
+            renderSelectedTags();
+            formChanged = true;
+        });
+    });
+
+    function renderSelectedTags() {
+        const container = document.getElementById('selectedTagsContainer');
+        container.innerHTML = '';
+
+        if (selectedTags.length === 0) {
+            container.innerHTML = '<div class="empty-state">No tags selected</div>';
         } else {
-            // Fallback if there's no referrer (like direct load)
+            selectedTags.forEach(tag => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip';
+                chip.innerHTML = `
+                    ${tag}
+                    <span class="chip-remove" onclick="removeSelectedTag('${tag}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        document.getElementById('tagNamesField').value = selectedTags.join(',');
+    }
+
+    function removeSelectedTag(tagName) {
+        selectedTags = selectedTags.filter(t => t !== tagName);
+
+        const checkbox = document.querySelector(`.tag-checkbox[data-tag-name="${tagName}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedTags();
+        formChanged = true;
+    }
+
+    // ============== CLASSIFICATIONS HANDLING ==============
+    document.querySelectorAll('.selection-item-flex[data-classification-name]').forEach(item => {
+        item.addEventListener('click', function() {
+            const checkbox = this.querySelector('.classification-checkbox');
+            const classificationName = this.getAttribute('data-classification-name');
+
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                this.classList.remove('selected');
+                selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
+            } else {
+                checkbox.checked = true;
+                this.classList.add('selected');
+                if (!selectedClassifications.includes(classificationName)) {
+                    selectedClassifications.push(classificationName);
+                }
+            }
+            renderSelectedClassifications();
+            formChanged = true;
+        });
+    });
+
+    function renderSelectedClassifications() {
+        const container = document.getElementById('selectedClassificationsContainer');
+        container.innerHTML = '';
+
+        if (selectedClassifications.length === 0) {
+            container.innerHTML = '<div class="empty-state">No classifications selected</div>';
+        } else {
+            selectedClassifications.forEach(classification => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip classification-chip';
+                chip.innerHTML = `
+                    ${classification}
+                    <span class="chip-remove" onclick="removeSelectedClassification('${classification}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        document.getElementById('classificationNamesField').value = selectedClassifications.join(',');
+    }
+
+    function removeSelectedClassification(classificationName) {
+        selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
+
+        const checkbox = document.querySelector(`.classification-checkbox[data-classification-name="${classificationName}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedClassifications();
+        formChanged = true;
+    }
+
+    // ============== BLINK ANIMATION ==============
+    function blinkItem(element) {
+        element.classList.add('blink');
+        setTimeout(() => {
+            element.classList.remove('blink');
+        }, 1800);
+    }
+
+    // ============== NAVIGATION PROTECTION ==============
+    let isSubmitting = false;
+    let navigationConfirmed = false;
+
+    // Track form changes
+    document.getElementById('editForm').addEventListener('input', function() {
+        formChanged = true;
+    });
+
+    document.getElementById('editForm').addEventListener('change', function() {
+        formChanged = true;
+    });
+
+    // Cancel button handler
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        if (hasFormChanged()) {
+            document.getElementById('confirmationModal').classList.add('show');
+        } else {
             window.location.href = '/documents';
         }
+    });
+
+    function closeConfirmationModal() {
+        document.getElementById('confirmationModal').classList.remove('show');
+    }
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+        formChanged = false;
+        navigationConfirmed = true;
+        isSubmitting = true;
+        closeConfirmationModal();
+        window.location.href = '/documents';
+    });
+
+    // Prevent accidental navigation
+    window.addEventListener('beforeunload', function(e) {
+        if (hasFormChanged() && !isSubmitting) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+    });
+
+    // Intercept link clicks
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.hasAttribute('data-bs-toggle')) {
+            const isFormButton = link.closest('.form-navigation') || link.closest('.edit-content');
+
+            if (!isFormButton && hasFormChanged() && !isSubmitting) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const targetUrl = link.href;
+                showNavigationConfirmation(targetUrl);
+            }
+        }
+    }, true);
+
+    // Handle browser back button
+    window.history.pushState(null, '', window.location.href);
+
+    window.addEventListener('popstate', function(e) {
+        if (hasFormChanged() && !isSubmitting && !navigationConfirmed) {
+            window.history.pushState(null, '', window.location.href);
+            showNavigationConfirmation('back');
+        }
+    });
+
+    function showNavigationConfirmation(targetUrl) {
+        const modal = document.getElementById('confirmationModal');
+        modal.classList.add('show');
+
+        const confirmBtn = document.getElementById('confirmCancelBtn');
+        confirmBtn.onclick = function() {
+            navigationConfirmed = true;
+            formChanged = false;
+            isSubmitting = true;
+            closeConfirmationModal();
+
+            if (targetUrl === 'back') {
+                window.history.back();
+            } else {
+                window.location.href = targetUrl;
+            }
+        };
+    }
+
+    // ============== FORM SUBMISSION ==============
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        // Validate required fields
+        const title = document.getElementById('title').value.trim();
+        const productCode = document.getElementById('productCode').value.trim();
+        const publishYear = document.getElementById('publishYear').value.trim();
+
+        if (!title) {
+            e.preventDefault();
+            showCustomAlert('Document Title is required.');
+            return false;
+        }
+
+        if (!productCode) {
+            e.preventDefault();
+            showCustomAlert('Product Code is required.');
+            return false;
+        }
+
+        if (!publishYear) {
+            e.preventDefault();
+            showCustomAlert('Publication Year is required.');
+            return false;
+        }
+
+        // Set month and year values
+        document.getElementById('publishMonthField').value = document.getElementById('publishMonth').value;
+        document.getElementById('publishYearField').value = document.getElementById('publishYear').value;
+
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        formChanged = false;
+        isSubmitting = true;
+        return true;
+    });
+
+    function showCustomAlert(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        alertDiv.innerHTML = `
+            <i class="bi bi-exclamation-circle-fill" style="font-size: 20px;"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
     }
 </script>
+
 </body>
 </html>

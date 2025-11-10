@@ -22,8 +22,9 @@ public class StoredProcedureRepository {
         this.entityManager = entityManager;
     }
 
+    //TODO: change datatype of publishDate to string
     public Long uploadDocument(String title, String productCode, String edition,  // ✅ Changed return type from Long to Integer
-                                  LocalDate publishDate, Integer noOfPages, String notes,
+                                  String publishDate, Integer noOfPages, String notes,
                                   String filePath, Long uploaderUserId,
                                   String tagNames, String classificationNames) {
 
@@ -34,7 +35,7 @@ public class StoredProcedureRepository {
         query.registerStoredProcedureParameter("title", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("productCode", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("edition", String.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("publishDate", LocalDate.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter("publishDate", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("noOfPages", Integer.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("notes", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("filePath", String.class, ParameterMode.IN);
@@ -92,7 +93,7 @@ public class StoredProcedureRepository {
     }
 
     public boolean updateDocument(Long documentId, String title, String productCode,
-                                  String edition, LocalDate publishDate, Integer noOfPages,
+                                  String edition, String publishDate, Integer noOfPages,
                                   String notes, String tagNames, String classificationNames) {
 
         logger.info("Executing stored procedure: sp_UpdateDocument for document ID: {}", documentId);
@@ -103,7 +104,7 @@ public class StoredProcedureRepository {
         query.registerStoredProcedureParameter("title", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("productCode", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("edition", String.class, ParameterMode.IN);
-        query.registerStoredProcedureParameter("publishDate", LocalDate.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter("publishDate", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("noOfPages", Integer.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("notes", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("tagNames", String.class, ParameterMode.IN);

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Viewer</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <script th:if="${documentId}" th:inline="javascript">
         window.documentId = /*[[${documentId}]]*/ null;
         window.userRole = /*[[${userRole}]]*/ 'Viewer'; // Get user role from backend
@@ -421,6 +423,10 @@
             color: white;
         }
 
+        .modal-icon.danger {
+            background: #f56565;
+        }
+
         .modal-title-large {
             font-size: 20px;
             font-weight: 600;
@@ -468,7 +474,7 @@
             justify-content: flex-end;
         }
 
-        .btn-cancel, .btn-primary {
+        .btn-cancel, .btn-primary, .btn-danger {
             padding: 10px 20px;
             border-radius: 6px;
             font-size: 14px;
@@ -494,6 +500,15 @@
 
         .btn-primary:hover {
             background: #3367d6;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
         }
 
         /* Notification */
@@ -554,7 +569,7 @@
         </div>
     </div>
     <div class="nav-right">
-        <button class="nav-btn" id="bookmarkBtn" onclick="showBookmarkModal()">
+        <button class="nav-btn" id="bookmarkBtn" onclick="handleBookmarkClick()">
             <i class="far fa-bookmark" id="bookmarkIcon"></i>
             <span id="bookmarkBtnText">Bookmark Document</span>
         </button>
@@ -592,10 +607,10 @@
             </button>
         </div>
 
-        <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input type="text" placeholder="Search in document...">
-        </div>
+        <!--        <div class="search-box">-->
+        <!--            <i class="fas fa-search"></i>-->
+        <!--            <input type="text" placeholder="Search in document...">-->
+        <!--        </div>-->
     </div>
 </div>
 
@@ -676,6 +691,27 @@
     </div>
 </div>
 
+<!-- Remove Bookmark Confirmation Modal -->
+<div class="modal" id="removeBookmarkModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Remove Bookmark</h2>
+            <button class="modal-close" onclick="closeRemoveBookmarkModal()">×</button>
+        </div>
+        <div class="modal-body modal-body-center">
+            <div class="modal-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="modal-title-large">Remove This Bookmark?</h3>
+            <p class="modal-text">Are you sure you want to remove this bookmark? This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeRemoveBookmarkModal()">Cancel</button>
+            <button class="btn-danger" onclick="confirmRemoveBookmark()">Yes, Remove Bookmark</button>
+        </div>
+    </div>
+</div>
+
 <!-- Download Modal -->
 <div class="modal" id="downloadModal">
     <div class="modal-content">
@@ -712,6 +748,9 @@
 </script>
 
 <script>
+    // ==================== GLOBAL BOOKMARK STATE ====================
+    let isCurrentlyBookmarked = false;
+
     // ==================== DATE FORMATTING UTILITY ====================
     /**
      * Formats a date string to dd-MMM-yyyy format (e.g., "06-Oct-2024")
@@ -808,37 +847,204 @@
         }
     });
 
-    // ✅ Check if document is already bookmarked
+    // ==================== BOOKMARK FUNCTIONALITY ====================
+
+    // Check if the document is already bookmarked (runs on page load)
     async function checkIfBookmarked() {
+        if (!documentId) {
+            console.error("Document ID not found!");
+            return;
+        }
+
         try {
-            const response = await fetch(`${API_BASE_URL}/is-bookmarked/${documentId}`);
+            // Calls backend endpoint: /bookmark/check/{documentId}
+            const response = await fetch(`/bookmark/check/${documentId}`);
+
             if (response.ok) {
-                const isBookmarked = await response.json();
-                updateBookmarkButton(isBookmarked);
+                const bookmarked = await response.json();
+                isCurrentlyBookmarked = bookmarked;
+                updateBookmarkButton(bookmarked);
+            } else {
+                console.error("Failed to check bookmark status:", response.status);
             }
         } catch (error) {
-            console.error('Error checking bookmark status:', error);
+            console.error("Error checking bookmark status:", error);
         }
     }
 
-    // ✅ Update bookmark button based on status
+    // Update the bookmark button based on bookmark status
     function updateBookmarkButton(isBookmarked) {
-        const bookmarkBtn = document.getElementById('bookmarkBtn');
-        const bookmarkIcon = document.getElementById('bookmarkIcon');
-        const bookmarkBtnText = document.getElementById('bookmarkBtnText');
+        const bookmarkBtn = document.getElementById("bookmarkBtn");
+        const bookmarkIcon = document.getElementById("bookmarkIcon");
+        const bookmarkBtnText = document.getElementById("bookmarkBtnText");
+
+        if (!bookmarkBtn || !bookmarkIcon || !bookmarkBtnText) return;
 
         if (isBookmarked) {
-            bookmarkBtn.disabled = true;
-            bookmarkBtn.style.cursor = 'not-allowed';
-            bookmarkIcon.className = 'fas fa-bookmark'; // Solid bookmark icon
-            bookmarkBtnText.textContent = 'Already Bookmarked';
-        } else {
+            // Already bookmarked - show filled icon and "Remove Bookmark" text
             bookmarkBtn.disabled = false;
             bookmarkBtn.style.cursor = 'pointer';
-            bookmarkIcon.className = 'far fa-bookmark'; // Regular bookmark icon
-            bookmarkBtnText.textContent = 'Bookmark Document';
+            bookmarkIcon.className = "fas fa-bookmark"; // filled icon
+            bookmarkIcon.style.color = "#f59e0b"; // amber/yellow color
+            bookmarkBtnText.textContent = 'Remove Bookmark';
+        } else {
+            // Not bookmarked yet - show outline icon
+            bookmarkBtn.disabled = false;
+            bookmarkBtn.style.cursor = "pointer";
+            bookmarkIcon.className = "far fa-bookmark"; // outline icon
+            bookmarkIcon.style.color = ""; // default color
+            bookmarkBtnText.textContent = "Bookmark Document";
         }
     }
+
+    // Handle bookmark button click - decides whether to add or remove
+    function handleBookmarkClick() {
+        if (isCurrentlyBookmarked) {
+            // Show remove confirmation modal
+            showRemoveBookmarkModal();
+        } else {
+            // Show add bookmark modal
+            showBookmarkModal();
+        }
+    }
+
+    // Show Bookmark Modal (for adding bookmark)
+    function showBookmarkModal() {
+        const modal = document.getElementById("bookmarkModal");
+        if (modal) {
+            modal.classList.add("active");
+            document.getElementById("bookmarkName").value = "";
+        }
+    }
+
+    // Close Bookmark Modal
+    function closeBookmarkModal() {
+        const modal = document.getElementById("bookmarkModal");
+        if (modal) modal.classList.remove("active");
+    }
+
+    // Show Remove Bookmark Confirmation Modal
+    function showRemoveBookmarkModal() {
+        const modal = document.getElementById("removeBookmarkModal");
+        if (modal) {
+            modal.classList.add("active");
+        }
+    }
+
+    // Close Remove Bookmark Modal
+    function closeRemoveBookmarkModal() {
+        const modal = document.getElementById("removeBookmarkModal");
+        if (modal) modal.classList.remove("active");
+    }
+
+    // Save Bookmark
+    async function saveBookmark() {
+        const name = document.getElementById("bookmarkName").value.trim();
+        if (!name) {
+            showNotification("Please enter a bookmark name", "warning");
+            return;
+        }
+
+        // ✅ Read CSRF token and header name from meta tags
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+        try {
+            const response = await fetch(`/documents/bookmark/${documentId}?page=${pageNum}&name=${encodeURIComponent(name)}`, {
+                method: "POST",
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const errorText = await response.text();
+
+            if (response.ok) {
+                closeBookmarkModal();
+                showNotification("Bookmark saved successfully!", "success");
+                isCurrentlyBookmarked = true;
+                updateBookmarkButton(true);
+            } else if (
+                response.status === 409 ||
+                errorText.toLowerCase().includes("already") ||
+                errorText.toLowerCase().includes("exist")
+            ) {
+                closeBookmarkModal();
+                showNotification("This document is already bookmarked", "warning");
+                isCurrentlyBookmarked = true;
+                updateBookmarkButton(true);
+            } else {
+                console.error("Bookmark save failed:", errorText);
+                showNotification("Failed to save bookmark", "error");
+            }
+        } catch (error) {
+            console.error("Error saving bookmark:", error);
+            showNotification("Failed to save bookmark", "error");
+        }
+    }
+
+    // Confirm Remove Bookmark
+    async function confirmRemoveBookmark() {
+        if (!documentId) {
+            console.error("Document ID not found!");
+            showNotification("Cannot remove bookmark: Document ID missing", "error");
+            return;
+        }
+
+        // ✅ Read CSRF token and header name from meta tags
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute("content");
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute("content");
+
+        if (!csrfToken || !csrfHeader) {
+            console.error("CSRF token not found!");
+            showNotification("Security error: Please refresh the page", "error");
+            return;
+        }
+
+        try {
+            console.log("Attempting to delete bookmark for document:", documentId);
+
+            const response = await fetch(`/bookmarks/document/${documentId}`, {
+                method: "DELETE",
+                headers: {
+                    [csrfHeader]: csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log("Delete response status:", response.status);
+
+            if (response.ok) {
+                const responseText = await response.text();
+                console.log("Delete response:", responseText);
+
+                closeRemoveBookmarkModal();
+                showNotification("Bookmark removed successfully!", "success");
+                isCurrentlyBookmarked = false;
+                updateBookmarkButton(false);
+            } else {
+                const errorText = await response.text();
+                console.error("Failed to remove bookmark. Status:", response.status, "Error:", errorText);
+
+                if (response.status === 404) {
+                    showNotification("Bookmark not found", "warning");
+                    // Update UI anyway since bookmark doesn't exist
+                    isCurrentlyBookmarked = false;
+                    updateBookmarkButton(false);
+                    closeRemoveBookmarkModal();
+                } else if (response.status === 403) {
+                    showNotification("You don't have permission to remove this bookmark", "error");
+                } else {
+                    showNotification("Failed to remove bookmark: " + errorText, "error");
+                }
+            }
+        } catch (error) {
+            console.error("Error removing bookmark:", error);
+            showNotification("Network error: Failed to remove bookmark", "error");
+        }
+    }
+
+    // ==================== DOCUMENT INFO ====================
 
     // ✅ CONNECTED TO BACKEND - Load document info (optional API call for dynamic data)
     async function loadDocumentInfo() {
@@ -889,6 +1095,8 @@
             tagsContainer.innerHTML = '<span>No tags</span>';
         }
     }
+
+    // ==================== PDF RENDERING ====================
 
     // Load PDF document
     async function loadDocument(id) {
@@ -983,7 +1191,8 @@
         ctx.restore();
     }
 
-    // Navigation
+    // ==================== NAVIGATION & ZOOM ====================
+
     function previousPage() {
         if (pageNum <= 1) return;
         pageNum--;
@@ -1027,119 +1236,8 @@
         }
     }
 
-    // ====== BOOKMARK FUNCTIONALITY ======
+    // ==================== DOWNLOAD FUNCTIONALITY ====================
 
-// Check if the document is already bookmarked (runs on page load)
-async function checkIfBookmarked() {
-    if (!documentId) {
-        console.error("Document ID not found!");
-        return;
-    }
-
-    try {
-        // Calls backend endpoint: /bookmark/check/{documentId}
-        const response = await fetch(`/bookmark/check/${documentId}`);
-
-        if (response.ok) {
-            const isBookmarked = await response.json();
-            updateBookmarkButton(isBookmarked);
-        } else {
-            console.error("Failed to check bookmark status:", response.status);
-        }
-    } catch (error) {
-        console.error("Error checking bookmark status:", error);
-    }
-}
-
-// Update the bookmark button based on bookmark status
-function updateBookmarkButton(isBookmarked) {
-    const bookmarkBtn = document.getElementById("bookmarkBtn");
-    const bookmarkIcon = document.getElementById("bookmarkIcon");
-    const bookmarkBtnText = document.getElementById("bookmarkBtnText");
-
-    if (!bookmarkBtn || !bookmarkIcon || !bookmarkBtnText) return;
-
-    if (isBookmarked) {
-        // Already bookmarked
-        bookmarkBtn.disabled = true;
-        bookmarkBtn.style.cursor = "not-allowed";
-        bookmarkIcon.className = "fas fa-bookmark text-warning"; // filled icon (yellow)
-        bookmarkBtnText.textContent = "Already Bookmarked";
-    } else {
-        // Not bookmarked yet
-        bookmarkBtn.disabled = false;
-        bookmarkBtn.style.cursor = "pointer";
-        bookmarkIcon.className = "far fa-bookmark"; // outline icon
-        bookmarkBtnText.textContent = "Bookmark Document";
-    }
-}
-
-// Show Bookmark Modal
-function showBookmarkModal() {
-    const bookmarkBtn = document.getElementById("bookmarkBtn");
-
-    // If already bookmarked → show message only
-    if (bookmarkBtn && bookmarkBtn.disabled) {
-        showNotification("This document is already bookmarked", "warning");
-        return;
-    }
-
-    const modal = document.getElementById("bookmarkModal");
-    if (modal) {
-        modal.classList.add("active");
-        document.getElementById("bookmarkName").value = "";
-    }
-}
-
-// Close Bookmark Modal
-function closeBookmarkModal() {
-    const modal = document.getElementById("bookmarkModal");
-    if (modal) modal.classList.remove("active");
-}
-
-// Save Bookmark
-async function saveBookmark() {
-    const name = document.getElementById("bookmarkName").value.trim();
-    if (!name) {
-        showNotification("Please enter a bookmark name", "warning");
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `/documents/bookmark/${documentId}?page=${pageNum}&name=${encodeURIComponent(name)}`,
-            { method: "POST" }
-        );
-
-        const errorText = await response.text();
-
-        if (response.ok) {
-            closeBookmarkModal();
-            showNotification("Bookmark saved successfully!", "success");
-            updateBookmarkButton(true);
-        } else if (
-            response.status === 409 ||
-            errorText.toLowerCase().includes("already") ||
-            errorText.toLowerCase().includes("exist")
-        ) {
-            closeBookmarkModal();
-            showNotification("This document is already bookmarked", "warning");
-            updateBookmarkButton(true);
-        } else {
-            console.error("Bookmark save failed:", errorText);
-            showNotification("Failed to save bookmark", "error");
-        }
-    } catch (error) {
-        console.error("Error saving bookmark:", error);
-        showNotification("Failed to save bookmark", "error");
-    }
-}
-
-
-
-
-
-    // Download Modal
     function showDownloadModal() {
         document.getElementById('downloadModal').classList.add('active');
     }
@@ -1178,7 +1276,8 @@ async function saveBookmark() {
         }
     }
 
-    // Utilities
+    // ==================== UTILITIES ====================
+
     function showLoading(show) {
         const spinner = document.getElementById('loadingSpinner');
         if (show) {
@@ -1208,7 +1307,16 @@ async function saveBookmark() {
         showNotification(message, 'error');
     }
 
-    // Keyboard shortcuts
+    function goBackToPrevious() {
+        if (document.referrer && document.referrer !== window.location.href) {
+            window.history.back();
+        } else {
+            window.location.href = '/documents';
+        }
+    }
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+
     document.addEventListener('keydown', function(e) {
         if (e.target.tagName === 'INPUT') return;
 
@@ -1242,65 +1350,102 @@ async function saveBookmark() {
         }
     });
 </script>
+
 <!-- ==================== SECURITY SCRIPT ==================== -->
 <script>
-    // Disable right click
-    document.addEventListener('contextmenu', e => e.preventDefault());
+    (function() {
+        // ========== CONFIG ==========
+        const BLUR_DURATION = 2000; // ms
+        const BLUR_INTENSITY = '12px';
+        const WARNING_TEXT = '⚠️ Screenshot or Snipping not allowed.';
 
-    // Disable drag
-    document.addEventListener('dragstart', e => e.preventDefault());
+        // ========== CREATE OVERLAY ==========
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        `;
+        overlay.innerText = WARNING_TEXT;
+        document.body.appendChild(overlay);
 
-    // Disable keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Ctrl + P, S, U
-        if (e.ctrlKey && ['p','s','u'].includes(e.key.toLowerCase())) {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('This action is disabled for security reasons.', 'warning');
+        function showWarning() {
+            document.body.style.filter = `blur(${BLUR_INTENSITY})`;
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                document.body.style.filter = 'none';
+                overlay.style.opacity = '0';
+            }, BLUR_DURATION);
         }
-        // Ctrl + Shift + I/J/C/K
-        if (e.ctrlKey && e.shiftKey && ['I','J','C','K'].includes(e.key.toUpperCase())) {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('This action is disabled for security reasons.', 'warning');
-        }
-        // F12
-        if (e.key === 'F12') {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('This action is disabled for security reasons.', 'warning');
-        }
-        // Windows + Shift + S
-        if (e.metaKey && e.shiftKey && e.key.toLowerCase() === 's') {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('Screenshots are disabled for this document.', 'warning');
-        }
-    });
 
-    // Attempt to detect PrintScreen (PrtSc)
-    window.addEventListener('keyup', function(e) {
-        if (e.key === 'PrintScreen') {
-            showNotification('Screenshots are disabled for this document.', 'warning');
-            document.body.style.filter = 'blur(10px)';
-            setTimeout(() => document.body.style.filter = 'none', 1500);
-        }
-    });
+        // ========== DISABLE CONTEXT MENU & DRAG ==========
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
 
-    // Disable copy and cut
-    document.addEventListener('copy', e => e.preventDefault());
-    document.addEventListener('cut', e => e.preventDefault());
+        // ========== BLOCK DEV TOOLS / SHORTCUTS ==========
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + P/S/U
+            if (e.ctrlKey && ['p', 's', 'u'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+                showWarning();
+            }
+
+            // Ctrl + Shift + I/J/C/K
+            if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c', 'k'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+                showWarning();
+            }
+
+            // F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                showWarning();
+            }
+
+            // Windows + Shift + S (snipping)
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                showWarning();
+            }
+        });
+
+        // ========== PRINTSCREEN DETECTION ==========
+        window.addEventListener('keyup', function(e) {
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText('Screenshots disabled').catch(()=>{});
+                showWarning();
+            }
+        });
+
+        // ========== COPY & CUT DISABLE ==========
+        document.addEventListener('copy', e => {
+            e.preventDefault();
+            showWarning();
+        });
+        document.addEventListener('cut', e => {
+            e.preventDefault();
+            showWarning();
+        });
+
+        // ========== BLUR WHEN PAGE UNFOCUSED ==========
+        window.addEventListener('blur', () => {
+            document.body.style.filter = `blur(${BLUR_INTENSITY})`;
+        });
+        window.addEventListener('focus', () => {
+            document.body.style.filter = 'none';
+        });
+    })();
 </script>
-<script>
-    function goBackToPrevious() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go back to the last visited page
-            window.history.back();
-        } else {
-            // Fallback if there's no referrer (e.g. user opened page directly)
-            window.location.href = '/documents';
-        }
-    }
-</script>
+
 </body>
 </html>

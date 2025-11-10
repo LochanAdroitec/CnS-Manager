@@ -14,4 +14,3 @@ public class UserAppApplication {
 
 }
 
-//TODO: Check all these files with cloned project files

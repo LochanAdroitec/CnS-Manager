@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -151,4 +152,43 @@ public class BookmarkServiceImpl implements BookmarkService {
 
         return dto;
     }
+
+    @Override
+    @Transactional
+    public void updateBookmarkName(Long bookmarkId, String newName) {
+        try {
+            // Call stored procedure
+            bookmarkRepository.updateBookmarkNameSP(bookmarkId, newName);
+            logger.info("✅ Bookmark name updated successfully via Stored Procedure (ID: {})", bookmarkId);
+        } catch (Exception e) {
+            // Fallback: If SP fails, update via JPA
+            logger.error("⚠ Stored Procedure failed for updateBookmarkName: {}, trying fallback. Error: {}", bookmarkId, e.getMessage());
+            Bookmark bookmark = bookmarkRepository.findById(bookmarkId)
+                    .orElseThrow(() -> new RuntimeException("Bookmark not found with ID: " + bookmarkId));
+            bookmark.setBookmarkName(newName);
+            bookmarkRepository.save(bookmark);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deleteBookmarkByDocument(Long userId, Long documentId) {
+        try {
+            // Check if bookmark exists first
+            Optional<Bookmark> bookmark = bookmarkRepository.findByUserIdAndDocumentId(userId, documentId);
+            if (bookmark.isEmpty()) {
+                throw new RuntimeException("Bookmark not found for user " + userId + " and document " + documentId);
+            }
+
+            // Delete the bookmark
+            bookmarkRepository.deleteByUserIdAndDocumentId(userId, documentId);
+            logger.info("✅ Bookmark deleted successfully for user: {} and document: {}", userId, documentId);
+        } catch (Exception e) {
+            logger.error("❌ Error deleting bookmark for user: {} and document: {}", userId, documentId, e);
+            throw new RuntimeException("Failed to delete bookmark: " + e.getMessage());
+        }
+    }
+
+
+
 }

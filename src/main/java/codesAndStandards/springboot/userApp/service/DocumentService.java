@@ -11,7 +11,7 @@ public interface DocumentService {
 //    List<DocumentDto> findDocumentsByUsername();
     DocumentDto findDocumentById(Long id);
 //    For editing the Document
-    void updateDocument(Long id, DocumentDto documentDto) throws Exception;
+    void updateDocument(Long id, DocumentDto documentDto,MultipartFile file, String username) throws Exception;
     void deleteDocument(Long id);
     String getFilePath(Long id);
 }

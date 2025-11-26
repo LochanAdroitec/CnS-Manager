@@ -6,7 +6,8 @@
     <title>Activity Logs</title>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -22,13 +23,13 @@
             --shadow: 0 6px 18px rgba(18,38,63,0.06);
         }
         body {
-
             background-color: #f4f6f9;
-
+            margin: 0;
+            padding: 0;
             padding-top: 70px;
         }
 
-        /* Page container — place this inside your app's main content area so top/side nav remain intact */
+        /* Page container */
         .page-container{
             padding: 28px 32px;
         }
@@ -51,40 +52,48 @@
             color:#1f2d3d;
         }
 
-        /* Stat cards */
-        .stats-row {
-            display:flex;
-            gap:18px;
-            margin-bottom:20px;
-            flex-wrap:wrap;
-        }
+        /* Stat cards - now clickable */
         .stat-card {
-            min-width:160px;
-            flex:1 1 160px;
-            padding:22px;
-            border-radius:10px;
-            color:#fff;
-            box-shadow: var(--shadow);
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:flex-start;
-            gap:6px;
+            border-radius: 12px;
+            padding: 5px;
+            color: white;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            text-align: right;
+            cursor: pointer;
+            position: relative;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .stat-card.active {
+            border: 2px solid #1E78D7;
+            box-shadow: 0 0 12px rgba(30,120,215,0.4);
+        }
+        .stat-card.active::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
         }
         .stat-number {
-            font-size:28px;
-            font-weight:700;
+            font-size: 2rem;
+            font-weight: bold;
+            padding-left:0px;
+            padding-right:5px;
         }
         .stat-label {
-            font-size:13px;
-            opacity:0.95;
+            font-size: 0.9rem;
+            opacity: 0.9;
+            padding-left:0px;
+            padding-top:15px;
+            padding-right:5px;
         }
-
-        .stat-purple { background: linear-gradient(90deg,#7c3aed,#6b21a8); }
-        .stat-blue   { background: linear-gradient(90deg,#2b6ef6,#2563eb); }
-        .stat-green  { background: linear-gradient(90deg,#16a34a,#059669); }
-        .stat-red    { background: linear-gradient(90deg,#ef4444,#dc2626); }
-        .stat-amber  { background: linear-gradient(90deg,#f59e0b,#d97706); }
 
         /* Toolbar / filters */
         .toolbar {
@@ -104,6 +113,14 @@
         .search-input {
             min-width: 420px;
             flex:1;
+        }
+        .search-box {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+            padding-top:5px;
+            padding-bottom:5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .filter-right {
             display:flex;
@@ -150,50 +167,178 @@
         }
 
         /* Authentication */
-        .badge-login { background-color: #28a745; color: #fff; }              /* Green - Success */
-        .badge-login-failed { background-color: #dc3545; color: #fff; }       /* Red - Failed login */
-        .badge-logout { background-color: #6c757d; color: #fff; }             /* Gray - Logout */
+        .badge-login {color: #28a745;}
+        .badge-login-failed {color: #dc3545;}
+        .badge-logout {color: #28a745;}
 
         /* User Actions */
-        .badge-user-create { background-color: #007bff; color: #fff; }        /* Blue - Create user */
-        .badge-user-create-failed { background-color: #ff6f61; color: #fff; } /* Coral - Failed create */
-
-        .badge-user-edit { background-color: #ffc107; color: #000; }          /* Yellow - Edit user */
-        .badge-user-edit-failed { background-color: #ffb703; color: #000; }   /* Dark yellow - Failed edit */
-
-        .badge-user-delete { background-color: #dc3545; color: #fff; }        /* Red - Delete user */
-        .badge-user-delete-failed { background-color: #ff7675; color: #fff; } /* Light red - Failed delete */
+        .badge-user-create {color: #28a745;}
+        .badge-user-create-failed {color: #dc3545;}
+        .badge-user-edit {color: #28a745;}
+        .badge-user-edit-failed {color: #dc3545;}
+        .badge-user-delete {color: #28a745;}
+        .badge-user-delete-failed {color: #dc3545;}
 
         /* Document Actions */
-        .badge-document-upload { background-color: #20c997; color: #fff; }           /* Teal - Upload */
-        .badge-document-upload-failed { background-color: #198754; color: #fff; }    /* Darker green - Failed upload */
-
-        .badge-document-edit { background-color: #ffc107; color: #000; }             /* Yellow - Edit */
-        .badge-document-edit-failed { background-color: #ffb703; color: #000; }      /* Dark yellow - Failed edit */
-
-        .badge-document-delete { background-color: #dc3545; color: #fff; }           /* Red - Delete */
-        .badge-document-delete-failed { background-color: #ff7675; color: #fff; }    /* Light red - Failed delete */
-
-        .badge-document-download { background-color: #007bff; color: #fff; }         /* Blue - Download */
-        .badge-document-download-failed { background-color: #0d6efd; color: #fff; }  /* Dark blue - Failed download */
+        .badge-document-upload {color: #28a745;}
+        .badge-document-upload-failed {color: #dc3545;}
+        .badge-document-edit {color: #28a745;}
+        .badge-document-edit-failed {color: #dc3545;}
+        .badge-document-delete {color: #28a745;}
+        .badge-document-delete-failed {color: #dc3545;}
+        .badge-document-download {color: #28a745;}
+        .badge-document-download-failed {color: #dc3545;}
 
         /* Profile Actions */
-        .badge-edit-profile { background-color: #17a2b8; color: #fff; }              /* Cyan - Edit profile */
-        .badge-edit-profile-failed { background-color: #ff6f61; color: #fff; }       /* Coral - Failed profile edit */
+        .badge-edit-profile {color: #28a745;}
+        .badge-edit-profile-failed {color: #dc3545;}
+
+        /* TAG Actions */
+        .badge-success {color: #28a745;}
+        .badge-danger {color: #dc3545;}
 
         /* Small utilities */
         .muted-small { color:var(--muted); font-size:13px; }
-        .user-pill { font-weight:600; margin-right:8px; }
-        .role-pill { font-size:12px; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#334155; margin-left:8px; }
+        .user-pill {
+            font-weight:600;
+            margin-right:8px;
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .user-pill:hover {
+            text-decoration: underline;
+        }
+        .role-pill {
+            font-size:12px;
+            padding:2px 8px;
+            border-radius:999px;
+            background:#eef2ff;
+            color:#334155;
+            margin-left:8px;
+        }
 
         /* Right aligned controls used for download/datepickers */
         .controls-inline { display:flex; gap:10px; align-items:center; }
+
+        /* Modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+        .modal-overlay.active {
+            display: block;
+        }
+
+        /* User Details Modal */
+        .user-details-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .user-details-modal.active {
+            display: block;
+        }
+        .modal-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9eef5;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            color: #dc3545;
+        }
+        .user-detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .user-detail-label {
+            font-weight: 600;
+            width: 120px;
+            color: #495057;
+        }
+        .user-detail-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Make page responsive */
         @media (max-width: 900px){
             .search-input { min-width: 160px; }
             .stat-card { min-width:48%; flex-basis:48%; }
         }
+
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            outline: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
+        }
+
+        #scrollTopBtn:hover {
+            background-color:#1e3a5f;
+        }
+
     </style>
 </head>
 <body>
@@ -206,7 +351,7 @@
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
+    <div class="main-content flex-grow-1 p-4">
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -231,60 +376,76 @@
             </div>
         </div>
 
-        <!-- Stat cards row -->
-        <div class="stats-row">
-            <div class="stat-card stat-purple">
-                <div class="stat-number" th:text="${totalLogs}">0</div>
-                <div class="stat-label">Total Events</div>
-            </div>
-
-            <div class="stat-card stat-blue">
-                <div class="stat-number" th:text="${todayCount}">0</div>
-                <div class="stat-label">Today</div>
-            </div>
-
-            <div class="stat-card stat-green">
-                <div class="stat-number" th:text="${countSuccessLogs}">0</div>
-                <div class="stat-label">Success</div>
-            </div>
-
-            <div class="stat-card stat-red">
-                <div class="stat-number" th:text="${countFailedLogs}">0</div>
-                <div class="stat-label">Failures</div>
-            </div>
-
-
-        </div>
-
-        <!-- Toolbar with search, filters and date download controls (replaced Export CSV/JSON) -->
-        <div class="toolbar">
-            <div class="filter-left">
-                <div class="input-group search-input">
-                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-start-0" placeholder="Search activities..." id="searchInput">
+        <!-- Statistics Cards (Now clickable filters) -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="stat-card d-flex flex-row active" style="background-color: #1e3a5f"
+                     data-filter="all" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">All Events</div>
+                    <div class="stat-number" th:text="${totalLogs}">5</div>
                 </div>
             </div>
+            <div class="col-md-2">
+                <div class="stat-card d-flex flex-row" style="background-color: #0A3D91"
+                     data-filter="today" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">Today</div>
+                    <div class="stat-number" th:text="${todayCount}">1</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card d-flex flex-row" style="background-color: #4DA3FF"
+                     data-filter="success" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">Success</div>
+                    <div class="stat-number" th:text="${countSuccessLogs}">2</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card d-flex flex-row" style="background-color: #67abf5"
+                     data-filter="failures" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">Failures</div>
+                    <div class="stat-number" th:text="${countFailedLogs}">2</div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="stat-card d-flex flex-row" style="background-color: #82b3e0"
+                     data-filter="downloads" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">Downloads</div>
+                    <div class="stat-number" th:text="${countDownloadLogs != null ? countDownloadLogs : 0}">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="search-box mb-4">
+            <!-- Toolbar with search, filters and date download controls -->
+            <div class="toolbar">
+                <div class="filter-left">
+                    <div class="input-group search-input">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0"
+                               placeholder="Search by ID, user, action, or details....."
+                               id="searchInput">
+                    </div>
+                </div>
 
-            <!-- Right side: Date pickers + Download button (replaces Export CSV/JSON) -->
-            <div class="filter-right controls-inline">
-                <input type="date" id="startDate" class="form-control" style="width:160px;" />
-                <span class="muted-small">to</span>
-                <input type="date" id="endDate" class="form-control" style="width:160px;" />
-                <button class="btn btn-primary" onclick="downloadLogsAsCSV()">
-                    <i class="bi bi-download me-1"></i> Download
-                </button>
+                <!-- Right side: Date pickers + Download button -->
+                <div class="filter-right controls-inline">
+                    <input type="date" id="startDate" class="form-control" style="width:160px;"
+                           onchange="filterByDateRange()" />
+                    <span class="muted-small">to</span>
+                    <input type="date" id="endDate" class="form-control" style="width:160px;"
+                           onchange="filterByDateRange()" />
+                    <button class="btn " style="background-color: #1e3a5f; color:#ffffff;" onclick="downloadLogsAsCSV()">
+                        <i class="bi bi-download me-1"></i> Download
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Activity list card -->
         <div class="logs-card mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="mb-0">Activity Log <small class="text-muted">(<span th:text="${totalLogs}">0</span>)</small></h5>
+                <h5 class="mb-0">Activity Log <small class="text-muted">(<span id="visibleLogsCount" th:text="${totalLogs}">0</span>)</small></h5>
                 <div class="muted-small">Showing recent activity</div>
             </div>
-
-            <!-- If you're already rendering a table with thymeleaf, we'll keep your table structure.
-                 The UI in the image shows a list; we'll render a table for simplicity (keeps your existing code). -->
 
             <div class="table-responsive">
                 <table class="table align-middle" id="activityLogsTable">
@@ -302,40 +463,62 @@
                         <td colspan="5" class="text-center py-4">No logs found</td>
                     </tr>
 
-                    <tr th:each="log : ${logs}">
+                    <tr th:each="log : ${logs}"
+                        th:attr="data-timestamp=${log.timestamp},
+                 data-action=${log.action},
+                 data-user-id=${log.user != null ? log.user.id : ''}">
                         <td th:text="${log.logId}">1</td>
 
                         <td>
                             <div>
-                                <span class="user-pill" th:text="${log.user != null ? log.user.username : 'Deleted User'}">User</span>
+                                <a href="javascript:void(0)"
+                                   class="user-pill user-link"
+                                   th:text="${log.user != null ? log.user.username : 'Deleted User'}"
+                                   th:attr="data-user-id=${log.user != null ? log.user.id : 0}"
+                                   th:classappend="${log.user == null ? 'disabled-link' : ''}"
+                                   th:style="${log.user == null ? 'cursor: default; color: #6c757d; pointer-events: none;' : ''}">
+                                    User
+                                </a>
                                 <small class="muted-small d-block" th:text="${log.user != null ? log.user.email : 'N/A'}">email</small>
                             </div>
                         </td>
 
                         <td>
-                        <span class="badge"
-                              th:classappend="${log.action == 'LOGIN' ? 'badge-login' :
-                      log.action == 'LOGIN_FAILED' ? 'badge-login-failed' :
-                      log.action == 'LOGOUT' ? 'badge-logout' :
-                      log.action == 'USER_CREATE' ? 'badge-user-create' :
-                      log.action == 'USER_CREATE_FAILED' ? 'badge-user-create-failed' :
-                      log.action == 'USER_EDIT' ? 'badge-user-edit' :
-                      log.action == 'USER_EDIT_FAILED' ? 'badge-user-edit-failed' :
-                      log.action == 'USER_DELETE' ? 'badge-user-delete' :
-                      log.action == 'USER_DELETE_FAILED' ? 'badge-user-delete-failed' :
-                      log.action == 'DOCUMENT_UPLOAD' ? 'badge-document-upload' :
-                      log.action == 'DOCUMENT_UPLOAD_FAILED' ? 'badge-document-upload-failed' :
-                      log.action == 'DOCUMENT_EDIT' ? 'badge-document-edit' :
-                      log.action == 'DOCUMENT_EDIT_FAILED' ? 'badge-document-edit-failed' :
-                      log.action == 'DOCUMENT_DELETE' ? 'badge-document-delete' :
-                      log.action == 'DOCUMENT_DELETE_FAILED' ? 'badge-document-delete-failed' :
-                      log.action == 'DOCUMENT_DOWNLOAD' ? 'badge-document-download' :
-                      log.action == 'DOCUMENT_DOWNLOAD_FAILED' ? 'badge-document-download-failed' :
-                      log.action == 'EDIT_PROFILE' ? 'badge-edit-profile' :
-                      log.action == 'EDIT_PROFILE_FAILED' ? 'badge-edit-profile-failed' : ''}"
-                              th:text="${log.action}">
-    ACTION
-</span>
+            <span class="badge"
+                  th:classappend="${log.action == 'LOGIN' ? 'badge-login' :
+                                   log.action == 'LOGIN_FAILED' ? 'badge-login-failed' :
+                                   log.action == 'LOGOUT' ? 'badge-logout' :
+                                   log.action == 'USER_CREATE' ? 'badge-user-create' :
+                                   log.action == 'USER_CREATE_FAILED' ? 'badge-user-create-failed' :
+                                   log.action == 'USER_EDIT' ? 'badge-user-edit' :
+                                   log.action == 'USER_EDIT_FAILED' ? 'badge-user-edit-failed' :
+                                   log.action == 'USER_DELETE' ? 'badge-user-delete' :
+                                   log.action == 'USER_DELETE_FAILED' ? 'badge-user-delete-failed' :
+                                   log.action == 'DOCUMENT_UPLOAD' ? 'badge-document-upload' :
+                                   log.action == 'DOCUMENT_UPLOAD_FAILED' ? 'badge-document-upload-failed' :
+                                   log.action == 'DOCUMENT_EDIT' ? 'badge-document-edit' :
+                                   log.action == 'DOCUMENT_EDIT_FAILED' ? 'badge-document-edit-failed' :
+                                   log.action == 'DOCUMENT_DELETE' ? 'badge-document-delete' :
+                                   log.action == 'DOCUMENT_DELETE_FAILED' ? 'badge-document-delete-failed' :
+                                   log.action == 'DOCUMENT_DOWNLOAD' ? 'badge-document-download' :
+                                   log.action == 'DOCUMENT_DOWNLOAD_FAILED' ? 'badge-document-download-failed' :
+                                   log.action == 'EDIT_PROFILE' ? 'badge-edit-profile' :
+                                   log.action == 'EDIT_PROFILE_FAILED' ? 'badge-edit-profile-failed' :
+                                   log.action == 'TAG_ADD' ? 'badge-success' :
+                                   log.action == 'TAG_EDIT' ? 'badge-success' :
+                                   log.action == 'TAG_DELETE' ? 'badge-success' :
+                                   log.action == 'TAG_ADD_FAIL' ? 'badge-danger' :
+                                   log.action == 'TAG_EDIT_FAIL' ? 'badge-danger' :
+                                   log.action == 'TAG_DELETE_FAIL' ? 'badge-danger' :
+                                   log.action == 'CLASSIFICATION_ADD' ? 'badge-success' :
+                                   log.action == 'CLASSIFICATION_EDIT' ? 'badge-success' :
+                                   log.action == 'CLASSIFICATION_DELETE' ? 'badge-success' :
+                                   log.action == 'CLASSIFICATION_ADD_FAIL' ? 'badge-danger' :
+                                   log.action == 'CLASSIFICATION_EDIT_FAIL' ? 'badge-danger' :
+                                   log.action == 'CLASSIFICATION_DELETE_FAIL' ? 'badge-danger' : ''}"
+                  th:text="${log.action}">
+                ACTION
+            </span>
                         </td>
 
                         <td th:text="${log.details}">Details</td>
@@ -349,26 +532,294 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- Footer controls -->
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <a th:href="@{/users}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Users
-                </a>
-            </div>
-            <div class="muted-small">Last updated: <span th:text="${lastUpdated}">—</span></div>
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn" title="Go to top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeUserModal()"></div>
+
+<!-- User Details Modal -->
+<div class="user-details-modal" id="userDetailsModal">
+    <div class="modal-header-custom">
+        <h4>User Details</h4>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+    </div>
+    <div id="userDetailsContent">
+        <div class="text-center py-4">
+            <div class="loading-spinner"></div>
         </div>
     </div>
 </div>
 
 <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
-<!-- Your existing download script (adapted to table IDs used above) -->
+
+<script th:inline="javascript">
+    // Pass server-side context path to JavaScript
+    var contextPath = /*[[@{/}]]*/ '/';
+</script>
+
 <script>
-    // Keep your existing logic but ensure date parsing is robust for the thymeleaf-rendered date format
+    let currentFilter = 'all';
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Event delegation for user links
+        const table = document.getElementById('activityLogsTable');
+
+        if (table) {
+            table.addEventListener('click', function(e) {
+                const userLink = e.target.closest('.user-link');
+
+                if (userLink && !userLink.classList.contains('disabled-link')) {
+                    const userId = userLink.getAttribute('data-user-id');
+
+                    if (userId && userId !== '0') {
+                        showUserDetails(parseInt(userId));
+                    }
+                }
+            });
+        }
+
+        // Initialize search input listener
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                applyFilters();
+            });
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeUserModal();
+            }
+        });
+
+        // Scroll to top button
+        const scrollTopBtn = document.getElementById("scrollTopBtn");
+        if (scrollTopBtn) {
+            window.onscroll = function() {
+                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                    scrollTopBtn.style.display = "block";
+                } else {
+                    scrollTopBtn.style.display = "none";
+                }
+            };
+
+            scrollTopBtn.addEventListener("click", function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+    });
+
+    // Function to show user details modal
+    function showUserDetails(userId) {
+        const modal = document.getElementById('userDetailsModal');
+        const overlay = document.getElementById('modalOverlay');
+        const content = document.getElementById('userDetailsContent');
+
+        // Show modal and overlay
+        modal.classList.add('active');
+        overlay.classList.add('active');
+
+        // Show loading spinner
+        content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
+
+        // Fetch user details via AJAX
+        fetch(contextPath + `api/users/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('User not found');
+                }
+                return response.json();
+            })
+            .then(user => {
+    let createdDate = 'N/A';
+    if (user.createdAt) {
+        const date = new Date(user.createdAt);
+        createdDate = date.toLocaleString('en-IN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+    }
+
+    let roleName = user.roleName || 'N/A';
+
+    content.innerHTML = `
+<!--        <div class="user-detail-row">-->
+<!--            <div class="user-detail-label">User ID:</div>-->
+<!--            <div class="user-detail-value">${user.id || 'N/A'}</div>-->
+<!--        </div>-->
+        <div class="user-detail-row">
+            <div class="user-detail-label">First Name:</div>
+            <div class="user-detail-value">${user.firstName || 'N/A'}</div>
+        </div>
+        <div class="user-detail-row">
+            <div class="user-detail-label">Last Name:</div>
+            <div class="user-detail-value">${user.lastName || 'N/A'}</div>
+        </div>
+        <div class="user-detail-row">
+            <div class="user-detail-label">Username:</div>
+            <div class="user-detail-value">${user.username || 'N/A'}</div>
+        </div>
+        <div class="user-detail-row">
+            <div class="user-detail-label">Email:</div>
+            <div class="user-detail-value">${user.email || 'N/A'}</div>
+        </div>
+        <div class="user-detail-row">
+            <div class="user-detail-label">Role:</div>
+            <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
+        </div>
+        <div class="user-detail-row">
+            <div class="user-detail-label">Created At:</div>
+            <div class="user-detail-value">${createdDate}</div>
+        </div>
+        <div class="user-detail-row" style="border-bottom: none;">
+            <div class="user-detail-label">Created By:</div>
+            <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
+        </div>
+    `;
+})
+
+            .catch(error => {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load user details. ${error.message}
+                    </div>
+                `;
+            });
+    }
+
+    // Function to close user details modal
+    function closeUserModal() {
+        document.getElementById('userDetailsModal').classList.remove('active');
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    // Filter by stat card
+    function filterByStatCard(card) {
+        const filter = card.getAttribute('data-filter');
+
+        // Remove active class from all cards
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked card
+        card.classList.add('active');
+
+        currentFilter = filter;
+        applyFilters();
+    }
+
+    // Filter by date range
+    function filterByDateRange() {
+        applyFilters();
+    }
+
+    // Apply all filters
+    function applyFilters() {
+        const startDateInput = document.getElementById('startDate').value;
+        const endDateInput = document.getElementById('endDate').value;
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+        const startDate = startDateInput ? new Date(startDateInput) : null;
+        const endDate = endDateInput ? new Date(endDateInput) : null;
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const allRows = document.querySelectorAll('#activityLogsTable tbody tr');
+        let visibleCount = 0;
+
+        allRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 5) return;
+
+            const idCell = cells[0].textContent.trim();
+            if (!idCell || idCell.toLowerCase().includes('no logs')) return;
+
+            let show = true;
+
+            // Date filter
+            const dateText = cells[4].children[0]?.textContent?.trim() || cells[4].textContent.trim();
+            const logDate = parseDateFromText(dateText);
+
+            if (logDate) {
+                if (startDate && logDate < startDate) show = false;
+                if (endDate && logDate > endDate) show = false;
+            }
+
+            // Stat card filter
+            if (currentFilter === 'today' && logDate) {
+                if (logDate.getTime() !== today.getTime()) show = false;
+            } else if (currentFilter === 'success') {
+                const action = row.getAttribute('data-action') || '';
+                if (action.includes('FAILED') || action.includes('FAIL')) show = false;
+            } else if (currentFilter === 'failures') {
+                const action = row.getAttribute('data-action') || '';
+                if (!action.includes('FAILED') && !action.includes('FAIL')) show = false;
+            } else if (currentFilter === 'downloads') {
+               const action = row.getAttribute('data-action') || '';
+               if (action !== 'DOCUMENT_DOWNLOAD') show = false;
+            }
+
+            // Search filter (excluding date/time column)
+            if (searchQuery && show) {
+                let searchText = '';
+                for (let i = 0; i < cells.length - 1; i++) {
+                    searchText += cells[i].textContent.toLowerCase() + ' ';
+                }
+                if (!searchText.includes(searchQuery)) show = false;
+            }
+
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        document.getElementById('visibleLogsCount').textContent = visibleCount;
+    }
+
+    // Parse date from text format "14 Oct 2025"
+    function parseDateFromText(dateText) {
+        if (!dateText) return null;
+
+        const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const parts = dateText.split(" ");
+
+        if (parts.length === 3) {
+            const day = parseInt(parts[0], 10);
+            const monthIndex = monthNames.indexOf(parts[1]);
+            const year = parseInt(parts[2], 10);
+
+            if (!isNaN(day) && monthIndex >= 0 && !isNaN(year)) {
+                const date = new Date(year, monthIndex, day);
+                date.setHours(0, 0, 0, 0);
+                return date;
+            }
+        }
+
+        return null;
+    }
+
+    // Download logs as CSV
     function downloadLogsAsCSV() {
         const table = document.querySelector("#activityLogsTable");
         if (!table) {
@@ -390,38 +841,22 @@
             const cols = row.querySelectorAll("th, td");
             if (cols.length === 0) return;
 
-            // header row
             if (index === 0) {
                 const header = Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",");
                 csvContent += header + "\n";
                 return;
             }
 
-            // Skip empty or placeholder rows
             const idCell = cols[0]?.textContent.trim();
             if (!idCell || idCell.toLowerCase().includes('no logs')) return;
 
-            // The date is in the 5th column (index 4), first line is date, second line is time
+            if (row.style.display === 'none') return;
+
             const dateText = cols[4]?.children[0]?.textContent?.trim() || cols[4]?.textContent?.trim();
             if (!dateText) return;
 
-            // Try to parse date of format "14 Oct 2025"
-            let logDate = new Date(dateText);
-            if (isNaN(logDate)) {
-                // fallback parsing for 'dd MMM yyyy'
-                const parts = dateText.split(" ");
-                if (parts.length === 3) {
-                    const day = parseInt(parts[0], 10);
-                    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-                    const monthIndex = monthNames.indexOf(parts[1]);
-                    const year = parseInt(parts[2], 10);
-                    if (!isNaN(day) && monthIndex >= 0 && !isNaN(year)) {
-                        logDate = new Date(year, monthIndex, day);
-                    }
-                }
-            }
+            const logDate = parseDateFromText(dateText);
 
-            // Filter by dates (inclusive)
             if (
                 (!start || logDate >= start) &&
                 (!end || logDate <= end)
@@ -431,12 +866,11 @@
             }
         });
 
-        if (csvContent.trim() === "") {
+        if (csvContent.trim() === "" || csvContent.split("\n").length <= 2) {
             alert("No logs found for the selected date range!");
             return;
         }
 
-        // Trigger download
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
@@ -449,30 +883,12 @@
         document.body.removeChild(link);
     }
 
-    // Optional: very simple client-side search/filter to help the UI (works on the current table)
-    document.getElementById('searchInput').addEventListener('input', function(e){
-        const q = e.target.value.trim().toLowerCase();
-        const rows = document.querySelectorAll('#activityLogsTable tbody tr[th\\:each]');
-        // Thymeleaf repeats rows so they won't have a specific attribute after rendering.
-        // Use a generic approach:
-        const allRows = document.querySelectorAll('#activityLogsTable tbody tr');
-        allRows.forEach(r=>{
-            if (r.querySelectorAll('td').length === 0) return;
-            const text = r.textContent.toLowerCase();
-            r.style.display = text.includes(q) ? '' : 'none';
-        });
-    });
-
-    // Optional: you can wire action/user/status selects to filter the rendered rows.
-</script>
-<script>
+    // Go back function
     function goBack() {
         if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
             window.history.back();
         } else {
-            // Fallback if there's no referrer (like direct load)
-            window.location.href = '/documents';
+            window.location.href = contextPath + 'documents';
         }
     }
 </script>

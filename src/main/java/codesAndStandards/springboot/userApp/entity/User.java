@@ -66,4 +66,33 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = {}, orphanRemoval = true)
     private List<ActivityLog> activityLogs = new ArrayList<>();
 
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Tag> createdTags = new HashSet<>();
+
+    @OneToMany(mappedBy = "updatedBy")
+    private Set<Tag> updatedTags = new HashSet<>();
+
+    @OneToMany(mappedBy = "createdBy")
+    private Set<Classification> createdClassifications = new HashSet<>();
+
+    @OneToMany(mappedBy = "updatedBy")
+    private Set<Classification> updatedClassifications = new HashSet<>();
+
+    @PreRemove
+    private void preRemove() {
+        // Set all references to null before deletion
+        for (Tag tag : createdTags) {
+            tag.setCreatedBy(null);
+        }
+        for (Tag tag : updatedTags) {
+            tag.setUpdatedBy(null);
+        }
+        for (Classification classification : createdClassifications) {
+            classification.setCreatedBy(null);
+        }
+        for (Classification classification : updatedClassifications) {
+            classification.setUpdatedBy(null);
+        }
+    }
+
 }

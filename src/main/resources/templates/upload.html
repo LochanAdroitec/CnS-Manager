@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Document - Codes & Standards</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -16,6 +17,7 @@
           margin: 0;
           padding: 0;
           box-sizing: border-box;
+
         }
 
         body {
@@ -23,41 +25,782 @@
           padding-top: 70px;
         }
 
-        .page-header {
+        /* ============== WIZARD STYLES ============== */
+        .wizard-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          overflow: hidden;
+        }
+
+        .wizard-header {
+          background-color: #1e3a5f;
+          padding: 30px;
+          color: white;
+        }
+
+        .wizard-header h2 {
+          margin: 0;
+          font-size: 24px;
+          font-weight: 600;
+        }
+
+        .wizard-header p {
+          margin: 5px 0 0;
+          opacity: 0.9;
+          font-size: 14px;
+        }
+
+        /* Step Progress Bar */
+        .wizard-steps {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 30px 50px;
+          background: #f8f9fa;
+          position: relative;
+        }
+
+        .wizard-steps::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50px;
+          right: 50px;
+          height: 2px;
+          background: #e0e0e0;
+          z-index: 0;
+        }
+
+        .wizard-step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+          flex: 1;
+        }
+
+        .wizard-step-circle {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: white;
+          border: 3px solid #e0e0e0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 18px;
+          color: #9ca3af;
+          transition: all 0.3s;
+          margin-bottom: 10px;
+        }
+
+        .wizard-step.active .wizard-step-circle {
+          background: #667eea;
+          border-color: #667eea;
+          color: white;
+          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .wizard-step.completed .wizard-step-circle {
+          background: #10b981;
+          border-color: #10b981;
+          color: white;
+        }
+
+        .wizard-step-label {
+          font-size: 14px;
+          font-weight: 500;
+          color: #6b7280;
+          text-align: center;
+        }
+
+        .wizard-step.active .wizard-step-label {
+          color: #667eea;
+          font-weight: 600;
+        }
+
+        .wizard-step.completed .wizard-step-label {
+          color: #10b981;
+        }
+
+        /* Wizard Content */
+        .wizard-content {
+          padding: 40px 50px;
+          min-height: 450px;
+        }
+
+        .wizard-step-content {
+          display: none;
+        }
+
+        .wizard-step-content.active {
+          display: block;
+          animation: fadeIn 0.4s;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Wizard Navigation */
+        .wizard-navigation {
+          display: flex;
+          justify-content: space-between;
+          padding: 20px 50px 30px;
+          border-top: 1px solid #e5e7eb;
+        }
+
+        .wizard-btn {
+          padding: 12px 32px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .wizard-btn-secondary {
+          background: #f3f4f6;
+          color: #374151;
+        }
+
+        .wizard-btn-secondary:hover {
+          background: #e5e7eb;
+        }
+
+        .wizard-btn-primary {
+          background: #667eea;
+          color: white;
+        }
+
+        .wizard-btn-primary:hover {
+          background: #5568d3;
+        }
+
+        .wizard-btn-primary:disabled {
+          background: #d1d5db;
+          cursor: not-allowed;
+        }
+
+        .wizard-btn-success {
+          background: #10b981;
+          color: white;
+        }
+
+        .wizard-btn-success:hover {
+          background: #059669;
+        }
+
+        /* ============== STEP 1: FILE UPLOAD ============== */
+        .drop-zone {
+          border: 3px dashed #d1d5db;
+          border-radius: 12px;
+          padding: 80px 40px;
+          text-align: center;
+          background: linear-gradient(135deg, #fafbfc 0%, #f0f7ff 100%);
+          cursor: pointer;
+          transition: all 0.3s;
+          position: relative;
+        }
+
+        .drop-zone:hover {
+          border-color: #667eea;
+          background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+          transform: scale(1.02);
+        }
+
+        .drop-zone.dragover {
+          border-color: #667eea;
+          background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+          border-style: solid;
+          transform: scale(1.05);
+        }
+
+        .drop-zone-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 20px;
+          color: #667eea;
+        }
+
+        .drop-zone-text {
+          font-size: 20px;
+          color: #1a2332;
+          margin-bottom: 10px;
+          font-weight: 600;
+        }
+
+        .drop-zone-info {
+          font-size: 14px;
+          color: #6b7a99;
+          margin-bottom: 25px;
+        }
+
+        .browse-btn {
+          background: #667eea;
+          color: white;
+          padding: 14px 36px;
+          border-radius: 8px;
+          font-size: 15px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          border: none;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .browse-btn:hover {
+          background: #5568d3;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        /* File Upload Success Message */
+        .file-uploaded-message {
+          display: none;
+          background: #ecfdf5;
+          border: 2px solid #10b981;
+          border-radius: 12px;
+          padding: 30px;
+          text-align: center;
+          margin-top: 30px;
+        }
+
+        .file-uploaded-message.show {
+          display: block;
+          animation: slideIn 0.4s;
+        }
+
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+
+        .file-uploaded-icon {
+          width: 80px;
+          height: 80px;
+          background: #10b981;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 20px;
+          color: white;
+          font-size: 40px;
+        }
+
+        .file-uploaded-title {
+          font-size: 20px;
+          font-weight: 600;
+          color: #065f46;
+          margin-bottom: 10px;
+        }
+
+        .file-uploaded-details {
+          font-size: 14px;
+          color: #047857;
+          margin-bottom: 20px;
+        }
+
+        .change-file-btn {
+          background: #10b981;
+          color: white;
+          padding: 10px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .change-file-btn:hover {
+          background: #059669;
+        }
+
+        /* ============== STEP 2: DOCUMENT DETAILS ============== */
+        .form-section {
           margin-bottom: 30px;
         }
 
-        .page-header h1 {
-          font-size: 28px;
+        .form-section-title {
+          font-size: 18px;
           font-weight: 600;
           color: #1a2332;
-          margin-bottom: 5px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid #e5e7eb;
         }
 
-        .page-header p {
-          color: #6b7a99;
-          font-size: 14px;
+        .form-section-title i {
+          color: #667eea;
         }
 
-        .back-link {
-          color: #6b7a99;
-          text-decoration: none;
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-label {
           font-size: 14px;
+          font-weight: 600;
+          color: #374151;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .required-indicator {
+          color: #ef4444;
+        }
+
+        .form-control {
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 12px 16px;
+          font-size: 14px;
+          transition: all 0.3s;
+          width: 100%;
+        }
+
+        .form-control:focus {
+          border-color: #667eea;
+          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+          outline: none;
+        }
+
+        textarea.form-control {
+          min-height: 120px;
+          resize: vertical;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        /* Tags and Classifications */
+        .selection-area-flex {
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 15px;
+          background: #f9fafb;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          min-height: 100px;
+          max-height: 150px;
+          overflow-y: auto;
+        }
+
+        .selection-item-flex {
           display: inline-flex;
           align-items: center;
+          padding: 10px 16px;
+          background: white;
+          border: 2px solid #e5e7eb;
+          border-radius: 20px;
+          cursor: pointer;
+          transition: all 0.3s;
+          font-size: 14px;
+          color: #374151;
+          font-weight: 500;
+        }
+
+        .selection-item-flex:hover {
+           border-color: #4DA3FF;
+           background: #E6F4FF;
+           transform: translateY(-2px);
+           box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .selection-item-flex.selected {
+          border-color: #4DA3FF;
+          background: #E6F4FF;
+          color: #4DA3FF;
+        }
+
+        .selection-item-flex.blink {
+          animation: blinkAnimation 0.6s ease 3;
+        }
+        .selection-item-flex.selected[data-classification-name] {
+            border-color: #1e3a5f !important;
+            background: #E3E8EF !important;
+            color: #1e3a5f !important;
+        }
+        .selection-item-flex[data-classification-name]:hover {
+            border-color: #1e3a5f !important;
+            background: #E3E8EF !important;
+        }
+
+
+
+        @keyframes blinkAnimation {
+          0%, 100% { border-color: #e5e7eb; background: white; }
+          50% { border-color: #fbbf24; background: #fef3c7; transform: scale(1.05); }
+        }
+
+        .selected-items-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          padding: 15px;
+          border: 2px solid #e5e7eb;
+          border-radius: 8px;
+          min-height: 80px;
+          background: white;
+          margin-top: 10px;
+        }
+
+        .selected-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: #4DA3FF;
+          color: white;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 500;
+          animation: chipFadeIn 0.3s;
+        }
+
+        .classification-chip {
+          background: #1e3a5f !important;
+          color: white !important;
+        }
+
+        @keyframes chipFadeIn {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .chip-remove {
+          cursor: pointer;
+          font-weight: bold;
+          opacity: 0.8;
+          width: 18px;
+          height: 18px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.2);
+          transition: all 0.2s;
+        }
+
+        .chip-remove:hover {
+          opacity: 1;
+          background: rgba(255,255,255,0.3);
+          transform: scale(1.1);
+        }
+
+        .empty-state {
+          text-align: center;
+          color: #9ca3af;
+          font-size: 13px;
+          padding: 20px;
+          width: 100%;
+        }
+
+        .error-message {
+          display: none;
+          color: #ef4444;
+          font-size: 13px;
+          margin-top: 5px;
+          animation: fadeIn 0.3s;
+          padding: 8px 12px;
+          background: #fee2e2;
+          border-radius: 6px;
+          border-left: 3px solid #ef4444;
+        }
+
+        .error-message.show {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .info-text {
+          font-size: 13px;
+          color: #6b7280;
+          margin-top: 5px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        /* ============== STEP 4: REVIEW SECTION ============== */
+        .review-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+        }
+
+        .review-details {
+          background: #f9fafb;
+          border-radius: 8px;
+          padding: 25px;
+        }
+
+        .review-section {
+          margin-bottom: 20px;
+        }
+
+        .review-section:last-child {
+          margin-bottom: 0;
+        }
+
+        .review-section h6 {
+          color: #667eea;
+          font-size: 14px;
+          font-weight: 600;
+          margin-bottom: 10px;
+        }
+
+        .review-grid {
+          display: grid;
+          grid-template-columns: 150px 1fr;
+          gap: 10px;
+          font-size: 14px;
+        }
+
+        .review-grid strong {
+          color: #374151;
+        }
+
+        .review-grid span {
+          color: #6b7280;
+        }
+
+        .review-divider {
+          border: 0;
+          border-top: 1px solid #e5e7eb;
+          margin: 15px 0;
+        }
+
+        .review-tags, .review-classifications {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .pdf-preview-box {
+          background: #f9fafb;
+          border: 2px solid #e5e7eb;
+          border-radius: 12px;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .pdf-preview-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #1a2332;
           margin-bottom: 15px;
-          transition: color 0.3s;
+          text-align: center;
         }
 
-        .back-link:hover {
-          color: #2563eb;
+        .pdf-canvas-container {
+          background: white;
+          border-radius: 8px;
+          padding: 15px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          max-width: 100%;
         }
 
-        .back-link i {
-          margin-right: 8px;
+        #reviewPdfCanvas {
+          max-width: 100%;
+          height: auto;
+          border-radius: 4px;
         }
 
-        /* Alert Messages */
+        /* ============== CUSTOM MODALS ============== */
+        .custom-modal-overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 9999;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s;
+        }
+
+        .custom-modal-overlay.show {
+          display: flex;
+        }
+
+        .custom-modal {
+          background: white;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          max-width: 500px;
+          width: 90%;
+          animation: slideUp 0.3s;
+          overflow: hidden;
+        }
+
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header-custom {
+          padding: 25px 30px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .modal-header-warning {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .modal-icon {
+          width: 50px;
+          height: 50px;
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+        }
+
+        .modal-title-custom {
+          flex: 1;
+        }
+
+        .modal-title-custom h3 {
+          margin: 0;
+          font-size: 20px;
+          font-weight: 600;
+        }
+
+        .modal-title-custom p {
+          margin: 5px 0 0;
+          font-size: 13px;
+          opacity: 0.9;
+        }
+
+        .modal-close-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          border: none;
+          color: white;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s;
+        }
+
+        .modal-close-btn:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: rotate(90deg);
+        }
+
+        .modal-body-custom {
+          padding: 30px;
+        }
+
+        .modal-body-custom p {
+          margin: 0;
+          font-size: 15px;
+          color: #4b5563;
+          line-height: 1.6;
+        }
+
+        .modal-body-custom ul {
+          margin: 15px 0 0 0;
+          padding-left: 20px;
+          color: #4b5563;
+        }
+
+        .modal-body-custom li {
+          margin-bottom: 8px;
+          font-size: 14px;
+        }
+
+        .modal-footer-custom {
+          padding: 20px 30px;
+          background: #f9fafb;
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+        }
+
+        .modal-btn {
+          padding: 10px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+
+        .modal-btn-secondary {
+          background: white;
+          color: #374151;
+          border: 2px solid #e5e7eb;
+        }
+
+        .modal-btn-secondary:hover {
+          background: #f3f4f6;
+        }
+
+        .modal-btn-danger {
+          background: #ef4444;
+          color: white;
+        }
+
+        .modal-btn-danger:hover {
+          background: #dc2626;
+        }
+
+        .modal-btn-warning {
+          background: #f59e0b;
+          color: white;
+        }
+
+        .modal-btn-warning:hover {
+          background: #d97706;
+        }
+
+        /* Alert Styles */
         .alert {
           border-radius: 8px;
           padding: 15px 20px;
@@ -71,319 +814,53 @@
           font-size: 20px;
         }
 
-        /* Upload Container */
-        .upload-container {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 30px;
-          margin-bottom: 30px;
+        @keyframes slideInRight {
+          from { opacity: 0; transform: translateX(100px); }
+          to { opacity: 1; transform: translateX(0); }
         }
 
-        .upload-section, .metadata-section {
-          background: white;
-          border-radius: 8px;
-          padding: 25px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .section-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: #1a2332;
-          margin-bottom: 20px;
-          display: flex;
-          align-items: center;
-        }
-
-        .section-title i {
-          margin-right: 10px;
-          color: #6b7a99;
-        }
-
-        /* Drag & Drop Area */
-        .drop-zone {
-          border: 2px dashed #d1d5db;
-          border-radius: 8px;
-          padding: 60px 20px;
-          text-align: center;
-          background-color: #fafbfc;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .drop-zone:hover {
-          border-color: #2563eb;
-          background-color: #f0f7ff;
-        }
-
-        .drop-zone.dragover {
-          border-color: #2563eb;
-          background-color: #e0f2fe;
-          border-style: solid;
-        }
-
-        .drop-zone-icon {
-          width: 60px;
-          height: 60px;
-          margin: 0 auto 20px;
-          color: #6b7a99;
-        }
-
-        .drop-zone-text {
-          font-size: 16px;
-          color: #1a2332;
-          margin-bottom: 8px;
-          font-weight: 500;
-        }
-
-        .drop-zone-info {
-          font-size: 13px;
-          color: #6b7a99;
-          margin-bottom: 20px;
-        }
-
-        .required-indicator {
-          color: #ef4444;
-          margin-left: 2px;
-        }
-
-        .browse-btn {
-          background-color: white;
-          border: 1px solid #d1d5db;
-          color: #374151;
-          padding: 10px 24px;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .browse-btn:hover {
-          background-color: #f9fafb;
-          border-color: #9ca3af;
-        }
-
-        .file-preview {
-          display: none;
-          padding: 15px;
-          background-color: #f0f7ff;
-          border: 1px solid #bfdbfe;
-          border-radius: 6px;
-          margin-top: 15px;
-        }
-
-        .file-preview.show {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .file-info {
-          display: flex;
-          align-items: center;
-        }
-
-        .file-icon {
-          width: 40px;
-          height: 40px;
-          background-color: #2563eb;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          margin-right: 12px;
-        }
-
-        .file-details h6 {
-          font-size: 14px;
-          font-weight: 600;
-          color: #1a2332;
-          margin: 0 0 4px 0;
-        }
-
-        .file-details p {
-          font-size: 12px;
-          color: #6b7a99;
-          margin: 0;
-        }
-
-        .remove-file {
-          background: none;
-          border: none;
-          color: #ef4444;
-          cursor: pointer;
-          padding: 5px;
-          transition: opacity 0.3s;
-        }
-
-        .remove-file:hover {
-          opacity: 0.7;
-        }
-
-        /* Form Styles */
-        .form-label {
-          font-size: 14px;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 8px;
-        }
-
-        .form-control {
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          padding: 10px 14px;
-          font-size: 14px;
-          transition: all 0.3s;
-        }
-
-        .form-control:focus {
-          border-color: #2563eb;
-          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        textarea.form-control {
-          min-height: 100px;
-          resize: vertical;
-        }
-
-        /* Tags & Classifications */
-        .tag-container {
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          padding: 10px;
-          min-height: 80px;
-          background: #f8f9fa;
-          margin-top: 5px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          align-items: flex-start;
-        }
-
-        .tag-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #007bff;
-          color: white;
-          padding: 5px 12px;
-          border-radius: 20px;
-          font-size: 13px;
-          animation: fadeIn 0.3s;
-        }
-
-        .classification-chip {
-          background: #28a745;
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
-
-        .tag-chip .remove-tag {
-          cursor: pointer;
-          font-weight: bold;
-          opacity: 0.8;
-          margin-left: 4px;
-          display: inline-flex;
-          align-items: center;
-        }
-
-        .tag-chip .remove-tag:hover {
-          opacity: 1;
-        }
-
-        .tag-hint {
-          font-size: 12px;
-          color: #6c757d;
-          margin-top: 3px;
-        }
-
-        .existing-tags {
-          margin-top: 8px;
-          padding: 8px;
-          background: #e9ecef;
-          border-radius: 5px;
-          max-height: 120px;
-          overflow-y: auto;
-        }
-
-        .existing-tag-item {
-          display: inline-block;
-          padding: 4px 10px;
-          margin: 3px;
-          background: white;
-          border: 1px solid #dee2e6;
-          border-radius: 15px;
-          cursor: pointer;
-          font-size: 13px;
-          transition: all 0.2s;
-        }
-
-        .existing-tag-item:hover {
-          background: #007bff;
-          color: white;
-          border-color: #007bff;
-        }
-
-        .existing-classification-item:hover {
-          background: #28a745;
-          border-color: #28a745;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          padding: 20px 0;
-          border-top: 1px solid #e5e7eb;
-          margin-top: 30px;
-        }
-
-        .btn-cancel {
-          background-color: white;
-          border: 1px solid #d1d5db;
-          color: #374151;
-          padding: 10px 24px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .btn-cancel:hover {
-          background-color: #f9fafb;
-        }
-
-        .btn-save {
-          background-color: #2563eb;
-          border: none;
-          color: white;
-          padding: 10px 32px;
-          border-radius: 6px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .btn-save:hover {
-          background-color: #1d4ed8;
-        }
-
-        .btn-save:disabled {
-          background-color: #9ca3af;
-          cursor: not-allowed;
+        @keyframes slideOutRight {
+          from { opacity: 1; transform: translateX(0); }
+          to { opacity: 0; transform: translateX(100px); }
         }
 
         /* Responsive */
         @media (max-width: 992px) {
-          .upload-container {
+          .wizard-steps {
+            padding: 20px 30px;
+          }
+
+          .wizard-content {
+            padding: 30px 30px;
+          }
+
+          .wizard-navigation {
+            padding: 15px 30px 20px;
+          }
+
+          .form-row {
             grid-template-columns: 1fr;
+          }
+
+          .review-container {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .wizard-steps::before {
+            left: 30px;
+            right: 30px;
+          }
+
+          .wizard-step-label {
+            font-size: 12px;
+          }
+
+          .wizard-step-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
           }
         }
     </style>
@@ -398,31 +875,7 @@
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
-        <!-- Breadcrumb -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-1">Upload Document</h2>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="javascript:void(0);"
-                               onclick="goBack()"
-                               class="text-decoration-none">
-                                <i class="bi bi-arrow-left me-1"></i> Back
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item">
-                            <a th:href="@{/documents}" class="text-decoration-none">
-                                <i class="bi bi-house me-1"></i> Home
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item active">Upload Document</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-
+    <div class="main-content flex-grow-1 p-4">
         <!-- Alert Messages -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i>
@@ -436,450 +889,1323 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- Upload Form -->
-        <form id="uploadForm" th:action="@{/upload}" method="post" enctype="multipart/form-data" th:object="${document}">
+        <!-- Wizard Container -->
+        <div class="wizard-container">
+            <!-- Wizard Header -->
+            <div class="wizard-header">
+                <h2><i class="bi bi-cloud-upload me-2"></i>Upload Document</h2>
+                <p>Follow the steps below to upload your document</p>
+            </div>
 
-            <input type="hidden" name="tagNames" id="tagNamesField" />
-            <input type="hidden" name="classificationNames" id="classificationNamesField" />
-
-            <div class="upload-container">
-                <!-- File Upload Section -->
-                <div class="upload-section">
-                    <div class="section-title">
-                        <i class="bi bi-upload"></i> File Upload
+            <!-- Step Progress Bar -->
+            <div class="wizard-steps">
+                <div class="wizard-step active" data-step="1">
+                    <div class="wizard-step-circle">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
                     </div>
-
-                    <div class="drop-zone" id="dropZone">
-                        <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                        </svg>
-                        <div class="drop-zone-text">Drag & drop files here</div>
-                        <div class="drop-zone-info">
-                            Supported format: PDF (Max 50MB)
-                        </div>
-                        <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
-                            Browse Files
-                        </button>
-                        <input type="file" id="fileInput" name="file" accept=".pdf" style="display:none;" required />
-                    </div>
-
-                    <div class="file-preview" id="filePreview">
-                        <div class="file-info">
-                            <div class="file-icon">
-                                <i class="bi bi-file-earmark-pdf-fill"></i>
-                            </div>
-                            <div class="file-details">
-                                <h6 id="fileName">document.pdf</h6>
-                                <p id="fileSize">2.5 MB</p>
-                            </div>
-                        </div>
-                        <button type="button" class="remove-file" id="removeFile">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
+                    <div class="wizard-step-label">Upload File</div>
                 </div>
-
-                <!-- Document Metadata Section -->
-                <div class="metadata-section">
-                    <div class="section-title">
-                        <i class="bi bi-file-text"></i> Document Metadata
+                <div class="wizard-step" data-step="2">
+                    <div class="wizard-step-circle">
+                        <i class="bi bi-pencil-square"></i>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title <span class="required-indicator">*</span></label>
-                        <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1" required>
+                    <div class="wizard-step-label">Document Details</div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="wizard-step-circle">
+                        <i class="bi bi-tags"></i>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="productCode" class="form-label">Product Code <span class="required-indicator">*</span></label>
-                        <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" required>
+                    <div class="wizard-step-label">Tags & Classifications</div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="wizard-step-circle">
+                        <i class="bi bi-check-circle"></i>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="edition" class="form-label">Edition</label>
-                        <input type="text" class="form-control" id="edition" th:field="*{edition}" placeholder="e.g., 1.0, 2.1">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="publishDate" class="form-label">Publication Date</label>
-                        <input type="date" class="form-control" id="publishDate" th:field="*{publishDate}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="noOfPages" class="form-label">Number of Pages</label>
-                        <input type="number" class="form-control" id="noOfPages" th:field="*{noOfPages}" placeholder="e.g., 150" min="1">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" th:field="*{notes}" placeholder="Add any additional notes or description..."></textarea>
-                    </div>
-
-                    <!-- Tags Field -->
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-tags"></i> Tags (Optional)
-                        </label>
-                        <input class="form-control" type="text" id="tagInput" placeholder="Type a tag and press Enter" onkeypress="handleTagInput(event, 'tags')"/>
-                        <small class="tag-hint">
-                            <i class="bi bi-info-circle"></i> Press Enter to add tags
-                        </small>
-
-                        <!-- Existing tags (clickable) -->
-                        <div class="existing-tags" th:if="${allTags != null and !allTags.isEmpty()}">
-                            <small class="text-muted">Click to add existing tags:</small>
-                            <div th:each="tag : ${allTags}">
-                                <span class="existing-tag-item" th:text="${tag.tagName}" th:attr="data-tag-name=${tag.tagName}" onclick="addExistingTagFromData(this)"></span>
-                            </div>
-                        </div>
-
-                        <div class="tag-container" id="tagsContainer"></div>
-                    </div>
-
-                    <!-- Classifications Field -->
-                    <div class="mb-3">
-                        <label class="form-label">
-                            <i class="bi bi-folder"></i> Classifications (Optional)
-                        </label>
-                        <input class="form-control" type="text" id="classificationInput" placeholder="Type a classification and press Enter" onkeypress="handleTagInput(event, 'classifications')"/>
-                        <small class="tag-hint">
-                            <i class="bi bi-info-circle"></i> Press Enter to add classifications
-                        </small>
-
-                        <!-- Existing classifications (clickable) -->
-                        <div class="existing-tags" th:if="${allClassifications != null and !allClassifications.isEmpty()}">
-                            <small class="text-muted">Click to add existing classifications:</small>
-                            <div th:each="classification : ${allClassifications}">
-                                <span class="existing-tag-item existing-classification-item" th:text="${classification.classificationName}" th:attr="data-classification-name=${classification.classificationName}" onclick="addExistingClassificationFromData(this)"></span>
-                            </div>
-                        </div>
-
-                        <div class="tag-container" id="classificationsContainer"></div>
-                    </div>
+                    <div class="wizard-step-label">Review & Submit</div>
                 </div>
             </div>
 
-            <!-- Action Buttons at Bottom -->
-            <div class="action-buttons">
-                <button type="button" class="btn-cancel" id="cancelBtn">Cancel</button>
-                <button type="submit" class="btn-save" id="submitBtn">
-                    <i class="bi bi-check-circle me-2"></i>Save Document
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+            <!-- Wizard Form -->
+            <form id="uploadForm" th:action="@{/upload}" method="post" enctype="multipart/form-data" th:object="${document}">
+                <input type="hidden" name="tagNames" id="tagNamesField" />
+                <input type="hidden" name="classificationNames" id="classificationNamesField" />
+                <input type="hidden" name="publishMonth" id="publishMonthField" />
+                <input type="hidden" name="publishYear" id="publishYearField" />
 
-<!-- Confirmation Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-circle text-warning me-2"></i>
-                    Unsaved Changes
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-0">You have unsaved changes. Are you sure you want to cancel?</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Continue Editing</button>
-                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel</button>
+                <!-- Wizard Content Area -->
+                <div class="wizard-content">
+                    <!-- Step 1: Upload File -->
+                    <div class="wizard-step-content active" data-step="1">
+                        <div class="drop-zone" id="dropZone">
+                            <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                            </svg>
+                            <div class="drop-zone-text">Drag & Drop Your PDF File Here</div>
+                            <div class="drop-zone-info">
+                                or click the button below to browse
+                            </div>
+                            <div class="drop-zone-info" style="margin-bottom: 20px;">
+                                <i class="bi bi-info-circle"></i> Supported format: PDF • Maximum size: 50MB
+                            </div>
+                            <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                                <i class="bi bi-folder2-open"></i> Browse Files
+                            </button>
+                            <input type="file" id="fileInput" name="file" accept=".pdf" style="display:none;" />
+                        </div>
+
+                        <!-- File Uploaded Success Message -->
+                        <div class="file-uploaded-message" id="fileUploadedMessage">
+                            <div class="file-uploaded-icon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <div class="file-uploaded-title">File Uploaded Successfully!</div>
+                            <div class="file-uploaded-details">
+                                <strong id="uploadedFileName">document.pdf</strong>
+
+                                <span id="uploadedFileSize">0 KB</span> • <span id="uploadedFilePages">0 pages</span>
+                            </div>
+                            <button type="button" class="change-file-btn" onclick="changeFile()">
+                                <i class="bi bi-arrow-repeat"></i> Change File
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Document Details -->
+                    <div class="wizard-step-content" data-step="2">
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-info-circle"></i>
+                                Basic Information
+                            </div>
+
+                            <div class="form-group">
+                                <label for="title" class="form-label">
+                                    Document Title <span class="required-indicator">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1" required>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="productCode" class="form-label">
+                                        Product Code <span class="required-indicator">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edition" class="form-label">Edition</label>
+                                    <input type="text" class="form-control" id="edition" th:field="*{edition}" placeholder="e.g., 1.0, 2.1">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="publishMonth" class="form-label">Publication Month</label>
+                                    <select class="form-control" id="publishMonth">
+                                        <option value="">Select Month (Optional)</option>
+                                        <option value="01">January</option>
+                                        <option value="02">February</option>
+                                        <option value="03">March</option>
+                                        <option value="04">April</option>
+                                        <option value="05">May</option>
+                                        <option value="06">June</option>
+                                        <option value="07">July</option>
+                                        <option value="08">August</option>
+                                        <option value="09">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="publishYear" class="form-label">
+                                        Publication Year <span class="required-indicator">*</span>
+                                    </label>
+                                    <select class="form-control" id="publishYear" required>
+                                        <option value="">Select Year</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="noOfPages" class="form-label">Number of Pages <span class="required-indicator">*</span></label>
+                                <input type="number" class="form-control" id="noOfPages" th:field="*{noOfPages}" placeholder="Auto-detected from PDF" min="1" required>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span id="pagesInfoText">This field will be auto-filled when you upload a PDF</span>
+                                </p>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="notes" class="form-label">Notes / Description</label>
+                                <textarea class="form-control" id="notes" th:field="*{notes}" placeholder="Add any additional notes, description, or comments about this document..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Tags & Classifications -->
+                    <div class="wizard-step-content" data-step="3">
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-tags"></i>
+                                Tags (Optional)
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Create New Tag</label>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    Enter a tag name (lowercase, no spaces) and press Enter or click Add
+                                </p>
+                                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                    <input type="text" class="form-control" id="newTagInput" placeholder="Enter tag name (e.g., manual, technical)" style="flex: 1;">
+                                    <button type="button" class="wizard-btn wizard-btn-primary" id="addTagBtn" style="padding: 12px 24px;">
+                                        <i class="bi bi-plus-circle"></i> Add
+                                    </button>
+                                </div>
+                                <div class="error-message" id="tagErrorMessage"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Existing Tags</label>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    Click on tags to select/deselect them
+                                </p>
+                                <div class="selection-area-flex" id="tagsSelectionArea">
+                                    <div th:if="${allTags == null or allTags.isEmpty()}" class="empty-state">
+                                        No existing tags available
+                                    </div>
+                                    <div th:each="tag : ${allTags}" class="selection-item-flex" th:attr="data-tag-name=${tag.tagName}">
+                                        <input type="checkbox" class="selection-checkbox tag-checkbox" th:attr="data-tag-name=${tag.tagName}" style="display: none;">
+                                        <span class="selection-label" th:text="${tag.tagName}">Tag Name</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Selected Tags</label>
+                                <div class="selected-items-container" id="selectedTagsContainer">
+                                    <div class="empty-state">No tags selected</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-folder"></i>
+                                Classifications (Optional)
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Existing Classifications</label>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    Click on classifications to select/deselect them
+                                </p>
+                                <div class="selection-area-flex" id="classificationsSelectionArea">
+                                    <div th:if="${allClassifications == null or allClassifications.isEmpty()}" class="empty-state">
+                                        No existing classifications available
+                                    </div>
+                                    <div th:each="classification : ${allClassifications}" class="selection-item-flex" th:attr="data-classification-name=${classification.classificationName}">
+                                        <input type="checkbox" class="selection-checkbox classification-checkbox" th:attr="data-classification-name=${classification.classificationName}" style="display: none;">
+                                        <span class="selection-label" th:text="${classification.classificationName}">Classification Name</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Selected Classifications</label>
+                                <div class="selected-items-container" id="selectedClassificationsContainer">
+                                    <div class="empty-state">No classifications selected</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Review & Submit -->
+                    <div class="wizard-step-content" data-step="4">
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-eye"></i>
+                                Review Your Information
+                            </div>
+
+                            <div class="review-container">
+                                <!-- Left Side: Document Details -->
+                                <div class="review-details">
+                                    <div class="review-section">
+                                        <h6>FILE INFORMATION</h6>
+                                        <div class="review-grid">
+                                            <strong>File Name:</strong> <span id="reviewFileName">-</span>
+                                            <strong>File Size:</strong> <span id="reviewFileSize">-</span>
+                                            <strong>Pages:</strong> <span id="reviewFilePages">-</span>
+                                        </div>
+                                    </div>
+
+                                    <hr class="review-divider">
+
+                                    <div class="review-section">
+                                        <h6>DOCUMENT DETAILS</h6>
+                                        <div class="review-grid">
+                                            <strong>Title:</strong> <span id="reviewTitle">-</span>
+                                            <strong>Product Code:</strong> <span id="reviewProductCode">-</span>
+                                            <strong>Edition:</strong> <span id="reviewEdition">-</span>
+                                            <strong>Publish Date:</strong> <span id="reviewPublishDate">-</span>
+                                            <strong>Notes:</strong> <span id="reviewNotes">-</span>
+                                        </div>
+                                    </div>
+
+                                    <hr class="review-divider">
+
+                                    <div class="review-section">
+                                        <h6>TAGS</h6>
+                                        <div class="review-tags" id="reviewTags">
+                                            <span style="color: #9ca3af; font-size: 14px;">No tags selected</span>
+                                        </div>
+                                    </div>
+
+                                    <hr class="review-divider">
+
+                                    <div class="review-section">
+                                        <h6>CLASSIFICATIONS</h6>
+                                        <div class="review-classifications" id="reviewClassifications">
+                                            <span style="color: #9ca3af; font-size: 14px;">No classifications selected</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Side: PDF Preview -->
+                                <div class="pdf-preview-box">
+                                    <div class="pdf-preview-title">
+                                        <i class="bi bi-file-earmark-pdf me-2"></i>Document Preview (Page 1)
+                                    </div>
+                                    <div class="pdf-canvas-container">
+                                        <canvas id="reviewPdfCanvas"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wizard Navigation -->
+                <div class="wizard-navigation">
+                    <div>
+                        <button type="button" class="wizard-btn wizard-btn-secondary" id="prevBtn" style="display: none;">
+                            <i class="bi bi-arrow-left"></i> Previous
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="wizard-btn wizard-btn-secondary" id="cancelBtn">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        <button type="button" class="wizard-btn wizard-btn-primary" id="nextBtn">
+                            Next <i class="bi bi-arrow-right"></i>
+                        </button>
+                        <button type="submit" class="wizard-btn wizard-btn-success" id="submitBtn" style="display: none;">
+                            <i class="bi bi-check-circle"></i> Submit Document
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Custom Confirmation Modal -->
+        <div class="custom-modal-overlay" id="confirmationModal">
+            <div class="custom-modal">
+                <div class="modal-header-custom">
+                    <div class="modal-icon">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="modal-title-custom">
+                        <h3>Unsaved Changes</h3>
+                        <p>You have unsaved changes that will be lost</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="closeConfirmationModal()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-custom">
+                    <p>Are you sure you want to leave this page? All your progress will be lost if you continue.</p>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeConfirmationModal()">
+                        Continue Editing
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-danger" id="confirmCancelBtn">
+                        Yes, Leave Page
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- PDF Protection Warning Modal -->
+<div class="custom-modal-overlay" id="pdfProtectionModal">
+    <div class="custom-modal">
+        <div class="modal-header-custom modal-header-warning">
+            <div class="modal-icon">
+                <i class="bi bi-shield-lock"></i>
+            </div>
+            <div class="modal-title-custom">
+                <h3>Protected PDF Detected</h3>
+                <p>This document has restrictions</p>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closePdfProtectionModal()">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="modal-body-custom">
+            <p>The selected PDF has the following restrictions:</p>
+            <ul id="protectionList"></ul>
+            <p style="margin-top: 15px;"><strong>Do you want to continue with this document?</strong></p>
+            <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
+                <i class="bi bi-info-circle"></i> You will be able to manually enter the number of pages in the next step.
+            </p>
+        </div>
+        <div class="modal-footer-custom">
+            <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelProtectedPdf()">
+                Cancel & Select Another
+            </button>
+            <button type="button" class="modal-btn modal-btn-warning" id="forceUploadBtn">
+                <i class="bi bi-shield-exclamation"></i> Continue Anyway
+            </button>
+        </div>
+    </div>
+</div>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
-<script>
-    // Store tags and classifications
-    let tags = [];
-    let classifications = [];
-    let formChanged = false;
 
-    // Track form changes
-    document.getElementById('uploadForm').addEventListener('input', function() {
-        formChanged = true;
+<script>
+    // ============== WIZARD STATE MANAGEMENT ==============
+    let currentStep = 1;
+    let formChanged = false;
+    let selectedTags = [];
+    let selectedClassifications = [];
+    let uploadedFile = null;
+    let pdfDoc = null;
+    let isPasswordProtected = false;
+    let allExistingTags = [];
+    let allExistingClassifications = [];
+
+    // ============== INITIALIZE ==============
+    document.addEventListener('DOMContentLoaded', function() {
+        populateYearDropdown();
+        initializeTagsAndClassifications();
     });
 
-    // Drag and Drop Functionality
+    // ============== INITIALIZE TAGS AND CLASSIFICATIONS ==============
+    function initializeTagsAndClassifications() {
+        // Get all existing tags from the DOM
+        document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+            const tagName = checkbox.getAttribute('data-tag-name');
+            if (tagName) {
+                allExistingTags.push(tagName.toLowerCase());
+            }
+        });
+
+        // Get all existing classifications from the DOM
+        document.querySelectorAll('.classification-checkbox').forEach(checkbox => {
+            const classificationName = checkbox.getAttribute('data-classification-name');
+            if (classificationName) {
+                allExistingClassifications.push(classificationName);
+            }
+        });
+
+        // Attach click handlers to existing tags
+        document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.tag-checkbox');
+                const tagName = this.getAttribute('data-tag-name');
+
+                if (checkbox.checked) {
+                    checkbox.checked = false;
+                    this.classList.remove('selected');
+                    selectedTags = selectedTags.filter(t => t !== tagName);
+                } else {
+                    checkbox.checked = true;
+                    this.classList.add('selected');
+                    if (!selectedTags.includes(tagName)) {
+                        selectedTags.push(tagName);
+                    }
+                }
+                renderSelectedTags();
+                formChanged = true;
+            });
+        });
+
+        // Attach click handlers to existing classifications
+        document.querySelectorAll('.selection-item-flex[data-classification-name]').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.classification-checkbox');
+                const classificationName = this.getAttribute('data-classification-name');
+
+                if (checkbox.checked) {
+                    checkbox.checked = false;
+                    this.classList.remove('selected');
+                    selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
+                } else {
+                    checkbox.checked = true;
+                    this.classList.add('selected');
+                    if (!selectedClassifications.includes(classificationName)) {
+                        selectedClassifications.push(classificationName);
+                    }
+                }
+                renderSelectedClassifications();
+                formChanged = true;
+            });
+        });
+    }
+
+    // ============== POPULATE YEAR DROPDOWN ==============
+    function populateYearDropdown() {
+        const yearSelect = document.getElementById('publishYear');
+        const currentYear = new Date().getFullYear();
+
+        for (let year = currentYear; year >= 1900; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelect.appendChild(option);
+        }
+    }
+
+    // ============== WIZARD NAVIGATION ==============
+    function updateWizardStep(step) {
+        document.querySelectorAll('.wizard-step-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        const currentContent = document.querySelector(`.wizard-step-content[data-step="${step}"]`);
+        if (currentContent) {
+            currentContent.classList.add('active');
+        }
+
+        document.querySelectorAll('.wizard-step').forEach(stepEl => {
+            const stepNum = parseInt(stepEl.getAttribute('data-step'));
+            stepEl.classList.remove('active', 'completed');
+
+            if (stepNum < step) {
+                stepEl.classList.add('completed');
+            } else if (stepNum === step) {
+                stepEl.classList.add('active');
+            }
+        });
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        if (step === 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'inline-flex';
+            submitBtn.style.display = 'none';
+        } else if (step === 2) {
+            prevBtn.style.display = 'inline-flex';
+            nextBtn.style.display = 'inline-flex';
+            submitBtn.style.display = 'none';
+        } else if (step === 3) {
+            prevBtn.style.display = 'inline-flex';
+            nextBtn.style.display = 'inline-flex';
+            submitBtn.style.display = 'none';
+        } else if (step === 4) {
+            prevBtn.style.display = 'inline-flex';
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'inline-flex';
+            updateReviewSection();
+        }
+
+        currentStep = step;
+    }
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+        if (currentStep === 1) {
+            if (!uploadedFile) {
+                showCustomAlert('Please upload a PDF file before proceeding.');
+                return;
+            }
+            formChanged = true;
+            updateWizardStep(2);
+        } else if (currentStep === 2) {
+            const title = document.getElementById('title').value.trim();
+            const productCode = document.getElementById('productCode').value.trim();
+            const publishYear = document.getElementById('publishYear').value.trim();
+            const noOfPages = document.getElementById('noOfPages').value.trim();
+
+            if (!title || !productCode) {
+                showCustomAlert('Please fill in all required fields (Title and Product Code).');
+                return;
+            }
+
+            if (!publishYear) {
+                showCustomAlert('Publication Year is required.');
+                return;
+            }
+
+            if (!noOfPages) {
+                showCustomAlert('Number of Pages is required.');
+                return;
+            }
+
+            updateWizardStep(3);
+        } else if (currentStep === 3) {
+            updateWizardStep(4);
+        }
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', function() {
+        if (currentStep > 1) {
+            updateWizardStep(currentStep - 1);
+        }
+    });
+
+    // ============== FILE UPLOAD HANDLING ==============
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const filePreview = document.getElementById('filePreview');
-    const removeFile = document.getElementById('removeFile');
+    const fileUploadedMessage = document.getElementById('fileUploadedMessage');
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-      dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-      dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
     });
 
     dropZone.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      const files = dt.files;
-      fileInput.files = files;
-      handleFiles(files);
-      formChanged = true;
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        handleFiles(files);
     });
 
     fileInput.addEventListener('change', (e) => {
         handleFiles(e.target.files);
-        formChanged = true;
     });
 
-    function handleFiles(files) {
-  if (files.length > 0) {
-    const file = files[0];
+    async function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
 
-    if (file.type !== 'application/pdf') {
-      alert('Please upload only PDF files');
-      fileInput.value = '';
-      return;
+            if (file.type !== 'application/pdf') {
+                showCustomAlert('Please upload only PDF files');
+                fileInput.value = '';
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                showCustomAlert('File size must be less than 50MB');
+                fileInput.value = '';
+                return;
+            }
+
+            uploadedFile = file;
+            await checkPdfProtection(file);
+        }
     }
 
-    if (file.size > 50 * 1024 * 1024) {
-      alert('File size must be less than 50MB');
-      fileInput.value = '';
-      return;
+    async function checkPdfProtection(file) {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+            const pdf = await loadingTask.promise;
+
+            const restrictions = [];
+
+            // Check for password protection
+            if (pdf.isEncrypted || loadingTask._transport._passwordCallback) {
+                restrictions.push('Password Protected');
+            }
+
+            // Get document permissions
+            try {
+                const permissions = await pdf.getPermissions();
+                if (permissions) {
+                    if (permissions.includes(4) === false) {
+                        restrictions.push('Print Restricted');
+                    }
+                    if (permissions.includes(16) === false) {
+                        restrictions.push('Copy/Extract Restricted');
+                    }
+                    if (permissions.includes(8) === false) {
+                        restrictions.push('Modification Restricted');
+                    }
+                }
+            } catch (permError) {
+                console.log('Could not check permissions:', permError);
+            }
+
+            if (restrictions.length > 0) {
+                showProtectionWarning(restrictions);
+            } else {
+                await proceedWithUpload(file, pdf);
+            }
+        } catch (error) {
+            console.error("Error checking PDF protection:", error);
+            if (error.name === 'PasswordException') {
+                showProtectionWarning(['Password Protected - Cannot preview']);
+            } else {
+                await proceedWithUpload(file, null);
+            }
+        }
     }
 
-    displayFilePreview(file);
+    function showProtectionWarning(restrictions) {
+        const protectionList = document.getElementById('protectionList');
+        protectionList.innerHTML = '';
 
-    // ⬇️ Extract PDF metadata here
-    extractPdfMetadata(file);
-  }
-}
+        restrictions.forEach(restriction => {
+            const li = document.createElement('li');
+            li.innerHTML = `<i class="bi bi-exclamation-triangle" style="color: #f59e0b; margin-right: 5px;"></i>${restriction}`;
+            protectionList.appendChild(li);
+        });
 
-async function extractPdfMetadata(file) {
-  try {
-    const arrayBuffer = await file.arrayBuffer();
-
-    // Load PDF document
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-    // 🔹 Fetch number of pages
-    const pageCount = pdf.numPages;
-    document.getElementById('noOfPages').value = pageCount;
-
-    const match = file.name.match(/(PM-\d+)/i);
-    if (match) {
-         document.getElementById('productCode').value = match[1];
+        document.getElementById('pdfProtectionModal').classList.add('show');
     }
 
-
-    // 🔹 Try to read metadata (like Title, Author, etc.)
-    const metadata = await pdf.getMetadata().catch(() => null);
-
-    if (metadata && metadata.info && metadata.info.Title) {
-      document.getElementById('title').value = metadata.info.Title;
-    } else {
-      // If no title found, use filename (without extension)
-      const defaultTitle = file.name.replace(/\.[^/.]+$/, '');
-      document.getElementById('title').value = defaultTitle;
+    function closePdfProtectionModal() {
+        document.getElementById('pdfProtectionModal').classList.remove('show');
     }
 
-    console.log("PDF Metadata:", metadata);
-  } catch (error) {
-    console.error("Error reading PDF metadata:", error);
-  }
-}
+    function cancelProtectedPdf() {
+        fileInput.value = '';
+        uploadedFile = null;
+        closePdfProtectionModal();
+    }
 
-    function displayFilePreview(file) {
-      document.getElementById('fileName').textContent = file.name;
-      document.getElementById('fileSize').textContent = formatFileSize(file.size);
-      filePreview.classList.add('show');
-      dropZone.style.display = 'none'; // Hide drop zone when file is selected
+    document.getElementById('forceUploadBtn').addEventListener('click', async function() {
+        closePdfProtectionModal();
+        isPasswordProtected = true;
+        await proceedWithUpload(uploadedFile, null);
+    });
+
+    async function proceedWithUpload(file, pdf) {
+        displayFileSuccess(file);
+        await extractPdfMetadata(file, pdf);
+        if (pdf) {
+            pdfDoc = pdf;
+        }
+        formChanged = true;
+    }
+
+    async function extractPdfMetadata(file, pdf) {
+        try {
+            let pageCount = 0;
+
+            if (pdf) {
+                pageCount = pdf.numPages;
+                document.getElementById('noOfPages').value = pageCount;
+                document.getElementById('noOfPages').readOnly = true;
+                document.getElementById('pagesInfoText').textContent = 'Auto-detected from PDF';
+            } else {
+                // Password protected - allow manual entry
+                document.getElementById('noOfPages').value = '';
+                document.getElementById('noOfPages').readOnly = false;
+                document.getElementById('pagesInfoText').textContent = 'Please enter the number of pages manually';
+                document.getElementById('pagesInfoText').style.color = '#f59e0b';
+            }
+
+            document.getElementById('uploadedFilePages').textContent = pageCount > 0 ? pageCount + ' pages' : 'Manual entry required';
+
+            // Extract product code from filename
+            const match = file.name.match(/(PM-\d+)/i);
+            if (match) {
+                document.getElementById('productCode').value = match[1];
+            }
+
+            // Try to get title from metadata or filename
+            if (pdf) {
+                const metadata = await pdf.getMetadata().catch(() => null);
+                if (metadata && metadata.info && metadata.info.Title) {
+                    document.getElementById('title').value = metadata.info.Title;
+                } else {
+                    const defaultTitle = file.name.replace(/\.[^/.]+$/, '');
+                    document.getElementById('title').value = defaultTitle;
+                }
+            } else {
+                const defaultTitle = file.name.replace(/\.[^/.]+$/, '');
+                document.getElementById('title').value = defaultTitle;
+            }
+        } catch (error) {
+            console.error("Error reading PDF metadata:", error);
+        }
+    }
+
+    function displayFileSuccess(file) {
+        document.getElementById('uploadedFileName').textContent = file.name;
+        document.getElementById('uploadedFileSize').textContent = formatFileSize(file.size);
+        dropZone.style.display = 'none';
+        fileUploadedMessage.classList.add('show');
+    }
+
+    function changeFile() {
+        fileInput.value = '';
+        uploadedFile = null;
+        pdfDoc = null;
+        isPasswordProtected = false;
+        fileUploadedMessage.classList.remove('show');
+        dropZone.style.display = 'block';
+        document.getElementById('noOfPages').value = '';
+        document.getElementById('noOfPages').readOnly = false;
+        document.getElementById('pagesInfoText').textContent = 'This field will be auto-filled when you upload a PDF';
+        document.getElementById('pagesInfoText').style.color = '#6b7280';
     }
 
     function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      const k = 1024;
-      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    removeFile.addEventListener('click', () => {
-      fileInput.value = '';
-      filePreview.classList.remove('show');
-      dropZone.style.display = 'block'; // Show drop zone again
-    });
+    // ============== TAGS HANDLING ==============
+    const newTagInput = document.getElementById('newTagInput');
+    const addTagBtn = document.getElementById('addTagBtn');
+    const tagErrorMessage = document.getElementById('tagErrorMessage');
 
-    // Handle tag/classification input
-    function handleTagInput(event, type) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        const inputId = type === 'tags' ? 'tagInput' : 'classificationInput';
-        const input = document.getElementById(inputId);
-        const value = input.value.trim();
+    addTagBtn.addEventListener('click', addNewTag);
 
-        if (value) {
-          if (type === 'tags') {
-            if (!tags.includes(value)) {
-              tags.push(value);
-              renderTags();
-              formChanged = true;
-            }
-          } else {
-            if (!classifications.includes(value)) {
-              classifications.push(value);
-              renderClassifications();
-              formChanged = true;
-            }
-          }
-          input.value = '';
+    newTagInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addNewTag();
         }
-      }
-    }
+    });
 
-    // Add existing tag by clicking
-    function addExistingTagFromData(element) {
-      const tagName = element.getAttribute('data-tag-name');
-      if (tagName && !tags.includes(tagName)) {
-        tags.push(tagName);
-        renderTags();
+    newTagInput.addEventListener('input', function() {
+        hideTagError();
+    });
+
+    function addNewTag() {
+        let tagName = newTagInput.value.trim();
+
+        if (!tagName) {
+            showTagError('<i class="bi bi-exclamation-circle"></i> Please enter a tag name');
+            return;
+        }
+
+        if (tagName.includes(' ')) {
+            showTagError('<i class="bi bi-exclamation-circle"></i> Spaces are not allowed in tag names');
+            return;
+        }
+
+        tagName = tagName.toLowerCase();
+
+        if (allExistingTags.includes(tagName)) {
+            const existingItem = Array.from(document.querySelectorAll('.selection-item-flex[data-tag-name]')).find(
+                item => item.getAttribute('data-tag-name').toLowerCase() === tagName
+            );
+
+            if (existingItem) {
+                blinkItem(existingItem);
+                showTagError('<i class="bi bi-info-circle"></i> Tag already exists in available tags');
+
+                const checkbox = existingItem.querySelector('.tag-checkbox');
+                if (checkbox && !checkbox.checked) {
+                    checkbox.checked = true;
+                    if (!selectedTags.includes(tagName)) {
+                        selectedTags.push(tagName);
+                        existingItem.classList.add('selected');
+                        renderSelectedTags();
+                    }
+                }
+            }
+            newTagInput.value = '';
+            return;
+        }
+
+        if (selectedTags.some(t => t.toLowerCase() === tagName)) {
+            showTagError('<i class="bi bi-info-circle"></i> Tag is already selected');
+            newTagInput.value = '';
+            return;
+        }
+
+        selectedTags.push(tagName);
+        allExistingTags.push(tagName);
+
+        const tagsArea = document.getElementById('tagsSelectionArea');
+        const emptyState = tagsArea.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        const newTagItem = createNewSelectionItem(tagName, 'tag');
+        newTagItem.classList.add('selected');
+        const checkbox = newTagItem.querySelector('.tag-checkbox');
+        checkbox.checked = true;
+
+        tagsArea.appendChild(newTagItem);
+        renderSelectedTags();
+        newTagInput.value = '';
         formChanged = true;
-      }
     }
 
-    // Add existing classification by clicking
-    function addExistingClassificationFromData(element) {
-      const classificationName = element.getAttribute('data-classification-name');
-      if (classificationName && !classifications.includes(classificationName)) {
-        classifications.push(classificationName);
-        renderClassifications();
-        formChanged = true;
-      }
-    }
+    function createNewSelectionItem(name, type) {
+        const item = document.createElement('div');
+        item.className = 'selection-item-flex';
+        item.setAttribute(`data-${type}-name`, name);
+        item.innerHTML = `
+            <input type="checkbox" class="selection-checkbox ${type}-checkbox" data-${type}-name="${name}" style="display: none;">
+            <span class="selection-label">${name}</span>
+        `;
 
-    // Render tags
-    function renderTags() {
-      const container = document.getElementById('tagsContainer');
-      container.innerHTML = '';
-      tags.forEach((tag, index) => {
-        const chip = document.createElement('span');
-        chip.className = 'tag-chip';
-        chip.innerHTML = `${tag} <span class="remove-tag" onclick="removeTag(${index})"><i class="bi bi-x"></i></span>`;
-        container.appendChild(chip);
-      });
-      document.getElementById('tagNamesField').value = tags.join(',');
-    }
+        item.addEventListener('click', function() {
+            const checkbox = this.querySelector(`.${type}-checkbox`);
+            const itemName = this.getAttribute(`data-${type}-name`);
 
-    // Render classifications
-    function renderClassifications() {
-      const container = document.getElementById('classificationsContainer');
-      container.innerHTML = '';
-      classifications.forEach((classification, index) => {
-        const chip = document.createElement('span');
-        chip.className = 'tag-chip classification-chip';
-        chip.innerHTML = `${classification} <span class="remove-tag" onclick="removeClassification(${index})"><i class="bi bi-x"></i></span>`;
-        container.appendChild(chip);
-      });
-      document.getElementById('classificationNamesField').value = classifications.join(',');
-    }
-
-    // Remove tag
-    function removeTag(index) {
-      tags.splice(index, 1);
-      renderTags();
-    }
-
-    // Remove classification
-    function removeClassification(index) {
-      classifications.splice(index, 1);
-      renderClassifications();
-    }
-
-    // Cancel Button - Show confirmation if there are changes
-    document.getElementById('cancelBtn').addEventListener('click', function() {
-      if (formChanged || fileInput.files.length > 0 || tags.length > 0 || classifications.length > 0) {
-        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-        modal.show();
-      } else {
-        window.location.href = '/upload';
-      }
-    });
-
-    // Confirm Cancel - Clear form and redirect
-    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
-      formChanged = false;
-      // Close modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
-      modal.hide();
-      // Redirect
-      window.location.href = '/upload';
-    });
-
-    // Form Submission
-    document.getElementById('uploadForm').addEventListener('submit', (e) => {
-      if (!fileInput.files || fileInput.files.length === 0) {
-        e.preventDefault();
-        alert('Please select a file to upload');
-        return false;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Uploading...';
-      formChanged = false;
-      return true;
-    });
-
-    // Auto-dismiss alerts and reset form if success message is shown
-    window.addEventListener('load', function() {
-      const successAlert = document.querySelector('.alert-success');
-      const errorAlert = document.querySelector('.alert-error');
-
-      if (successAlert) {
-        // Reset form after successful upload
-        setTimeout(() => {
-          resetForm();
-        }, 100);
-      }
-
-      // Auto-dismiss alerts after 5 seconds
-      setTimeout(() => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-          if (bsAlert) bsAlert.close();
+            if (checkbox.checked) {
+                checkbox.checked = false;
+                this.classList.remove('selected');
+                if (type === 'tag') {
+                    selectedTags = selectedTags.filter(t => t !== itemName);
+                    renderSelectedTags();
+                } else {
+                    selectedClassifications = selectedClassifications.filter(c => c !== itemName);
+                    renderSelectedClassifications();
+                }
+            } else {
+                checkbox.checked = true;
+                this.classList.add('selected');
+                if (type === 'tag') {
+                    if (!selectedTags.includes(itemName)) {
+                        selectedTags.push(itemName);
+                    }
+                    renderSelectedTags();
+                } else {
+                    if (!selectedClassifications.includes(itemName)) {
+                        selectedClassifications.push(itemName);
+                    }
+                    renderSelectedClassifications();
+                }
+            }
+            formChanged = true;
         });
-      }, 5000);
+
+        return item;
+    }
+
+    function showTagError(message) {
+        tagErrorMessage.innerHTML = message;
+        tagErrorMessage.classList.add('show');
+        setTimeout(() => {
+            hideTagError();
+        }, 3000);
+    }
+
+    function hideTagError() {
+        tagErrorMessage.classList.remove('show');
+    }
+
+    function renderSelectedTags() {
+        const container = document.getElementById('selectedTagsContainer');
+        container.innerHTML = '';
+
+        if (selectedTags.length === 0) {
+            container.innerHTML = '<div class="empty-state">No tags selected</div>';
+        } else {
+            selectedTags.forEach(tag => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip';
+                chip.innerHTML = `
+                    ${tag}
+                    <span class="chip-remove" onclick="removeSelectedTag('${tag}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        document.getElementById('tagNamesField').value = selectedTags.join(',');
+    }
+
+    function removeSelectedTag(tagName) {
+        selectedTags = selectedTags.filter(t => t !== tagName);
+
+        const checkbox = document.querySelector(`.tag-checkbox[data-tag-name="${tagName}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedTags();
+    }
+
+    // ============== CLASSIFICATIONS HANDLING ==============
+    function renderSelectedClassifications() {
+        const container = document.getElementById('selectedClassificationsContainer');
+        container.innerHTML = '';
+
+        if (selectedClassifications.length === 0) {
+            container.innerHTML = '<div class="empty-state">No classifications selected</div>';
+        } else {
+            selectedClassifications.forEach(classification => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip classification-chip';
+                chip.innerHTML = `
+                    ${classification}
+                    <span class="chip-remove" onclick="removeSelectedClassification('${classification}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        document.getElementById('classificationNamesField').value = selectedClassifications.join(',');
+    }
+
+    function removeSelectedClassification(classificationName) {
+        selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
+
+        const checkbox = document.querySelector(`.classification-checkbox[data-classification-name="${classificationName}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedClassifications();
+    }
+
+    // ============== BLINK ANIMATION ==============
+    function blinkItem(element) {
+        element.classList.add('blink');
+        setTimeout(() => {
+            element.classList.remove('blink');
+        }, 1800);
+    }
+
+    // ============== REVIEW SECTION ==============
+    async function updateReviewSection() {
+        // File Information
+        document.getElementById('reviewFileName').textContent = uploadedFile ? uploadedFile.name : '-';
+        document.getElementById('reviewFileSize').textContent = uploadedFile ? formatFileSize(uploadedFile.size) : '-';
+        document.getElementById('reviewFilePages').textContent = document.getElementById('noOfPages').value || '-';
+
+        // Document Details
+        document.getElementById('reviewTitle').textContent = document.getElementById('title').value || '-';
+        document.getElementById('reviewProductCode').textContent = document.getElementById('productCode').value || '-';
+        document.getElementById('reviewEdition').textContent = document.getElementById('edition').value || '-';
+
+        const month = document.getElementById('publishMonth').value;
+        const year = document.getElementById('publishYear').value;
+        let publishDate = '-';
+        if (year) {
+            if (month) {
+                const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 'December'];
+                publishDate = `${monthNames[parseInt(month)]} ${year}`;
+            } else {
+                publishDate = year;
+            }
+        }
+        document.getElementById('reviewPublishDate').textContent = publishDate;
+
+        document.getElementById('reviewNotes').textContent = document.getElementById('notes').value || '-';
+
+        // Tags
+        const reviewTagsContainer = document.getElementById('reviewTags');
+        reviewTagsContainer.innerHTML = '';
+        if (selectedTags.length === 0) {
+            reviewTagsContainer.innerHTML = '<span style="color: #9ca3af; font-size: 14px;">No tags selected</span>';
+        } else {
+            selectedTags.forEach(tag => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip';
+                chip.textContent = tag;
+                reviewTagsContainer.appendChild(chip);
+            });
+        }
+
+        // Classifications
+        const reviewClassificationsContainer = document.getElementById('reviewClassifications');
+        reviewClassificationsContainer.innerHTML = '';
+        if (selectedClassifications.length === 0) {
+            reviewClassificationsContainer.innerHTML = '<span style="color: #9ca3af; font-size: 14px;">No classifications selected</span>';
+        } else {
+            selectedClassifications.forEach(classification => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip classification-chip';
+                chip.textContent = classification;
+                reviewClassificationsContainer.appendChild(chip);
+            });
+        }
+
+        // Render PDF Preview
+        if (pdfDoc && !isPasswordProtected) {
+            await renderReviewPdfPreview();
+        } else {
+            // Show placeholder for password-protected PDFs
+            const canvas = document.getElementById('reviewPdfCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 400;
+            canvas.height = 500;
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Preview not available', canvas.width / 2, canvas.height / 2 - 10);
+            ctx.fillText('(Password Protected)', canvas.width / 2, canvas.height / 2 + 15);
+        }
+    }
+
+    async function renderReviewPdfPreview() {
+        try {
+            const page = await pdfDoc.getPage(1);
+            const canvas = document.getElementById('reviewPdfCanvas');
+            const context = canvas.getContext('2d');
+
+            const viewport = page.getViewport({ scale: 1.2 });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+
+            await page.render(renderContext).promise;
+        } catch (error) {
+            console.error("Error rendering PDF preview:", error);
+        }
+    }
+
+    // ============== MODAL FUNCTIONS ==============
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        if (formChanged || uploadedFile) {
+            document.getElementById('confirmationModal').classList.add('show');
+        } else {
+            navigateAway();
+        }
     });
 
-    // Reset form function
-    function resetForm() {
-      document.getElementById('uploadForm').reset();
-      fileInput.value = '';
-      filePreview.classList.remove('show');
-      dropZone.style.display = 'block';
-      tags = [];
-      classifications = [];
-      renderTags();
-      renderClassifications();
-      formChanged = false;
+    function closeConfirmationModal() {
+        document.getElementById('confirmationModal').classList.remove('show');
     }
-</script>
-<script>
-    function goBack() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+        closeConfirmationModal();
+        navigateAway();
+    });
+
+    function navigateAway() {
+        formChanged = false;
+        isSubmitting = true;
+
+        // Check if there's a previous page in history
+        if (window.history.length > 1 && document.referrer) {
             window.history.back();
         } else {
-            // Fallback if there's no referrer (like direct load)
+            // No previous page, go to documents page
+            window.location.href = '/documents';
+        }
+    }
+
+    // Prevent accidental navigation
+    let isSubmitting = false;
+
+    window.addEventListener('beforeunload', function(e) {
+        if ((formChanged || uploadedFile) && !isSubmitting) {
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+        }
+    });
+
+    // ============== FORM SUBMISSION ==============
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        if (!uploadedFile) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCustomAlert('Please upload a file before submitting.');
+            return false;
+        }
+
+        // Set month and year values
+        document.getElementById('publishMonthField').value = document.getElementById('publishMonth').value;
+        document.getElementById('publishYearField').value = document.getElementById('publishYear').value;
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+        formChanged = false;
+        isSubmitting = true;
+        return true;
+    });
+
+    // Mark form as changed on any input
+    document.getElementById('uploadForm').addEventListener('input', function() {
+        formChanged = true;
+    });
+
+    document.getElementById('uploadForm').addEventListener('change', function() {
+        formChanged = true;
+    });
+
+    function showCustomAlert(message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        `;
+        alertDiv.innerHTML = `
+            <i class="bi bi-exclamation-circle-fill" style="font-size: 20px;"></i>
+            <span>${message}</span>
+        `;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => alertDiv.remove(), 300);
+        }, 3000);
+    }
+
+    // Initialize wizard
+    updateWizardStep(1);
+
+    // Auto-dismiss alerts
+    window.addEventListener('load', function() {
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                if (bsAlert) bsAlert.close();
+            });
+        }, 5000);
+    });
+
+    // ============== INTERCEPT ALL NAVIGATION ATTEMPTS ==============
+    let navigationConfirmed = false;
+    let pendingNavigationUrl = null;
+
+    // Push initial state to prevent back button
+    window.history.pushState(null, '', window.location.href);
+
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function(e) {
+        if ((formChanged || uploadedFile) && !isSubmitting && !navigationConfirmed) {
+            window.history.pushState(null, '', window.location.href);
+            showNavigationConfirmation('back');
+        }
+    });
+
+    // Intercept all link clicks
+    document.addEventListener('click', function(e) {
+        // Find if the clicked element or any parent is a link
+        const link = e.target.closest('a');
+
+        if (link && link.href && !link.hasAttribute('data-bs-toggle')) {
+            // Check if it's not a wizard button or internal action
+            const isWizardButton = link.closest('.wizard-navigation') ||
+                                   link.closest('.wizard-content') ||
+                                   link.id === 'confirmCancelBtn' ||
+                                   link.classList.contains('modal-btn') ||
+                                   link.classList.contains('change-file-btn');
+
+            // Check if it's a navbar or sidebar link
+            const isNavLink = link.closest('.navbar') ||
+                             link.closest('.sidebar') ||
+                             link.closest('nav') ||
+                             link.hasAttribute('href');
+
+            if (isNavLink && !isWizardButton && (formChanged || uploadedFile) && !isSubmitting && !navigationConfirmed) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                const targetUrl = link.href;
+                showNavigationConfirmation(targetUrl);
+                return false;
+            }
+        }
+    }, true); // Use capture phase to intercept before other handlers
+
+    // Show confirmation modal for navigation
+    function showNavigationConfirmation(targetUrl) {
+        pendingNavigationUrl = targetUrl;
+        const modal = document.getElementById('confirmationModal');
+        modal.classList.add('show');
+
+        const confirmBtn = document.getElementById('confirmCancelBtn');
+        // Remove old event listeners by cloning
+        const newConfirmBtn = confirmBtn.cloneNode(true);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+        newConfirmBtn.onclick = function() {
+            navigationConfirmed = true;
+            formChanged = false;
+            isSubmitting = true;
+            closeConfirmationModal();
+
+            if (pendingNavigationUrl === 'back') {
+                window.history.back();
+            } else {
+                window.location.href = pendingNavigationUrl;
+            }
+        };
+    }
+
+    // Intercept form submissions from other forms (if any)
+    document.addEventListener('submit', function(e) {
+        // Allow only our upload form to submit
+        if (e.target.id !== 'uploadForm' && (formChanged || uploadedFile) && !isSubmitting && !navigationConfirmed) {
+            e.preventDefault();
+            showNavigationConfirmation(e.target.action);
+        }
+    }, true);
+
+</script>
+
+<script>
+    function goBack() {
+        if (formChanged || uploadedFile) {
+            document.getElementById('confirmationModal').classList.add('show');
+
+            const confirmBtn = document.getElementById('confirmCancelBtn');
+            confirmBtn.onclick = function() {
+                navigationConfirmed = true;
+                formChanged = false;
+                isSubmitting = true;
+                closeConfirmationModal();
+
+                if (document.referrer && document.referrer !== window.location.href) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/documents';
+                }
+            };
+        } else if (document.referrer && document.referrer !== window.location.href) {
+            window.history.back();
+        } else {
             window.location.href = '/documents';
         }
     }
 </script>
+
 </body>
 </html>

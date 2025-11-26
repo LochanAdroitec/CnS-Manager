@@ -5,73 +5,229 @@
 </head>
 <body>
 <!-- Sidebar Fragment -->
-<div th:fragment="sidebar" id="sidebar" class="text-white p-3" style="min-width:250px; max-width:250px; min-height: calc(100vh - 56px); background-color: #1e3a5f;">
-    <!-- Browse Section -->
-    <div class="mb-4">
-        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Browse</h6>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a th:href="@{/documents}" class="nav-link text-white">
-                    <i class="bi bi-folder me-2"></i> Document Library
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a th:href="@{/my-bookmarks}" class="nav-link text-white">
-                    <i class="bi bi-bookmark me-2"></i> My Bookmarks
-                </a>
-            </li>
-        </ul>
-    </div>
-    <!-- Management Section (Admin & Manager) -->
-    <div class="mb-4" sec:authorize="hasAnyAuthority('Admin', 'Manager')">
-        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Management</h6>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a th:href="@{/upload}" class="nav-link text-white">
-                    <i class="bi bi-upload me-2"></i> Upload Document
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a th:href="@{/tags}" class="nav-link text-white">
-                    <i class="bi bi-tags me-2"></i> Tags Management
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a th:href="@{/classifications}" class="nav-link text-white">
-                    <i class="bi bi-diagram-3 me-2"></i> Classifications Management
-                </a>
-            </li>
-        </ul>
-    </div>
-    <!-- Administration Section (Admin only) -->
-    <div sec:authorize="hasAuthority('Admin')">
-        <h6 class="text-uppercase text-white-50 mb-3" style="font-size: 11px; letter-spacing: 1px;">Administration</h6>
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2">
-                <a th:href="@{/users}" class="nav-link text-white">
-                    <i class="bi bi-people me-2"></i> User Management
-                </a>
-            </li>
-            <li class="nav-item mb-2">
-                <a th:href="@{/activity-logs}" class="nav-link text-white">
-                    <i class="bi bi-clock-history me-2"></i> Activity Logs
-                </a>
-            </li>
-        </ul>
+<div th:fragment="sidebar" id="sidebar" class="sidebar-container text-white">
+    <div class="sidebar-content">
+        <!-- Browse Section -->
+        <div class="mb-4">
+            <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Library</h6>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a th:href="@{/documents}" class="nav-link text-white" title="Document Library">
+                        <i class="bi bi-folder sidebar-icon"></i>
+                        <span class="sidebar-text">Document Library</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a th:href="@{/my-bookmarks}" class="nav-link text-white" title="My Bookmarks">
+                        <i class="bi bi-bookmark sidebar-icon"></i>
+                        <span class="sidebar-text">My Bookmarks</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+
+        <!-- Management Section (Admin & Manager) -->
+        <div class="mb-4" sec:authorize="hasAnyAuthority('Admin', 'Manager')">
+            <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Management</h6>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a th:href="@{/upload}" class="nav-link text-white" title="Upload Document">
+                        <i class="bi bi-upload sidebar-icon"></i>
+                        <span class="sidebar-text">Upload Document</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a th:href="@{/tags-management}" class="nav-link text-white" title="Tags Management">
+                        <i class="bi bi-tags sidebar-icon"></i>
+                        <span class="sidebar-text">Tags</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a th:href="@{/classifications-management}" class="nav-link text-white" title="Classifications Management">
+                        <i class="bi bi-diagram-3 sidebar-icon"></i>
+                        <span class="sidebar-text">Classifications </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+
+        <!-- Administration Section (Admin only) -->
+        <div class="mb-4" sec:authorize="hasAuthority('Admin')">
+            <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Administration</h6>
+            <hr>
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a th:href="@{/bulk-upload}" class="nav-link text-white" title="Bulk Upload Documents">
+                        <i class="bi bi-cloud-upload sidebar-icon"></i>
+                        <span class="sidebar-text">Bulk Upload</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a th:href="@{/users}" class="nav-link text-white" title="User Management">
+                        <i class="bi bi-people sidebar-icon"></i>
+                        <span class="sidebar-text">User Management</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a th:href="@{/activity-logs}" class="nav-link text-white" title="Activity Logs">
+                        <i class="bi bi-clock-history sidebar-icon"></i>
+                        <span class="sidebar-text">Activity Logs</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
+
 <!-- Sidebar Styles Fragment -->
 <style th:fragment="sidebar-styles">
-    #sidebar {
+    /* Sidebar Container - Fixed Position */
+    .sidebar-container {
+        position: fixed;
+        top: 70px; /* Adjust based on your navbar height */
+        left: 0;
+        width: 250px;
+        height: calc(100vh - 70px);
         background-color: #1e3a5f;
+        transition: all 0.3s ease;
+        z-index: 1000;
+        overflow: hidden;
     }
-    #sidebar .nav-link:hover {
-        background-color: rgba(255,255,255,0.1);
-        border-radius: 5px;
+
+    /* Sidebar Content - Scrollable */
+    .sidebar-content {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 20px 15px;
     }
-    #sidebar .nav-link.active {
-        background-color: #2563eb;
+
+    /* Custom Scrollbar for Sidebar */
+    .sidebar-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    .sidebar-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Collapsed Sidebar */
+    .sidebar-container.collapsed {
+        width: 70px;
+    }
+
+    .sidebar-container.collapsed .sidebar-text {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        display: none;
+    }
+
+    .sidebar-container.collapsed .sidebar-section-title {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+        display: none;
+    }
+
+    .sidebar-container.collapsed .nav-link {
+        justify-content: center;
+        padding: 12px 0;
+    }
+
+    .sidebar-container.collapsed .sidebar-icon {
+        margin-right: 0;
+        font-size: 20px;
+    }
+
+    /* Navigation Links */
+    .sidebar-container .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
         border-radius: 5px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: white;
+    }
+
+    .sidebar-container .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+    }
+
+    .sidebar-container .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sidebar Icon */
+    .sidebar-icon {
+        min-width: 24px;
+        margin-right: 12px;
+        font-size: 18px;
+        transition: all 0.3s ease;
+    }
+
+    /* Sidebar Text */
+    .sidebar-text {
+        white-space: nowrap;
+        transition: all 0.3s ease;
+    }
+
+    /* Section Titles */
+    .sidebar-section-title {
+        font-size: 11px;
+        letter-spacing: 1px;
+        padding-left: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-container.collapsed .sidebar-section-title {
+        padding-left: 0;
+    }
+
+    /* Main Content Adjustment */
+    .main-content {
+        margin-left: 250px;
+        transition: margin-left 0.3s ease;
+        padding-top: 70px; /* Match navbar height */
+    }
+
+    .main-content.expanded {
+        margin-left: 70px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .sidebar-container {
+            width: 250px;
+            transform: translateX(-100%);
+        }
+
+        .sidebar-container.mobile-open {
+            transform: translateX(0);
+        }
+
+        .sidebar-container.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+        }
     }
 </style>
 </body>

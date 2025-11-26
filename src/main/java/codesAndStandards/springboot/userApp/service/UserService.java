@@ -4,6 +4,7 @@ import codesAndStandards.springboot.userApp.dto.UserDto;
 import codesAndStandards.springboot.userApp.entity.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
@@ -29,4 +30,12 @@ public interface UserService {
     void editUserProfileWithStoredProcedure(String username, UserDto userDto) throws RuntimeException;
 
     void deleteUserWithStoredProcedure(String username) throws RuntimeException;
+
+    boolean existsByUsername(String username);
+
+    /**
+     * Check if email exists
+     */
+    boolean existsByEmail(String email);
+    Optional<User> findById(Long id);
 }

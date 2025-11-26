@@ -5,22 +5,20 @@
 </head>
 <body>
 <!-- Top Navbar Fragment -->
-<nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f;">
+<nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f; height: 70px; z-index: 1050;">
     <div class="container-fluid d-flex align-items-center">
         <!-- Left side: Toggle + Logo -->
         <div class="d-flex align-items-center">
-            <button class="btn btn-outline-light me-2" id="toggleBtn">
+            <button class="btn btn-outline-light me-2" id="toggleBtn" title="Toggle Sidebar">
                 <i class="bi bi-list"></i>
             </button>
             <a th:href="@{/documents}">
                 <img src="/images/adroitec-logo.png"
                      alt="Adroitec Company Logo"
                      class="me-3"
-                     style="height: 70px; width: auto; cursor: pointer;">
+                     style="height: 50px; width: auto; cursor: pointer;">
             </a>
-
         </div>
-
 
         <!-- Center: Title -->
         <span class="navbar-brand mb-0 h1 mx-auto">
@@ -53,11 +51,41 @@
 
 <!-- JavaScript for Sidebar Toggle -->
 <script th:fragment="navbar-js">
-    document.getElementById('toggleBtn')?.addEventListener('click', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggleBtn');
         const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+        const mainContent = document.querySelector('.main-content');
+
+        // Load saved state from localStorage
+        const sidebarState = localStorage.getItem('sidebarState');
+        if (sidebarState === 'collapsed') {
+            sidebar?.classList.add('collapsed');
+            mainContent?.classList.add('expanded');
         }
+
+        // Toggle sidebar on button click
+        toggleBtn?.addEventListener('click', function() {
+            if (sidebar) {
+                sidebar.classList.toggle('collapsed');
+                mainContent?.classList.toggle('expanded');
+
+                // Save state to localStorage
+                if (sidebar.classList.contains('collapsed')) {
+                    localStorage.setItem('sidebarState', 'collapsed');
+                } else {
+                    localStorage.setItem('sidebarState', 'expanded');
+                }
+            }
+        });
+
+        // Set active link based on current page
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('#sidebar .nav-link');
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
     });
 </script>
 </body>

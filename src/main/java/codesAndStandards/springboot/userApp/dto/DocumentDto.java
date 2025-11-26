@@ -41,4 +41,8 @@ public class DocumentDto {
 
     private String tagNames;           // Comma-separated tag names
     private String classificationNames; // Comma-separated classification names
+
+    // ✅ Add these (needed for dropdown binding in Thymeleaf)
+    private String publishMonth;  // Example "01", "02", "12"
+    private String publishYear;   // Example "2024"
 }

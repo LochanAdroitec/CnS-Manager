@@ -31,43 +31,48 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for development; enable in production
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**") // Disable CSRF for API endpoints
+                ) // Disable CSRF for development; enable in production
                 .authorizeHttpRequests(authorize -> authorize
 
                                 //Granting Permissions based on roles
                                 .requestMatchers("/upload").hasAnyAuthority("Admin", "Manager")
-                                .requestMatchers("/tags").hasAnyAuthority("Admin","Manager")
-                                .requestMatchers("/classifications").hasAnyAuthority("Admin","Manager")
+//                        .requestMatchers("/tags").hasAnyAuthority("Admin","Manager")
+//                        .requestMatchers("/classifications").hasAnyAuthority("Admin","Manager")
                                 .requestMatchers("/documents").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/documents/**").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/my-bookmarks").hasAnyAuthority("Admin","Manager","Viewer")
                                 .requestMatchers("/DocViewer").hasAnyAuthority("Admin","Manager","Viewer")
 //                        .requestMatchers("/viewer").hasAnyAuthority("Viewer")
                                 .requestMatchers("/activity-logs").hasAuthority("Admin")
+                                .requestMatchers("/tags-management","/classifications-management").hasAnyAuthority("Admin","Manager")
+                                .requestMatchers("/api/tags/**","/api/classifications/**").hasAnyAuthority("Admin","Manager")
+//                                .anyRequest().authenticated()
 
-                        // Public endpoints
-                        .requestMatchers("/register/**").permitAll()
-                        .requestMatchers("/login/**").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                                // Public endpoints
+                                .requestMatchers("/register/**").permitAll()
+                                .requestMatchers("/login/**").permitAll()
+                                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
 
-                        // Admin only endpoints (use hasAuthority with UPPERCASE)
-                        .requestMatchers("/users", "/users/**").hasAuthority("Admin")
-                        .requestMatchers("/add", "/add/**").hasAuthority("Admin")
-                        .requestMatchers("/edit/**").hasAuthority("Admin")
-                        .requestMatchers("/delete/**").hasAuthority("Admin")
+                                // Admin only endpoints (use hasAuthority with UPPERCASE)
+                                .requestMatchers("/users", "/users/**").hasAuthority("Admin")
+                                .requestMatchers("/add", "/add/**").hasAuthority("Admin")
+                                .requestMatchers("/edit/**").hasAuthority("Admin")
+                                .requestMatchers("/delete/**").hasAuthority("Admin")
 
-                        // Manager endpoint
-                        .requestMatchers("/manager", "/manager/**").hasAuthority("Manager")
-                        .requestMatchers("/manager/documents/**").hasAuthority("Manager")
+                                // Manager endpoint
+                                .requestMatchers("/manager", "/manager/**").hasAuthority("Manager")
+                                .requestMatchers("/manager/documents/**").hasAuthority("Manager")
 
-                        // Viewer endpoint
-                        .requestMatchers("/viewer", "/viewer/**").hasAuthority("Viewer")
+                                // Viewer endpoint
+                                .requestMatchers("/viewer", "/viewer/**").hasAuthority("Viewer")
 
-                        // Profile accessible by all authenticated users
-                        .requestMatchers("/profile", "/profile/**").authenticated()
+                                // Profile accessible by all authenticated users
+                                .requestMatchers("/profile", "/profile/**").authenticated()
 
-                        // All other requests require authentication
-                        .anyRequest().authenticated()
+                                // All other requests require authentication
+                                .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -77,9 +82,19 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
+        //Only one time user login
+//        http.sessionManagement(session -> session
+//                .sessionConcurrency(concurrency -> concurrency
+//                        .maximumSessions(1)                // ✅ allow only one session per user
+//                        .maxSessionsPreventsLogin(true)    // ✅ block new login if already logged in
+//                        .expiredUrl("/login?expired")      // ✅ redirect when session expires
+//                )
+//        );
 
         return http.build();
     }

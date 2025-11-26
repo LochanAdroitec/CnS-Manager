@@ -3,21 +3,29 @@ package codesAndStandards.springboot.userApp.service.Impl;
 import codesAndStandards.springboot.userApp.dto.UserDto;
 import codesAndStandards.springboot.userApp.entity.Role;
 import codesAndStandards.springboot.userApp.entity.User;
+import codesAndStandards.springboot.userApp.repository.ClassificationRepository;
 import codesAndStandards.springboot.userApp.repository.RoleRepository;
+import codesAndStandards.springboot.userApp.repository.TagRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.UserService;
-import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -322,9 +330,39 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto findUserById(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
-        return userOptional.map(this::mapToUserDto).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user == null) {
+            return null;
+        }
+
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+
+        // ✅ Role mapping
+        if (user.getRole() != null) {
+            dto.setRoleId(user.getRole().getId());
+            dto.setRoleName(user.getRole().getRoleName());
+        }
+
+        // ✅ createdAt formatting
+        dto.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
+
+        // ✅ createdBy → another User (not string)
+        if (user.getCreatedBy() != null) {
+            dto.setCreatedByUsername(user.getCreatedBy().getUsername());
+        } else {
+            dto.setCreatedByUsername("System");
+        }
+
+        return dto;
     }
+
+
 
     @Override
     public void editUser(UserDto updatedUserDto, Long userId) {
@@ -382,5 +420,51 @@ public class UserServiceImpl implements UserService {
         }
 
         return dto;
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        System.out.println("Checking username: " + username);
+        Optional<User> user = userRepository.findOptionalByUsername(username);
+        boolean exists = user.isPresent();
+        System.out.println("Username '" + username + "' exists: " + exists);
+        return exists;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        System.out.println("Checking email: " + email);
+        Optional<User> user = userRepository.findByEmail(email);
+        boolean exists = user.isPresent();
+        System.out.println("Email '" + email + "' exists: " + exists);
+        return exists;
+    }
+
+    @Override
+//    @Transactional(readOnly = true)
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Autowired
+    private TagRepository tagRepository;
+
+    @Autowired
+    private ClassificationRepository classificationRepository;
+
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Clear tag references
+        tagRepository.clearCreatedByUser(userId);
+        tagRepository.clearUpdatedByUser(userId);
+
+        // Clear classification references
+        classificationRepository.clearCreatedByUser(userId);
+        classificationRepository.clearUpdatedByUser(userId);
+
+        // Now delete the user
+        userRepository.delete(user);
     }
 }

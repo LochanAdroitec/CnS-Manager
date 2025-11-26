@@ -1,19 +1,21 @@
 package codesAndStandards.springboot.userApp.controller;
 
 import codesAndStandards.springboot.userApp.dto.*;
-import codesAndStandards.springboot.userApp.entity.Document;
 import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.entity.Role;
 import codesAndStandards.springboot.userApp.repository.RoleRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.*;
 import codesAndStandards.springboot.userApp.service.Impl.UserServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -49,13 +51,13 @@ public class AuthController {
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     private final UserService userService;
-    private final UserServiceImpl userServiceImpl; // For fallback method
+    private final UserServiceImpl userServiceImpl;
     private final RoleRepository roleRepository;
     private final DocumentService documentService;
-    private final ActivityLogService activityLogService; // ADD THIS
+    private final ActivityLogService activityLogService;
 
     public AuthController(UserService userService, UserServiceImpl userServiceImpl,
-                          RoleRepository roleRepository, DocumentService documentService,ActivityLogService activityLogService) {
+                          RoleRepository roleRepository, DocumentService documentService, ActivityLogService activityLogService) {
         this.userService = userService;
         this.userServiceImpl = userServiceImpl;
         this.roleRepository = roleRepository;
@@ -79,15 +81,16 @@ public class AuthController {
         return "login";
     }
 
-    //NOT REQUIRED
-    @GetMapping("/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new UserDto());
-        // Add roles to the model for dropdown
-        List<Role> roles = roleRepository.findAll();
-        model.addAttribute("roles", roles);
-        return "register";
-    }
+    //Registering user before login(NOT required not) -AJ
+
+//    @GetMapping("/register")
+//    public String showRegistrationForm(Model model) {
+//        model.addAttribute("user", new UserDto());
+//        // Add roles to the model for dropdown
+//        List<Role> roles = roleRepository.findAll();
+//        model.addAttribute("roles", roles);
+//        return "register";
+//    }
 
     //NOT REQUIRED
     @PostMapping("/register/save")
@@ -141,7 +144,9 @@ public class AuthController {
         }
     }
 
-    // ================== ADMIN ONLY ==================
+    // ================== ADMIN ONLY ==================  -AJ
+
+    // User Management -AJ
     @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/users")
     public String users(Model model) {
@@ -168,7 +173,48 @@ public class AuthController {
         return "users";
     }
 
-    // FIXED: Changed to work with modal in users.html
+    @GetMapping("/users/check-username")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@RequestParam String username) {
+        Map<String, Boolean> response = new HashMap<>();
+
+        if (username == null || username.trim().isEmpty()) {
+            response.put("exists", false);
+            return ResponseEntity.ok(response);
+        }
+
+        boolean exists = userService.existsByUsername(username.trim());
+        response.put("exists", exists);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/users/check-email")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@RequestParam String email) {
+        Map<String, Boolean> response = new HashMap<>();
+
+        if (email == null || email.trim().isEmpty()) {
+            response.put("exists", false);
+            return ResponseEntity.ok(response);
+        }
+
+        boolean exists = userService.existsByEmail(email.trim());
+        response.put("exists", exists);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        Optional<User> user = userService.findById(id);
+
+        if (user.isPresent()) {
+            return ResponseEntity.ok(user.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // FIXED in users.html for adding new user by admin -AJ
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/add/save")
     public String addUser(@Valid @ModelAttribute("user") UserDto userDto,
@@ -180,17 +226,14 @@ public class AuthController {
         String adminUsername = principal != null ? principal.getName() : "Unknown";
 
         logger.info("Admin attempting to add user: {}", userDto.getUsername());
-
         // Set createdBy to current logged-in user
         if (principal != null) {
             userDto.setCreatedByUsername(adminUsername);
         }
-
         // Basic validation first
         if (userDto.getPassword().length() < 1) {
             result.rejectValue("password", null, "Password should have at least 1 characters");
         }
-
         if (result.hasErrors()) {
             logger.warn("Validation errors for user: {}", userDto.getUsername());
 
@@ -266,17 +309,7 @@ public class AuthController {
         }
     }
 
-
-
-    //Abhay Code
-//    @PreAuthorize("hasAuthority('Admin')")
-//    @GetMapping("/users")
-//    public String users(Model model) {
-//        List<UserDto> users = userService.findAllUsers();
-//        model.addAttribute("users", users);
-//        return "user"; // Admin dashboard
-//    }
-// pavan
+    //Editing user details(only by admin) -AJ
     @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/edit/{id}")
     public String editUser(@PathVariable Long id, Model model) {
@@ -290,6 +323,7 @@ public class AuthController {
         model.addAttribute("roles", roles);
         return "edit";
     }
+
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/edit/{id}")
     public String updateUserById(@Valid @ModelAttribute("user") UserDto updatedUserDto,
@@ -380,7 +414,7 @@ public class AuthController {
     }
 
 
-    // Show profile page
+    // All user can edit his own profile(Admin can't do any changes here) -AJ
     @GetMapping("/profile")
     public String showProfilePage(Model model, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
@@ -397,7 +431,9 @@ public class AuthController {
         return "profile";
     }
 
-    // Handle profile update
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping("/profile/update")
     public String updateProfile(@Valid @ModelAttribute("user") UserDto userDto,
                                 BindingResult result,
@@ -407,19 +443,10 @@ public class AuthController {
 
         String username = principal != null ? principal.getName() : "Unknown";
 
-        // Validation failure
         if (result.hasErrors()) {
             model.addAttribute("user", userDto);
-            List<Role> roles = roleRepository.findAll();
-            model.addAttribute("roles", roles);
-
-            // LOG FAILURE - EDIT_PROFILE_FAILED
-            activityLogService.logByUsername(
-                    username,
-                    ActivityLogService.EDIT_PROFILE_FAILED,
-                    "Validation failed while editing own profile"
-            );
-
+            model.addAttribute("roles", roleRepository.findAll());
+            activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE_FAILED, "Validation failed while editing profile");
             return "profile";
         }
 
@@ -429,51 +456,72 @@ public class AuthController {
         }
 
         try {
-            // Try stored procedure first
-            try {
-                userService.editUserProfileWithStoredProcedure(username, userDto);
-                logger.info("Profile updated using stored procedure: {}", username);
+            String rawCurrent = userDto.getCurrentPassword();
+            String newPassword = userDto.getNewPassword();
+            String confirmPassword = userDto.getConfirmPassword();
+            String encodedFromDb = loggedInUser.getPassword();
 
-                // LOG SUCCESS - EDIT_PROFILE
-                activityLogService.logByUsername(
-                        username,
-                        ActivityLogService.EDIT_PROFILE,
-                        "Updated own profile successfully"
-                );
+            logger.debug("CurrentPassword={}, NewPassword={}, ConfirmPassword={}",
+                    userDto.getCurrentPassword(),
+                    userDto.getNewPassword(),
+                    userDto.getConfirmPassword());
 
-                redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
-            } catch (RuntimeException e) {
-                logger.warn("Stored procedure failed, using fallback: {}", e.getMessage());
 
-                // Fallback to standard edit
-                userService.editUser(userDto, loggedInUser.getId());
+            // If user is trying to change password, validate current password first
+            if (rawCurrent != null && !rawCurrent.isBlank()) {
 
-                // LOG SUCCESS - EDIT_PROFILE
-                activityLogService.logByUsername(
-                        username,
-                        ActivityLogService.EDIT_PROFILE,
-                        "Updated own profile successfully (via fallback method)"
-                );
+                // Basic sanity checks
+                if (encodedFromDb == null || encodedFromDb.isBlank()) {
+                    logger.warn("User {} has no encoded password in DB.", username);
+                    redirectAttributes.addFlashAttribute("error", "Unable to verify current password.");
+                    activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE_FAILED, "No password stored for user");
+                    return "redirect:/profile";
+                }
 
-                redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
+                // Trim raw input to avoid accidental spaces
+                rawCurrent = rawCurrent.trim();
+
+                // DEBUG info (remove in production) — never log the raw password itself
+                logger.debug("Verifying password for user '{}'. encoded length: {}", username, encodedFromDb.length());
+
+                boolean matches = passwordEncoder.matches(rawCurrent, encodedFromDb);
+                logger.debug("Password match result: {}", matches);
+
+                if (!matches) {
+                    redirectAttributes.addFlashAttribute("passwordError", "current");
+                    activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE_FAILED, "Incorrect current password entered");
+                    return "redirect:/profile#changePasswordModal";
+                }
+
+                // Check new/confirm match
+                if (newPassword == null || confirmPassword == null || !newPassword.equals(confirmPassword)) {
+                    redirectAttributes.addFlashAttribute("passwordError", "mismatch");
+                    return "redirect:/profile#changePasswordModal";
+                }
+
+                // Encode and set new password (do NOT encode original DB password)
+                loggedInUser.setPassword(passwordEncoder.encode(newPassword));
             }
+
+            // Update other fields (example)
+            loggedInUser.setFirstName(userDto.getFirstName());
+            loggedInUser.setEmail(userDto.getEmail());
+//            loggedInUser.setMobile(userDto.getMobile());
+
+            userRepository.save(loggedInUser);
+
+            activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE, "Profile updated successfully");
+            redirectAttributes.addFlashAttribute("success", "Profile updated successfully!");
         } catch (Exception e) {
             logger.error("Failed to update profile", e);
-
-            // LOG FAILURE - EDIT_PROFILE_FAILED
-            activityLogService.logByUsername(
-                    username,
-                    ActivityLogService.EDIT_PROFILE_FAILED,
-                    "Failed to update own profile: " + e.getMessage()
-            );
-
+            activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE_FAILED, "Failed to update own profile: " + e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Failed to update profile: " + e.getMessage());
         }
 
         return "redirect:/profile";
     }
 
-
+    //Admin can delete any users(even other admins) but not himself -AJ
     @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/delete/{id}")
     public String deleteUser(@PathVariable Long id,
@@ -584,8 +632,7 @@ public class AuthController {
     }
 
 
-    // MANAGER
-
+    //Page you get after logging in as a Manager -AJ
     @PreAuthorize("hasAuthority('Manager')")
     @GetMapping("/manager")
     public String managerPage(Model model, Principal principal) {
@@ -603,7 +650,13 @@ public class AuthController {
     @Autowired
     private ClassificationService classificationService;
 
-    // Load upload page
+
+    @GetMapping("/bulk-upload")
+    public String showBulkUpload() {
+        return "Bulk-Upload-Documents";
+    }
+
+    // Load upload page: Uploading new document, admin and manager both have permission for this -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/upload")
     public String showUploadForm(Model model) {
@@ -614,11 +667,11 @@ public class AuthController {
 
         // Limit to only 3 most recent
         List<TagDto> limitedTags = allTags.stream()
-                .limit(3)
+//                .limit(3)
                 .collect(Collectors.toList());
 
         List<ClassificationDto> limitedClassifications = allClassifications.stream()
-                .limit(3)
+//                .limit(3)
                 .collect(Collectors.toList());
 
         model.addAttribute("allTags", limitedTags);
@@ -632,17 +685,73 @@ public class AuthController {
     public String uploadDocument(@Valid @ModelAttribute("document") DocumentDto documentDto,
                                  BindingResult result,
                                  @RequestParam("file") MultipartFile file,
-                                 @RequestParam(value = "tagNames", required = false) String tagNames,
-                                 @RequestParam(value = "classificationNames", required = false) String classificationNames,
+
+                                 @RequestParam(value = "tagNames", required = false) String tagsJson,
+                                 @RequestParam(value = "classificationNames", required = false) String classificationsJson,
                                  Principal principal,
                                  Model model,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
 
         String username = principal != null ? principal.getName() : "Unknown";
+        documentDto.setTagNames(tagsJson);
+        documentDto.setClassificationNames(classificationsJson);
+
+        // Get current user ID
+        Long userId = getCurrentUserId(authentication);
+
+        // Parse tags from JSON
+        List<String> tagNames = new ArrayList<>();
+        if (tagsJson != null && !tagsJson.isEmpty()) {
+            try {
+                // Try parsing as JSON array
+                tagNames = new ObjectMapper().readValue(tagsJson, new TypeReference<List<String>>() {
+                });
+            } catch (Exception e) {
+                logger.error("Error parsing tags JSON: {}", e.getMessage());
+                // Fallback to comma-separated
+                tagNames = Arrays.asList(tagsJson.split(","));
+            }
+        }
+
+        // Parse classifications from JSON
+        List<String> classificationNames = new ArrayList<>();
+        if (classificationsJson != null && !classificationsJson.isEmpty()) {
+            try {
+                classificationNames = new ObjectMapper().readValue(classificationsJson, new TypeReference<List<String>>() {
+                });
+            } catch (Exception e) {
+                logger.error("Error parsing classifications JSON: {}", e.getMessage());
+                classificationNames = Arrays.asList(classificationsJson.split(","));
+            }
+        }
+
+        // Create tags if they don't exist - PASS userId
+        for (String tagName : tagNames) {
+            if (tagName != null && !tagName.trim().isEmpty()) {
+                tagService.createTagIfNotExists(tagName.trim(), userId);
+            }
+        }
+
+        // If classification are to be created while uploading document -AJ
+//        for (String classificationName : classificationNames) {
+//            if (classificationName != null && !classificationName.trim().isEmpty()) {
+//                classificationService.createClassificationIfNotExists(classificationName.trim(), userId);
+//            }
+//        }
+
+        // IMPORTANT: Set tag names in DTO BEFORE validation
+        documentDto.setTagNames(String.join(",", tagNames));
+        documentDto.setClassificationNames(String.join(",", classificationNames));
 
         // Validation errors
         if (result.hasErrors()) {
             model.addAttribute("document", documentDto);
+
+            // Log all validation errors for debugging
+            result.getAllErrors().forEach(error -> {
+                logger.error("Validation error: {}", error.getDefaultMessage());
+            });
 
             // Reload tags and classifications
             List<TagDto> allTags = tagService.getAllTags();
@@ -664,11 +773,7 @@ public class AuthController {
         }
 
         try {
-            // Set tag and classification names in DTO
-            documentDto.setTagNames(tagNames);
-            documentDto.setClassificationNames(classificationNames);
-
-            // Save document
+            // Save document (tags already set above)
             documentService.saveDocument(documentDto, file, username);
 
             // LOG SUCCESS - DOCUMENT_UPLOAD
@@ -703,31 +808,47 @@ public class AuthController {
         }
     }
 
+    private Long getCurrentUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new RuntimeException("User not authenticated");
+        }
 
-    // Helper method to format file size (add to your controller)
+        String username = authentication.getName();
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            throw new RuntimeException("User not found with username: " + username);
+        }
+
+        return user.getId();
+    }
+
+    // Helper method to format file size (add to your controller) -AJ
     private String formatFileSize(long size) {
         if (size <= 0) return "0 B";
-        final String[] units = new String[] { "B", "KB", "MB", "GB" };
+        final String[] units = new String[]{"B", "KB", "MB", "GB"};
         int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
         return String.format("%.2f %s", size / Math.pow(1024, digitGroups), units[digitGroups]);
     }
 
-    // API to get all tags
+    //From here it will navigate to TagController -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
-    @GetMapping("/tags")
-    @ResponseBody
-    public ResponseEntity<List<TagDto>> getAllTags() {
-        return ResponseEntity.ok(tagService.getAllTags());
+    @GetMapping("/tags-management")
+    public String tagsManagement() {
+        return "tags-management";
     }
 
-    // API to get all classifications
-    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
-    @GetMapping("/classifications")
-    @ResponseBody
-    public ResponseEntity<List<ClassificationDto>> getAllClassifications() {
-        return ResponseEntity.ok(classificationService.getAllClassifications());
+    //From here it will navigate to ClassificationController -AJ
+    @PreAuthorize("hasAnyAuthority('Admin','Manager')")
+    @GetMapping("/classifications-management")
+    public String classificationsManagement() {
+        return "classifications-management";
     }
+
+
     // ================== DOCUMENT LIST - SHOW ALL DOCUMENTS ==================
+
+    //DOCUMENT LIBRARY: Show all the uploaded document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/documents")
     public String listDocuments(Model model, Principal principal) {
@@ -737,6 +858,9 @@ public class AuthController {
         // Get all tags for filter dropdown
         List<TagDto> allTags = tagService.getAllTags();
         model.addAttribute("allTags", allTags);
+        // Get all classifications for filter dropdown
+        List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
+        model.addAttribute("allClassifications", allClassifications);
 
         model.addAttribute("documents", allDocuments);
         model.addAttribute("currentUsername", principal.getName());
@@ -749,29 +873,7 @@ public class AuthController {
         return "document-list";
     }
 
-    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
-    @GetMapping("/documents/DocView/{id}")
-    public ResponseEntity<Resource> viewDocument(@PathVariable Long id) {
-        try {
-            String filePath = documentService.getFilePath(id);
-            Path path = Paths.get(filePath);
-            Resource resource = new UrlResource(path.toUri());
-
-            if (resource.exists() && resource.isReadable()) {
-                return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_PDF)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                throw new RuntimeException("File not found or not readable");
-            }
-        } catch (Exception e) {
-            logger.error("Failed to view document", e);
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    // Show edit form
+    // Editing only the metadata's of the document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/document/edit/{id}")
     public String showEditForm(@PathVariable("id") Long id, Model model) {
@@ -791,19 +893,66 @@ public class AuthController {
         return "edit-document";
     }
 
+    //Tags can be created while updating document also and that will also be stored in Tags table -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @PostMapping("/document/edit/{id}")
     public String updateDocument(@PathVariable("id") Long id,
                                  @Valid @ModelAttribute("document") DocumentDto documentDto,
                                  BindingResult result,
                                  @RequestParam(value = "file", required = false) MultipartFile file,
-                                 @RequestParam(value = "tagNames", required = false) String tagNames,
-                                 @RequestParam(value = "classificationNames", required = false) String classificationNames,
+                                 @RequestParam(value = "tagNames", required = false) String tagsJson,
+                                 @RequestParam(value = "classificationNames", required = false) String classificationsJson,
                                  Principal principal,
                                  Model model,
-                                 RedirectAttributes redirectAttributes) {
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
 
         String username = principal != null ? principal.getName() : "Unknown";
+
+        // Get current user ID
+        Long userId = getCurrentUserId(authentication);
+
+        // Parse tags from JSON
+        List<String> tagNames = new ArrayList<>();
+        if (tagsJson != null && !tagsJson.isEmpty()) {
+            try {
+                tagNames = new ObjectMapper().readValue(tagsJson, new TypeReference<List<String>>() {
+                });
+            } catch (Exception e) {
+                logger.error("Error parsing tags JSON: {}", e.getMessage());
+                tagNames = Arrays.asList(tagsJson.split(","));
+            }
+        }
+
+        // Parse classifications from JSON
+        List<String> classificationNames = new ArrayList<>();
+        if (classificationsJson != null && !classificationsJson.isEmpty()) {
+            try {
+                classificationNames = new ObjectMapper().readValue(classificationsJson, new TypeReference<List<String>>() {
+                });
+            } catch (Exception e) {
+                logger.error("Error parsing classifications JSON: {}", e.getMessage());
+                classificationNames = Arrays.asList(classificationsJson.split(","));
+            }
+        }
+
+        // Create tags if they don't exist
+        for (String tagName : tagNames) {
+            if (tagName != null && !tagName.trim().isEmpty()) {
+                tagService.createTagIfNotExists(tagName.trim(), userId);
+            }
+        }
+
+        // If classification are to be created while updating document -AJ
+//        for (String classificationName : classificationNames) {
+//            if (classificationName != null && !classificationName.trim().isEmpty()) {
+//                classificationService.createClassificationIfNotExists(classificationName.trim(), userId);
+//            }
+//        }
+
+        // Set tag/classification names in DTO before validation
+        documentDto.setTagNames(String.join(",", tagNames));
+        documentDto.setClassificationNames(String.join(",", classificationNames));
 
         // Validation errors
         if (result.hasErrors()) {
@@ -811,7 +960,6 @@ public class AuthController {
             model.addAttribute("allTags", tagService.getAllTags());
             model.addAttribute("allClassifications", classificationService.getAllClassifications());
 
-            // LOG FAILURE - DOCUMENT_EDIT_FAILED due to validation
             activityLogService.logByUsername(
                     username,
                     ActivityLogService.DOCUMENT_EDIT_FAILED,
@@ -826,13 +974,10 @@ public class AuthController {
             DocumentDto oldDoc = documentService.findDocumentById(id);
             String oldTitle = oldDoc.getTitle();
             String oldProductCode = oldDoc.getProductCode();
+            String oldFilePath = oldDoc.getFilePath();
 
-            // Set tag and classification names
-            documentDto.setTagNames(tagNames);
-            documentDto.setClassificationNames(classificationNames);
-
-            // Update document
-            documentService.updateDocument(id, documentDto);
+            // Update document including optional file
+            documentService.updateDocument(id, documentDto, file, username);
 
             // Build change log
             StringBuilder changes = new StringBuilder();
@@ -861,7 +1006,6 @@ public class AuthController {
         } catch (Exception e) {
             logger.error("Failed to update document", e);
 
-            // LOG FAILURE - DOCUMENT_EDIT_FAILED
             activityLogService.logByUsername(
                     username,
                     ActivityLogService.DOCUMENT_EDIT_FAILED,
@@ -877,9 +1021,31 @@ public class AuthController {
         }
     }
 
+    @Autowired
 
+    private NetworkFileService fileStorageService;
 
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/diagnose-network-share")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> diagnoseNetworkShare() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("host", networkFileService.getHost());
+            response.put("share", networkFileService.getShareName());
+            response.put("folder", networkFileService.getFolder());
 
+            Map<String, Object> permissions = networkFileService.checkPermissions();
+            response.put("permissions", permissions);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    //Deleting any document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/documents/delete/{id}")
     public String deleteDocument(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
@@ -926,6 +1092,30 @@ public class AuthController {
     @Autowired
     private WatermarkService watermarkService;
 
+    //Viewing any document(all have permission for this) -AJ
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @GetMapping("/documents/DocView/{id}")
+    public ResponseEntity<Resource> viewDocument(@PathVariable Long id) {
+        try {
+            String filePath = documentService.getFilePath(id);
+            Path path = Paths.get(filePath);
+            Resource resource = new UrlResource(path.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                        .body(resource);
+            } else {
+                throw new RuntimeException("File not found or not readable");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to view document", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/documents/DocViewer-view/{id}")
     public ResponseEntity<byte[]> viewDocumentForViewer(@PathVariable Long id, Principal principal) {
@@ -953,7 +1143,7 @@ public class AuthController {
         }
     }
 
-// ================== SECURE PDF VIEWER API ==================
+// ================== SECURE PDF VIEWER API ================== -AJ
 
     @Autowired
     private UserRepository userRepository;
@@ -1011,7 +1201,8 @@ public class AuthController {
             info.put("title", document.getTitle());
             info.put("productCode", document.getProductCode());
             info.put("edition", document.getEdition());
-            info.put("publishDate", document.getPublishDate());
+//            info.put("publishDate", document.getPublishDate());
+            info.put("publishDate", document.getPublishDate()); // ✅ String (YYYY or YYYY-MM)
             info.put("noOfPages", document.getNoOfPages());
             info.put("notes", document.getNotes());
             info.put("tagNames", document.getTagNames());
@@ -1023,6 +1214,7 @@ public class AuthController {
     }
 
 
+    //    Download with watermark(username and timestamp) -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/documents/download/{id}")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id, Principal principal) {
@@ -1076,48 +1268,46 @@ public class AuthController {
         }
     }
 
+    //19.11.2025
 
-    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
-    @GetMapping("/documents/download-watermarked/{id}")
-    public ResponseEntity<byte[]> downloadWatermarkedDocument(@PathVariable Long id, Principal principal) {
-        try {
-            DocumentDto document = documentService.findDocumentById(id);
+//    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+//    @GetMapping("/documents/download-watermarked/{id}")
+//    public ResponseEntity<byte[]> downloadWatermarkedDocument(@PathVariable Long id, Principal principal) {
+//        try {
+//            DocumentDto document = documentService.findDocumentById(id);
+//
+//            String filePath = documentService.getFilePath(id);
+//            logger.info("Downloading watermarked document from viewer: {} for user: {}",
+//                    document.getTitle(), principal.getName());
+//
+//            // Read original PDF from network share
+//            byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
+//
+//            // Add watermark
+//            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(
+//                    originalPdfBytes,
+//                    principal.getName()
+//            );
+//
+//            String watermarkedFilename = "WATERMARKED_" + document.getTitle() + ".pdf";
+//
+//            return ResponseEntity.ok()
+//                    .contentType(MediaType.APPLICATION_PDF)
+//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + watermarkedFilename + "\"")
+//                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
+//                    .body(watermarkedPdfBytes);
+//
+//        } catch (Exception e) {
+//            logger.error("Failed to download watermarked document from viewer", e);
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .contentType(MediaType.TEXT_PLAIN)
+//                    .body(("Error downloading document: " + e.getMessage()).getBytes());
+//        }
+//    }
 
-            String filePath = documentService.getFilePath(id);
-            logger.info("Downloading watermarked document from viewer: {} for user: {}",
-                    document.getTitle(), principal.getName());
-
-            // Read original PDF from network share
-            byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
-
-            // Add watermark
-            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(
-                    originalPdfBytes,
-                    principal.getName()
-            );
-
-            String watermarkedFilename = "WATERMARKED_" + document.getTitle() + ".pdf";
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_PDF)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + watermarkedFilename + "\"")
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
-                    .body(watermarkedPdfBytes);
-
-        } catch (Exception e) {
-            logger.error("Failed to download watermarked document from viewer", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body(("Error downloading document: " + e.getMessage()).getBytes());
-        }
-    }
-
+    //Every user have their own bookmark -AJ
     @Autowired
     private BookmarkService bookmarkService;
-
-//    @Autowired
-//    private UserService userService;
-
 
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/my-bookmarks")
@@ -1128,6 +1318,7 @@ public class AuthController {
     }
 // ================== BOOKMARK ENDPOINTS ==================
 
+    //Only complete document can be bookmarked. It is not based on the any specific page in document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @PostMapping("/documents/bookmark/{id}")
     public ResponseEntity<?> saveBookmark(@PathVariable Long id,
@@ -1188,11 +1379,45 @@ public class AuthController {
                     .body(Map.of("error", "Failed to retrieve bookmarks"));
         }
     }
+
+    //Cannot bookmark same document by the same user more than one time -AJ
     @GetMapping("/bookmark/check/{documentId}")
     public ResponseEntity<Boolean> checkIfBookmarked(@PathVariable Long documentId, Principal principal) {
         User user = userService.findUserByUsername(principal.getName());
         boolean isBookmarked = bookmarkService.isDocumentBookmarked(user.getId(), documentId);
         return ResponseEntity.ok(isBookmarked);
+    }
+
+
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @DeleteMapping("/bookmarks/document/{documentId}")
+    public ResponseEntity<String> deleteBookmarkByDocument(
+            @PathVariable Long documentId,
+            Principal principal) {
+        try {
+            logger.info("Delete bookmark request for document: {} by user: {}", documentId, principal.getName());
+
+            User user = userService.findUserByUsername(principal.getName());
+            bookmarkService.deleteBookmarkByDocument(user.getId(), documentId);
+
+            logger.info("Bookmark deleted successfully for document: {} by user: {}", documentId, principal.getName());
+            return ResponseEntity.ok("Bookmark deleted successfully");
+
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("not found")) {
+                logger.warn("Bookmark not found for document: {} by user: {}", documentId, principal.getName());
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Bookmark not found");
+            }
+            logger.error("Error deleting bookmark for document: {} by user: {}", documentId, principal.getName(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete bookmark: " + e.getMessage());
+
+        } catch (Exception e) {
+            logger.error("Unexpected error deleting bookmark for document: {} by user: {}", documentId, principal.getName(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to delete bookmark: " + e.getMessage());
+        }
     }
 
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
@@ -1224,23 +1449,21 @@ public class AuthController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin', 'Viewer')")
+    @PutMapping("/bookmarks/{id}")
+    public ResponseEntity<?> updateBookmarkName(@PathVariable Long id,
+                                                @RequestBody Map<String, String> payload) {
+        try {
+            String newName = payload.get("bookmarkName");
+            if (newName == null || newName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Bookmark name cannot be empty"));
+            }
 
-
-
-
-
-    // ================== VIEWER ROLE ==================
-
-
-//    @PreAuthorize("hasAnyAuthority('Viewer')")
-//    @GetMapping("/viewer")
-//    public String viewerPage(Model model, Principal principal) {
-//        User user = userService.findUserByUsername(principal.getName());
-//        if (user == null) {
-//            return "redirect:/login?error=userNotFound";
-//        }
-//        model.addAttribute("user", userService.findUserById(user.getId()));
-//        return "view";
-//    }
-
+            bookmarkService.updateBookmarkName(id, newName.trim());
+            return ResponseEntity.ok(Map.of("message", "Bookmark name updated successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update bookmark: " + e.getMessage()));
+        }
+    }
 }

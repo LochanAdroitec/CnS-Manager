@@ -33,8 +33,14 @@ public class Document {
     @Column(name = "edition")
     private String edition;
 
-    @Column(name = "publication_date")
-    private LocalDate publishDate;
+    //TODO: publish date is to be changed
+
+    // ✅ Now stores YYYY or YYYY-MM as a string (month optional)
+    @Column(name = "publication_date", length = 7)
+    private String publishDate;
+
+//    @Column(name = "publication_date")
+//    private LocalDate publishDate;
 
     @Column(name = "number_of_pages")
     private Integer noOfPages;

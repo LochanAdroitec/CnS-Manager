@@ -51,48 +51,49 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional
     public void saveDocument(DocumentDto documentDto, MultipartFile file, String username) throws Exception {
-        // Validate file
-//        Document doc = new Document();
+
         if (file.isEmpty()) {
             throw new RuntimeException("Please select a file to upload");
         }
 
-        // Validate file type (only PDF)
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.equals("application/pdf")) {
+        if (!"application/pdf".equals(file.getContentType())) {
             throw new RuntimeException("Only PDF files are allowed");
         }
 
-        // Create upload directory if not exists
         File uploadDirectory = new File(uploadDir);
         if (!uploadDirectory.exists()) {
             uploadDirectory.mkdirs();
         }
 
-        // Generate unique file name
         String originalFileName = file.getOriginalFilename();
         String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
         String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
-
-        // Save file to server
         Path filePath = Paths.get(uploadDir, uniqueFileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        // Get user
         User user = userRepository.findByUsername(username);
         if (user == null) {
             throw new RuntimeException("User not found");
         }
 
-        // Parse publish date
-        LocalDate publishDate = null;
-        if (documentDto.getPublishDate() != null && !documentDto.getPublishDate().isEmpty()) {
-            publishDate = LocalDate.parse(documentDto.getPublishDate());
+        if (documentDto.getPublishYear() != null && !documentDto.getPublishYear().isEmpty()) {
+            if (documentDto.getPublishMonth() != null && !documentDto.getPublishMonth().isEmpty()) {
+                documentDto.setPublishDate(documentDto.getPublishYear() + "-" + documentDto.getPublishMonth());
+            } else {
+                documentDto.setPublishDate(documentDto.getPublishYear());
+            }
+        } else {
+            documentDto.setPublishDate(null);
         }
 
-        logger.info("Calling stored procedure sp_UploadDocument for document: {}", documentDto.getTitle());
-        logger.info("Tags: {}, Classifications: {}", documentDto.getTagNames(), documentDto.getClassificationNames());
 
+
+        String publishDate = (documentDto.getPublishDate() != null && !documentDto.getPublishDate().isEmpty())
+                ? documentDto.getPublishDate()
+                : null;
+
+        logger.info("Saving Doc -> Title: {}, PublishDate: {}, Tags: {}, Classifications: {}",
+                documentDto.getTitle(), publishDate, documentDto.getTagNames(), documentDto.getClassificationNames());
 
         Long documentId = storedProcedureRepository.uploadDocument(
                 documentDto.getTitle(),
@@ -108,30 +109,69 @@ public class DocumentServiceImpl implements DocumentService {
         );
 
         if (documentId == null) {
-            logger.error("Stored procedure failed to return document ID");
-            throw new RuntimeException("Failed to upload document - no ID returned");
+            throw new RuntimeException("Stored procedure failed to return document ID");
         }
 
-        logger.info("✅ Document uploaded successfully using STORED PROCEDURE sp_UploadDocument. Document ID: {}", documentId);
-        logger.info("File saved to: {}", filePath.toString());
-//        Document savedDoc = documentRepository.save(doc);
-//        return savedDoc;
+        logger.info("✅ Document uploaded successfully. ID = {}", documentId);
     }
 
     @Override
     @Transactional
-    public void updateDocument(Long id, DocumentDto documentDto) throws Exception {
-        logger.info("Calling stored procedure sp_UpdateDocument for document ID: {}", id);
-        logger.info("New Title: {}, Tags: {}, Classifications: {}",
-                documentDto.getTitle(), documentDto.getTagNames(), documentDto.getClassificationNames());
+    public void updateDocument(Long id, DocumentDto documentDto, MultipartFile file, String username) throws Exception {
+        logger.info("Updating document ID: {}", id);
 
-        // Parse publish date
-        LocalDate publishDate = null;
-        if (documentDto.getPublishDate() != null && !documentDto.getPublishDate().isEmpty()) {
-            publishDate = LocalDate.parse(documentDto.getPublishDate());
+        // 1️⃣ Handle file if provided
+        String filePathStr = null;
+        if (file != null && !file.isEmpty()) {
+            if (!"application/pdf".equals(file.getContentType())) {
+                throw new RuntimeException("Only PDF files are allowed");
+            }
+
+            File uploadDirectory = new File(uploadDir);
+            if (!uploadDirectory.exists()) {
+                uploadDirectory.mkdirs();
+            }
+
+            String originalFileName = file.getOriginalFilename();
+            String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+            Path filePath = Paths.get(uploadDir, uniqueFileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            filePathStr = filePath.toString();
+        }
+        Document document = documentRepository.findById(id)
+
+                .orElseThrow(() -> new RuntimeException("Document not found with id: " + id));
+        if (documentDto.getFilePath() != null && !documentDto.getFilePath().isEmpty()) {
+
+            document.setFilePath(documentDto.getFilePath());
+
         }
 
-        // Call stored procedure to update document
+        // 2️⃣ Validate user
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        // 3️⃣ Handle publish date from year/month
+        if (documentDto.getPublishYear() != null && !documentDto.getPublishYear().isEmpty()) {
+            if (documentDto.getPublishMonth() != null && !documentDto.getPublishMonth().isEmpty()) {
+                documentDto.setPublishDate(documentDto.getPublishYear() + "-" + documentDto.getPublishMonth());
+            } else {
+                documentDto.setPublishDate(documentDto.getPublishYear());
+            }
+        } else {
+            documentDto.setPublishDate(null);
+        }
+
+        String publishDate = (documentDto.getPublishDate() != null && !documentDto.getPublishDate().isEmpty())
+                ? documentDto.getPublishDate()
+                : null;
+
+        logger.info("Updating Doc -> ID: {}, Title: {}, PublishDate: {}, Tags: {}, Classifications: {}",
+                id, documentDto.getTitle(), publishDate, documentDto.getTagNames(), documentDto.getClassificationNames());
+
         boolean updated = storedProcedureRepository.updateDocument(
                 id,
                 documentDto.getTitle(),
@@ -145,100 +185,50 @@ public class DocumentServiceImpl implements DocumentService {
         );
 
         if (!updated) {
-            logger.error("Failed to update document with ID: {}", id);
-            throw new RuntimeException("Document not found or failed to update");
+            throw new RuntimeException("Document not found or update failed");
         }
 
-        logger.info("✅ Document updated successfully using STORED PROCEDURE sp_UpdateDocument. Document ID: {}", id);
+        logger.info("✅ Document updated successfully: {}", id);
     }
+
 
     @Override
     @Transactional(readOnly = true)
     public List<DocumentDto> findAllDocuments() {
         return documentRepository.findAll()
-                .stream()
-                .map(this::convertToDto)
+                .stream().map(this::convertToDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public DocumentDto findDocumentById(Long id) {
-        logger.info("========== FINDING DOCUMENT BY ID: {} ==========", id);
-
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document not found"));
 
-        logger.info("Document found: {}", document.getTitle());
-
-        // Force initialization of lazy-loaded collections
-        int tagCount = document.getTags().size();
-        int classCount = document.getClassifications().size();
-
-        logger.info("Tags count: {}", tagCount);
-        logger.info("Classifications count: {}", classCount);
-
-        // Log each tag
-        if (tagCount > 0) {
-            document.getTags().forEach(tag ->
-                    logger.info("  - Tag: {}", tag.getTagName())
-            );
-        } else {
-            logger.warn("NO TAGS FOUND for document ID: {}", id);
-        }
-
-        // Log each classification
-        if (classCount > 0) {
-            document.getClassifications().forEach(classification ->
-                    logger.info("  - Classification: {}", classification.getClassificationName())
-            );
-        } else {
-            logger.warn("NO CLASSIFICATIONS FOUND for document ID: {}", id);
-        }
-
-        DocumentDto dto = convertToDto(document);
-
-        logger.info("DTO tagNames: '{}'", dto.getTagNames());
-        logger.info("DTO classificationNames: '{}'", dto.getClassificationNames());
-        logger.info("========== END FINDING DOCUMENT ==========");
-
-        return dto;
+        return convertToDto(document);
     }
 
     @Override
     @Transactional
     public void deleteDocument(Long id) {
-        logger.info("Calling stored procedure sp_DeleteDocument for document ID: {}", id);
+        logger.info("Deleting document ID: {}", id);
 
-        // Call stored procedure to delete document
         Map<String, Object> result = storedProcedureRepository.deleteDocument(id);
-
         Boolean deleted = (Boolean) result.get("deleted");
         String filePath = (String) result.get("filePath");
 
         if (deleted == null || !deleted) {
-            logger.error("Failed to delete document with ID: {}. Document not found or deletion failed.", id);
-            throw new RuntimeException("Document not found or failed to delete");
+            throw new RuntimeException("Failed to delete document");
         }
 
-        logger.info("✅ Document deleted successfully using STORED PROCEDURE sp_DeleteDocument. Document ID: {}", id);
-
-        // Delete file from server
         if (filePath != null && !filePath.isEmpty()) {
             try {
-                Path path = Paths.get(filePath);
-                boolean fileDeleted = Files.deleteIfExists(path);
-                if (fileDeleted) {
-                    logger.info("✅ Physical file deleted successfully: {}", filePath);
-                } else {
-                    logger.warn("⚠️ Physical file not found or already deleted: {}", filePath);
-                }
+                Files.deleteIfExists(Paths.get(filePath));
+                logger.info("Deleted physical file: {}", filePath);
             } catch (Exception e) {
-                logger.error("❌ Error deleting physical file: {}", filePath, e);
-                // Don't throw exception - database deletion was successful
+                logger.error("Error deleting file: {}", filePath, e);
             }
-        } else {
-            logger.warn("⚠️ No file path returned from stored procedure for document ID: {}", id);
         }
     }
 
@@ -257,7 +247,12 @@ public class DocumentServiceImpl implements DocumentService {
         dto.setEdition(document.getEdition());
 
         if (document.getPublishDate() != null) {
-            dto.setPublishDate(document.getPublishDate().toString());
+            dto.setPublishDate(document.getPublishDate());  // e.g. "2024-05"
+            String[] parts = document.getPublishDate().split("-");
+            dto.setPublishYear(parts[0]);
+            if (parts.length > 1) {
+                dto.setPublishMonth(parts[1]);
+            }
         }
 
         dto.setNoOfPages(document.getNoOfPages());
@@ -265,36 +260,21 @@ public class DocumentServiceImpl implements DocumentService {
         dto.setFilePath(document.getFilePath());
 
         if (document.getUploadedAt() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            dto.setUploadedAt(document.getUploadedAt().format(formatter));
+            dto.setUploadedAt(document.getUploadedAt()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         }
 
         if (document.getUploadedBy() != null) {
             dto.setUploadedByUsername(document.getUploadedBy().getUsername());
         }
 
-        // ✅ Load tags and classifications
-        if (document.getTags() != null && !document.getTags().isEmpty()) {
-            String tagNames = document.getTags().stream()
-                    .map(Tag::getTagName)
-                    .collect(Collectors.joining(","));
-            dto.setTagNames(tagNames);
-            logger.debug("Tags loaded: {}", tagNames);
-        } else {
-            dto.setTagNames("");
-            logger.debug("No tags found for document");
-        }
+        dto.setTagNames(document.getTags().stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.joining(",")));
 
-        if (document.getClassifications() != null && !document.getClassifications().isEmpty()) {
-            String classificationNames = document.getClassifications().stream()
-                    .map(Classification::getClassificationName)
-                    .collect(Collectors.joining(","));
-            dto.setClassificationNames(classificationNames);
-            logger.debug("Classifications loaded: {}", classificationNames);
-        } else {
-            dto.setClassificationNames("");
-            logger.debug("No classifications found for document");
-        }
+        dto.setClassificationNames(document.getClassifications().stream()
+                .map(Classification::getClassificationName)
+                .collect(Collectors.joining(",")));
 
         return dto;
     }

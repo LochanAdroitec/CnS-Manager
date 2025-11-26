@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Profile - Codes & Standards</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <!-- Include Sidebar Styles -->
@@ -13,7 +14,9 @@
     <style>
         body {
             background-color: #f4f6f9;
-            padding-top: 70px;
+            margin: 0;
+            padding: 0;
+            padding-top:70px;
         }
         .profile-avatar {
             width: 120px;
@@ -103,6 +106,25 @@
           color: white !important;
           padding:10px;
         }
+        .btn-change-password {
+            background-color: #2d6ec4 !important;
+            border: none;
+            color: white !important;
+            padding: 10px 25px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-change-password i {
+            color: white !important;
+        }
+
+        .btn-change-password:hover {
+            background-color: #245aa2 !important; /* darker shade for hover */
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 110, 196, 0.4);
+            color: white !important;
+        }
     </style>
 </head>
 <body>
@@ -116,7 +138,8 @@
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
+    <div class="main-content flex-grow-1 p-4">
+
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
@@ -141,18 +164,22 @@
             </div>
         </div>
 
-        <!-- Success/Error Messages -->
-        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show">
+        <!-- Success Message -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
             <i class="bi bi-check-circle me-2"></i>
-            <strong>Success!</strong> Profile updated successfully.
+            <strong>Success!</strong>
+            <span th:text="${success}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show">
+        <!-- Error Message -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
             <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>Error!</strong> Failed to update profile.
+            <strong>Error!</strong>
+            <span th:text="${error}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+
 
         <div class="row">
             <!-- Left Column - Profile Card -->
@@ -205,9 +232,9 @@
                     <div class="info-row">
                         <div class="info-label">Role</div>
                         <div class="info-value">
-                            <span class="role-badge"
-                                  th:classappend="${user.roleName == 'Admin' ? 'role-admin' : (user.roleName == 'Manager' ? 'role-manager' : 'role-viewer')}"
-                                  th:text="${user.roleName}">Administrator</span>
+                                <span class="role-badge"
+                                      th:classappend="${user.roleName == 'Admin' ? 'role-admin' : (user.roleName == 'Manager' ? 'role-manager' : 'role-viewer')}"
+                                      th:text="${user.roleName}">Administrator</span>
                         </div>
                     </div>
                 </div>
@@ -246,10 +273,12 @@
             </div>
         </div>
     </div>
+
 </div>
 
 <!-- Change Password Modal -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1">
+<div class="modal fade" id="changePasswordModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" th:action="@{/profile/update}">
@@ -268,19 +297,43 @@
 
                     <div class="mb-3">
                         <label for="currentPassword" class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+
+                        <!-- keep the base class in the normal class attribute and append conditionally -->
+                        <input type="password"
+                               id="currentPassword"
+                               name="currentPassword"
+                               class="form-control"
+                               th:classappend="${passwordError == 'current'} ? ' is-invalid' : ''"
+                               required>
+
+                        <!-- show this only when the backend sets passwordError == 'current' -->
+                        <div class="invalid-feedback" th:if="${passwordError == 'current'}">
+                            Current password is incorrect.
+                        </div>
                     </div>
+
+
 
                     <div class="mb-3">
                         <label for="newPassword" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="newPassword" name="password" required>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
                         <small class="text-muted">Minimum 1 characters</small>
                     </div>
 
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control" id="confirmPassword" required>
+
+                        <input type="password"
+                               id="confirmPassword"
+                               name="confirmPassword"
+                               class="form-control"
+                               oninput="validateConfirmPassword()">
+
+                        <div class="invalid-feedback" id="confirmPasswordError">
+                            New password and confirm password do not match.
+                        </div>
                     </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -293,7 +346,8 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<script src="/js/bootstrap.bundle.min.js"></script>
 
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
@@ -316,9 +370,48 @@
             return false;
         }
     });
+    document.addEventListener("DOMContentLoaded", function () {
+        /* If backend sends an error flag, open modal automatically */
+        if ("[[${passwordError}]]" === "current" || "[[${passwordError}]]" === "mismatch") {
+            var myModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            myModal.show();
+        }
+    });
 
+    function validateConfirmPassword() {
+        const newPassword = document.getElementById("newPassword");
+        const confirmPassword = document.getElementById("confirmPassword");
+        const errorMsg = document.getElementById("confirmPasswordError");
 
+        if (confirmPassword.value !== newPassword.value) {
+            confirmPassword.classList.add("is-invalid");
+            errorMsg.style.display = "block";
+        } else {
+            confirmPassword.classList.remove("is-invalid");
+            errorMsg.style.display = "none";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Select all Bootstrap alerts on the page
+        const alerts = document.querySelectorAll('.alert');
+
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                // Add fade-out class
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+
+                // Fully remove after fading (Bootstrap uses 150ms animation)
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+
+            }, 5000); // 5 seconds
+        });
+    });
 </script>
+
 <script>
     function goBack() {
         if (document.referrer && document.referrer !== window.location.href) {

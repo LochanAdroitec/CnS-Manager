@@ -37,4 +37,8 @@ public class UserDto {
 
     private String createdByUsername; // Who created the user
     private String createdAt;         // Timestamp in string format
+
+    private String currentPassword;
+    private String newPassword;
+    private String confirmPassword;
 }

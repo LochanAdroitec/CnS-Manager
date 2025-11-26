@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer</title>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script th:if="${documentId}" th:inline="javascript">
+        window.documentId = /*[[${documentId}]]*/ null;
+        window.userRole = /*[[${userRole}]]*/ 'Viewer';
+
+        window.documentInfo = {
+            title: /*[[${document != null ? document.title : 'Document'}]]*/ 'Document',
+            productCode: /*[[${document != null ? document.productCode : 'N/A'}]]*/ 'N/A',
+            edition: /*[[${document != null ? document.edition : 'N/A'}]]*/ 'N/A',
+            publishDate: /*[[${document != null ? document.publishDate : 'N/A'}]]*/ 'N/A',
+            totalPages: /*[[${document != null ? document.noOfPages : 0}]]*/ 0,
+            notes: /*[[${document != null ? document.notes : 'No notes available'}]]*/ 'No notes available',
+            tagNames: /*[[${document != null ? document.tagNames : ''}]]*/ 'N/A',
+            classificationNames: /*[[${document != null ? document.classificationNames : ''}]]*/ ''
+        };
+
+        console.log('Document ID:', window.documentId);
+        console.log('User Role:', window.userRole);
+        console.log('Document Info:', window.documentInfo);
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: #f7fafc;
+        }
+
+        .document-header {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .document-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .document-meta {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #f7fafc;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f7fafc;
+        }
+
+        .download-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+        }
+
+        .download-btn:hover {
+            background: #3367d6;
+        }
+
+        .toolbar {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0px;
+            z-index: 999;
+        }
+
+        .toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .zoom-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background: #f7fafc;
+        }
+
+        .toolbar-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-jump-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8f9fa;
+        }
+
+        .page-jump-label {
+            font-size: 14px;
+            color: #718096;
+            white-space: nowrap;
+        }
+
+        .page-jump-input {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+        }
+
+        .page-jump-input:focus {
+            border-color: #4285f4;
+        }
+
+        .page-jump-total {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .page-jump-btn {
+            padding: 4px 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .page-jump-btn:hover {
+            background: #3367d6;
+        }
+
+        .main-container {
+            display: flex;
+            position: fixed;
+            top: 120px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .pdf-viewer-area {
+            flex: 1;
+            background: #e8e8e8;
+            display: block;
+            overflow: auto;
+            padding: 20px;
+            text-align: center;
+            scroll-behavior: smooth;
+        }
+
+        .pdf-pages-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pdf-canvas-wrapper {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .pdf-canvas-wrapper canvas {
+            display: block;
+        }
+
+        .page-number-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin-bottom: 20px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 6px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .info-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .classification-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .info-notes {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-spinner.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #718096;
+        }
+
+        .modal-close:hover {
+            color: #2d3748;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-body-center {
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            background: #4285f4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .modal-icon i {
+            font-size: 36px;
+            color: white;
+        }
+
+        .modal-icon.danger {
+            background: #f56565;
+        }
+
+        .modal-title-large {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: #4285f4;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel, .btn-primary, .btn-danger {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: white;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-cancel:hover {
+            background: #f7fafc;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 10001;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success { border-left: 4px solid #48bb78; }
+        .notification.error { border-left: 4px solid #f56565; }
+        .notification.warning { border-left: 4px solid #ed8936; }
+
+        .notification-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #718096;
+            padding: 4px;
+        }
+        /* Default Sidebar Width */
+        .sidebar {
+            width: 320px;
+            transition: width 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Closed Sidebar */
+        .sidebar.closed {
+            width: 0;
+            padding: 0;
+            border: none;
+            overflow: hidden;
+        }
+
+        /* PDF Area expands automatically */
+        .pdf-viewer-area.expanded {
+            width: 100%;
+        }
+
+
+    </style>
+</head>
+<body>
+<!-- Top Navigation -->
+<div class="top-nav">
+    <div class="nav-left">
+        <a href="javascript:void(0);" class="back-btn" onclick="goBackToPrevious()">
+            <i class="fas fa-arrow-left"></i>
+            Back to Library
+        </a>
+        <div class="document-header">
+            <div class="document-title" id="topDocTitle">Loading...</div>
+            <div class="document-meta" id="topDocMeta">Loading...</div>
+        </div>
+    </div>
+    <div class="nav-right">
+        <button class="nav-btn" id="bookmarkBtn" onclick="handleBookmarkClick()">
+            <i class="far fa-bookmark" id="bookmarkIcon"></i>
+            <span id="bookmarkBtnText">Bookmark Document</span>
+        </button>
+        <button class="nav-btn download-btn" id="downloadBtn" onclick="showDownloadModal()"
+                th:if="${userRole != 'Viewer'}" style="display: none;">
+            <i class="fas fa-download"></i>
+            Download with Watermark
+        </button>
+        <button class="nav-btn" id="toggleSidebarBtn" onclick="toggleSidebar()">
+            <i class="fas fa-info-circle"></i>
+            Hide Info
+        </button>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+    <div class="toolbar-controls">
+        <div class="zoom-group">
+            <button class="toolbar-btn" onclick="zoomOut()">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <span style="min-width: 60px; text-align: center; font-size: 14px;" id="zoomValue">100%</span>
+            <button class="toolbar-btn" onclick="zoomIn()">
+                <i class="fas fa-search-plus"></i>
+            </button>
+        </div>
+
+        <div class="page-jump-group">
+            <span class="page-jump-label">Page</span>
+            <input type="number" class="page-jump-input" id="pageJumpInput" min="1"
+                   placeholder="1" onkeypress="handlePageJumpEnter(event)">
+            <span class="page-jump-label">of</span>
+            <span class="page-jump-total" id="totalPagesDisplay">--</span>
+        </div>
+    </div>
+</div>
+
+<!-- Main Container -->
+<div class="main-container">
+    <!-- PDF Viewer Area -->
+    <div class="pdf-viewer-area" id="pdfViewerArea">
+        <div class="pdf-pages-container" id="pdfPagesContainer"></div>
+    </div>
+
+    <!-- Sidebar - Document Info -->
+    <div class="sidebar">
+        <h2 class="sidebar-title">Document Info</h2>
+
+        <div class="info-item">
+            <div class="info-label">Title</div>
+            <div class="info-value" id="sidebarTitle">API Documentation v4.2</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Product Code</div>
+            <div class="info-value" id="sidebarProductCode">API-011</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Edition</div>
+            <div class="info-value" id="sidebarEdition">4.2</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Publication Date</div>
+            <div class="info-value format-date" id="sidebarPublishDate">3/18/2024</div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Tags</div>
+            <div class="info-tags" id="sidebarTags">
+                <span class="tag-badge">api</span>
+                <span class="tag-badge">documentation</span>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Classifications</div>
+            <div class="info-tags" id="sidebarClassifications">
+                <span class="classification-badge">Technical</span>
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-label">Notes</div>
+            <div class="info-notes" id="sidebarNotes">Complete API reference documentation</div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Spinner -->
+<div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+    <span>Loading PDF...</span>
+</div>
+
+<!-- Bookmark Modal -->
+<div class="modal" id="bookmarkModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Bookmark Document</h2>
+            <button class="modal-close" onclick="closeBookmarkModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Bookmark Name</label>
+                <input type="text" class="form-input" id="bookmarkName"
+                       placeholder="Enter a name for this bookmark">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeBookmarkModal()">Cancel</button>
+            <button class="btn-primary" onclick="saveBookmark()">Save Bookmark</button>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Bookmark Confirmation Modal -->
+<div class="modal" id="removeBookmarkModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Remove Bookmark</h2>
+            <button class="modal-close" onclick="closeRemoveBookmarkModal()">×</button>
+        </div>
+        <div class="modal-body modal-body-center">
+            <div class="modal-icon danger">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="modal-title-large">Remove This Bookmark?</h3>
+            <p class="modal-text">Are you sure you want to remove this bookmark? This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeRemoveBookmarkModal()">Cancel</button>
+            <button class="btn-danger" onclick="confirmRemoveBookmark()">Yes, Remove Bookmark</button>
+        </div>
+    </div>
+</div>
+
+<!-- Download Modal -->
+<div class="modal" id="downloadModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Download PDF</h2>
+            <button class="modal-close" onclick="closeDownloadModal()">×</button>
+        </div>
+        <div class="modal-body modal-body-center">
+            <div class="modal-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3 class="modal-title-large">Watermarked Download</h3>
+            <p class="modal-text">This PDF will be downloaded with watermarks for security purposes.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeDownloadModal()">Cancel</button>
+            <button class="btn-primary" onclick="confirmDownload()">Download with Watermark</button>
+        </div>
+    </div>
+</div>
+
+<!-- Notification -->
+<div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText"></span>
+    <button class="notification-close" onclick="closeNotification()">
+        <i class="fas fa-times"></i>
+    </button>
+</div>
+
+<script th:inline="javascript">
+    window.username = [[${username}]];
+</script>
+
+<script>
+    // ==================== GLOBAL BOOKMARK STATE ====================
+    let isCurrentlyBookmarked = false;
+
+    // ==================== DATE FORMATTING UTILITY ====================
+    function formatDateToDDMMMYYYY(dateStr) {
+        if (!dateStr || dateStr === '-' || dateStr === 'N/A') return dateStr;
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        try {
+            let date;
+
+            if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+                date = new Date(dateStr.split(' ')[0]);
+            } else {
+                date = new Date(dateStr);
+            }
+
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date:', dateStr);
+                return dateStr;
+            }
+
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+
+            return `${day}-${month}-${year}`;
+        } catch (error) {
+            console.error('Error formatting date:', dateStr, error);
+            return dateStr;
+        }
+    }
+
+    function formatAllDates() {
+        const dateElements = document.querySelectorAll('.format-date');
+        dateElements.forEach(element => {
+            const originalDate = element.textContent.trim();
+            if (originalDate && originalDate !== '-' && originalDate !== 'N/A') {
+                const formattedDate = formatDateToDDMMMYYYY(originalDate);
+                element.textContent = formattedDate;
+            }
+        });
+    }
+
+    // ==================== PDF VIEWER CORE ====================
+    const API_BASE_URL = '/documents';
+    let pdfDoc = null;
+    let scale = 1.0;
+    let documentId = window.documentId;
+    let renderedPages = new Map();
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.documentInfo) {
+            updateDocumentInfo(window.documentInfo);
+        }
+
+        formatAllDates();
+
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn && window.userRole !== 'Viewer') {
+            downloadBtn.style.display = 'flex';
+        }
+
+        if (documentId) {
+            loadDocument(documentId);
+            checkIfBookmarked();
+        } else {
+            showError('No document ID provided');
+        }
+    });
+
+    // ==================== BOOKMARK FUNCTIONALITY ====================
+
+    async function checkIfBookmarked() {
+        if (!documentId) {
+            console.error("Document ID not found!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/bookmark/check/${documentId}`);
+
+            if (response.ok) {
+                const data = await response.json();
+
+                if (typeof data === 'object' && data.bookmarked !== undefined) {
+                    isCurrentlyBookmarked = data.bookmarked;
+                } else if (typeof data === 'boolean') {
+                    isCurrentlyBookmarked = data;
+                } else {
+                    isCurrentlyBookmarked = false;
+                }
+
+                updateBookmarkButton(isCurrentlyBookmarked);
+            } else {
+                console.error("Failed to check bookmark status:", response.status);
+            }
+        } catch (error) {
+            console.error("Error checking bookmark status:", error);
+        }
+    }
+
+    function updateBookmarkButton(isBookmarked) {
+        const bookmarkBtn = document.getElementById("bookmarkBtn");
+        const bookmarkIcon = document.getElementById("bookmarkIcon");
+        const bookmarkBtnText = document.getElementById("bookmarkBtnText");
+
+        if (!bookmarkBtn || !bookmarkIcon || !bookmarkBtnText) return;
+
+        if (isBookmarked) {
+            bookmarkBtn.disabled = false;
+            bookmarkBtn.style.cursor = 'pointer';
+            bookmarkIcon.className = "fas fa-bookmark";
+            bookmarkIcon.style.color = "#f59e0b";
+            bookmarkBtnText.textContent = 'Remove Bookmark';
+        } else {
+            bookmarkBtn.disabled = false;
+            bookmarkBtn.style.cursor = "pointer";
+            bookmarkIcon.className = "far fa-bookmark";
+            bookmarkIcon.style.color = "";
+            bookmarkBtnText.textContent = "Bookmark Document";
+        }
+    }
+
+    function handleBookmarkClick() {
+        if (isCurrentlyBookmarked) {
+            showRemoveBookmarkModal();
+        } else {
+            showBookmarkModal();
+        }
+    }
+
+    function showBookmarkModal() {
+        const modal = document.getElementById("bookmarkModal");
+        if (modal) {
+            modal.classList.add("active");
+            document.getElementById("bookmarkName").value = "";
+        }
+    }
+
+    function closeBookmarkModal() {
+        const modal = document.getElementById("bookmarkModal");
+        if (modal) modal.classList.remove("active");
+    }
+
+    function showRemoveBookmarkModal() {
+        const modal = document.getElementById("removeBookmarkModal");
+        if (modal) {
+            modal.classList.add("active");
+        }
+    }
+
+    function closeRemoveBookmarkModal() {
+        const modal = document.getElementById("removeBookmarkModal");
+        if (modal) modal.classList.remove("active");
+    }
+
+    async function saveBookmark() {
+        const name = document.getElementById("bookmarkName").value.trim();
+        if (!name) {
+            showNotification("Please enter a bookmark name", "warning");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute("content");
+
+        try {
+            const response = await fetch(`/documents/bookmark/${documentId}?page=1&name=${encodeURIComponent(name)}`, {
+                method: "POST",
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+
+            const errorText = await response.text();
+
+            if (response.ok) {
+                closeBookmarkModal();
+                showNotification("Bookmark saved successfully!", "success");
+                isCurrentlyBookmarked = true;
+                updateBookmarkButton(true);
+            } else if (
+                response.status === 409 ||
+                errorText.toLowerCase().includes("already") ||
+                errorText.toLowerCase().includes("exist")
+            ) {
+                closeBookmarkModal();
+                showNotification("This document is already bookmarked", "warning");
+                isCurrentlyBookmarked = true;
+                updateBookmarkButton(true);
+            } else {
+                console.error("Bookmark save failed:", errorText);
+                showNotification("Failed to save bookmark", "error");
+            }
+        } catch (error) {
+            console.error("Error saving bookmark:", error);
+            showNotification("Failed to save bookmark", "error");
+        }
+    }
+
+    async function confirmRemoveBookmark() {
+        if (!documentId) {
+            console.error("Document ID not found!");
+            showNotification("Cannot remove bookmark: Document ID missing", "error");
+            return;
+        }
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute("content");
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute("content");
+
+        if (!csrfToken || !csrfHeader) {
+            console.error("CSRF token not found!");
+            showNotification("Security error: Please refresh the page", "error");
+            return;
+        }
+
+        try {
+            console.log("Attempting to delete bookmark for document:", documentId);
+
+            const response = await fetch(`/bookmarks/document/${documentId}`, {
+                method: "DELETE",
+                headers: {
+                    [csrfHeader]: csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log("Delete response status:", response.status);
+
+            if (response.ok) {
+                const responseText = await response.text();
+                console.log("Delete response:", responseText);
+
+                closeRemoveBookmarkModal();
+                showNotification("Bookmark removed successfully!", "success");
+                isCurrentlyBookmarked = false;
+                updateBookmarkButton(false);
+            } else {
+                const errorText = await response.text();
+                console.error("Failed to remove bookmark. Status:", response.status, "Error:", errorText);
+
+                if (response.status === 404) {
+                    showNotification("Bookmark not found", "warning");
+                    isCurrentlyBookmarked = false;
+                    updateBookmarkButton(false);
+                    closeRemoveBookmarkModal();
+                } else if (response.status === 403) {
+                    showNotification("You don't have permission to remove this bookmark", "error");
+                } else {
+                    showNotification("Failed to remove bookmark: " + errorText, "error");
+                }
+            }
+        } catch (error) {
+            console.error("Error removing bookmark:", error);
+            showNotification("Network error: Failed to remove bookmark", "error");
+        }
+    }
+
+    // ==================== DOCUMENT INFO ====================
+    function toggleSidebar() {
+        const sidebar = document.querySelector(".sidebar");
+        const viewer = document.querySelector(".pdf-viewer-area");
+        const btn = document.getElementById("toggleSidebarBtn");
+
+        sidebar.classList.toggle("closed");
+
+        if (sidebar.classList.contains("closed")) {
+            viewer.classList.add("expanded");
+            btn.innerHTML = `<i class="fas fa-info-circle"></i> Show Info`;
+        } else {
+            viewer.classList.remove("expanded");
+            btn.innerHTML = `<i class="fas fa-times"></i> Hide Info`;
+        }
+    }
+
+
+    function updateDocumentInfo(info) {
+        const title = info.title || 'Document';
+        const productCode = info.productCode || '';
+        const edition = info.edition || '';
+        const totalPages = info.totalPages || info.noOfPages || 0;
+
+        document.getElementById('topDocTitle').textContent = title;
+        document.getElementById('topDocMeta').textContent =
+            `${productCode} • v${edition} • ${totalPages} pages`;
+
+        document.getElementById('sidebarTitle').textContent = title;
+        document.getElementById('sidebarProductCode').textContent = productCode || 'N/A';
+        document.getElementById('sidebarEdition').textContent = edition || 'N/A';
+        document.getElementById('sidebarPublishDate').textContent = info.publishDate || 'N/A';
+        document.getElementById('sidebarNotes').textContent = info.notes || 'No notes available';
+
+        const tagsContainer = document.getElementById('sidebarTags');
+        if (info.tagNames && info.tagNames.trim() !== '') {
+            const tagsArray = info.tagNames.split(',').map(tag => tag.trim());
+            tagsContainer.innerHTML = tagsArray.map(tag =>
+                `<span class="tag-badge">${tag}</span>`
+            ).join('');
+        } else if (info.tags && info.tags.length > 0) {
+            tagsContainer.innerHTML = info.tags.map(tag =>
+                `<span class="tag-badge">${tag.tagName || tag}</span>`
+            ).join('');
+        } else {
+            tagsContainer.innerHTML = '<span>No tags</span>';
+        }
+
+        const clsContainer = document.getElementById('sidebarClassifications');
+        if (clsContainer) {
+            if (info.classificationNames && info.classificationNames.trim() !== '') {
+                const clsArray = info.classificationNames.split(',').map(c => c.trim());
+                clsContainer.innerHTML = clsArray.map(c =>
+                    `<span class="classification-badge">${c}</span>`
+                ).join('');
+            } else {
+                clsContainer.innerHTML = '<span>No classifications</span>';
+            }
+        }
+    }
+
+    // ==================== PDF RENDERING ====================
+
+    async function loadDocument(id) {
+        try {
+            showLoading(true);
+
+            const response = await fetch(`${API_BASE_URL}/DocViewer-view/${id}`);
+            if (!response.ok) throw new Error('Failed to load PDF');
+
+            const pdfArrayBuffer = await response.arrayBuffer();
+            const loadingTask = pdfjsLib.getDocument({ data: pdfArrayBuffer });
+            pdfDoc = await loadingTask.promise;
+
+            const totalPages = pdfDoc.numPages;
+            document.getElementById('totalPagesDisplay').textContent = totalPages;
+            document.getElementById('pageJumpInput').setAttribute('max', totalPages);
+
+            await renderAllPages();
+        } catch (error) {
+            console.error('Error loading document:', error);
+            showError('Failed to load document');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function renderAllPages() {
+        const container = document.getElementById('pdfPagesContainer');
+        container.innerHTML = '';
+        renderedPages.clear();
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'pdf-canvas-wrapper';
+            pageWrapper.id = `page-wrapper-${pageNum}`;
+            pageWrapper.setAttribute('data-page-number', pageNum);
+
+            const canvas = document.createElement('canvas');
+            canvas.id = `pdf-canvas-${pageNum}`;
+            canvas.className = 'pdf-page-canvas';
+
+            const pageLabel = document.createElement('div');
+            pageLabel.className = 'page-number-label';
+            pageLabel.textContent = `Page ${pageNum} of ${pdfDoc.numPages}`;
+
+            pageWrapper.appendChild(canvas);
+            pageWrapper.appendChild(pageLabel);
+            container.appendChild(pageWrapper);
+
+            await renderSinglePage(pageNum, canvas);
+        }
+    }
+
+    async function renderSinglePage(pageNum, canvas) {
+        try {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({scale: scale});
+
+            const ctx = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({
+                canvasContext: ctx,
+                viewport: viewport
+            }).promise;
+
+            addWatermark(ctx, canvas);
+            renderedPages.set(pageNum, { canvas, ctx, page });
+
+        } catch (error) {
+            console.error(`Error rendering page ${pageNum}:`, error);
+        }
+    }
+
+    function addWatermark(ctx, canvas) {
+        if (!ctx || !canvas) return;
+
+        const watermarkText = window.username || 'User';
+        const fontSize = 48;
+        const opacity = 0.1;
+        const gapX = 300;
+        const gapY = 200;
+
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.font = fontSize + 'px Arial';
+        ctx.fillStyle = '#FF0000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(-Math.PI / 4);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+
+        for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
+            for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
+                ctx.fillText(watermarkText, x, y);
+            }
+        }
+
+        ctx.restore();
+    }
+
+    // ==================== PAGE JUMP FUNCTIONALITY ====================
+
+    function jumpToPage() {
+        const input = document.getElementById('pageJumpInput');
+        let pageNumber = parseInt(input.value);
+
+        if (!pageNumber || isNaN(pageNumber)) {
+            showNotification("Please enter a valid page number", "warning");
+            return;
+        }
+
+        const totalPages = pdfDoc ? pdfDoc.numPages : 1;
+
+        if (pageNumber < 1) {
+            pageNumber = 1;
+            input.value = 1;
+        } else if (pageNumber > totalPages) {
+            pageNumber = totalPages;
+            input.value = totalPages;
+        }
+
+        const pageWrapper = document.getElementById(`page-wrapper-${pageNumber}`);
+        if (pageWrapper) {
+            const viewerArea = document.getElementById('pdfViewerArea');
+            const offsetTop = pageWrapper.offsetTop - 20;
+            viewerArea.scrollTo({
+                top: offsetTop,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function handlePageJumpEnter(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            jumpToPage();
+        }
+    }
+
+    // ==================== ZOOM FUNCTIONALITY ====================
+
+    async function zoomIn() {
+        if (scale < 3) {
+            const container = document.querySelector('.pdf-viewer-area');
+            const scrollRatio = container.scrollTop / container.scrollHeight;
+
+            scale += 0.25;
+            document.getElementById('zoomValue').textContent = Math.round(scale * 100) + '%';
+
+            await renderAllPages();
+
+            setTimeout(() => {
+                container.scrollTop = scrollRatio * container.scrollHeight;
+            }, 100);
+        }
+    }
+
+    async function zoomOut() {
+        if (scale > 0.25) {
+            const container = document.querySelector('.pdf-viewer-area');
+            const scrollRatio = container.scrollTop / container.scrollHeight;
+
+            scale -= 0.25;
+            document.getElementById('zoomValue').textContent = Math.round(scale * 100) + '%';
+
+            await renderAllPages();
+
+            setTimeout(() => {
+                container.scrollTop = scrollRatio * container.scrollHeight;
+            }, 100);
+        }
+    }
+
+    // ==================== DOWNLOAD FUNCTIONALITY ====================
+
+    function showDownloadModal() {
+        document.getElementById('downloadModal').classList.add('active');
+    }
+
+    function closeDownloadModal() {
+        document.getElementById('downloadModal').classList.remove('active');
+    }
+
+    async function confirmDownload() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/download-watermarked/${documentId}`);
+            if (!response.ok) throw new Error('Download failed');
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = 'watermarked_document.pdf';
+            if (contentDisposition) {
+                const match = contentDisposition.match(/filename="(.+)"/);
+                if (match) filename = match[1];
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            closeDownloadModal();
+            showNotification('PDF downloaded successfully', 'success');
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            showNotification('Failed to download PDF', 'error');
+        }
+    }
+
+    // ==================== UTILITIES ====================
+
+    function showLoading(show) {
+        const spinner = document.getElementById('loadingSpinner');
+        if (show) {
+            spinner.classList.add('active');
+        } else {
+            spinner.classList.remove('active');
+        }
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        const text = document.getElementById('notificationText');
+
+        notification.className = `notification ${type} show`;
+        text.textContent = message;
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+        }, 5000);
+    }
+
+    function closeNotification() {
+        document.getElementById('notification').classList.remove('show');
+    }
+
+    function showError(message) {
+        showNotification(message, 'error');
+    }
+
+    function goBackToPrevious() {
+        if (document.referrer && document.referrer !== window.location.href) {
+            window.history.back();
+        } else {
+            window.location.href = '/documents';
+        }
+    }
+
+    // ==================== KEYBOARD SHORTCUTS ====================
+
+    document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT') return;
+
+        switch(e.key) {
+            case '+':
+            case '=':
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    zoomIn();
+                }
+                break;
+            case '-':
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    zoomOut();
+                }
+                break;
+        }
+    });
+
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            e.target.classList.remove('active');
+        }
+    });
+</script>
+
+<!-- ==================== SECURITY SCRIPT ==================== -->
+<script>
+    (function() {
+        const BLUR_DURATION = 2000;
+        const BLUR_INTENSITY = '12px';
+        const WARNING_TEXT = '⚠️ Screenshot or Snipping not allowed.';
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            font-size: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999999;
+            backdrop-filter: blur(5px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        `;
+        overlay.innerText = WARNING_TEXT;
+        document.body.appendChild(overlay);
+
+        function showWarning() {
+            document.body.style.filter = `blur(${BLUR_INTENSITY})`;
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                document.body.style.filter = 'none';
+                overlay.style.opacity = '0';
+            }, BLUR_DURATION);
+        }
+
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('dragstart', e => e.preventDefault());
+
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && ['p', 's', 'u'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+                showWarning();
+            }
+
+            if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c', 'k'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+                showWarning();
+            }
+
+            if (e.key === 'F12') {
+                e.preventDefault();
+                showWarning();
+            }
+
+            if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                showWarning();
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            if (e.key === 'PrintScreen') {
+                navigator.clipboard.writeText('Screenshots disabled').catch(()=>{});
+                showWarning();
+            }
+        });
+
+        document.addEventListener('copy', e => {
+            e.preventDefault();
+            showWarning();
+        });
+        document.addEventListener('cut', e => {
+            e.preventDefault();
+            showWarning();
+        });
+
+        window.addEventListener('blur', () => {
+            document.body.style.filter = `blur(${BLUR_INTENSITY})`;
+        });
+        window.addEventListener('focus', () => {
+            document.body.style.filter = 'none';
+        });
+    })();
+</script>
+
+</body>
+</html>

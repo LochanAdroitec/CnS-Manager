@@ -4,35 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Codes & Standards</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
     <style>
         body {
             background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
             padding-top: 70px;
         }
+
+        /* Stat cards - now clickable */
         .stat-card {
             border-radius: 12px;
             padding: 5px;
             color: white;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            text-align: right;
+            cursor: pointer;
+            position: relative;
         }
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
+        .stat-card.active {
+            border: 2px solid #1E78D7;
+            box-shadow: 0 0 12px rgba(30,120,215,0.4);
+        }
+        .stat-card.active::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+        }
         .stat-number {
             font-size: 2rem;
             font-weight: bold;
-            padding-left:10px;
+            padding-left:0px;
+            padding-right:5px;
         }
         .stat-label {
             font-size: 0.9rem;
             opacity: 0.9;
-            padding-left:10px;
-            padding-top:20px;
+            padding-left:0px;
+            padding-top:15px;
+            padding-right:5px;
         }
         .search-box {
             background: white;
@@ -61,6 +86,148 @@
           color: white !important;
           padding:10px;
         }
+
+        /* Clickable row styling */
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .clickable-row:hover {
+            background-color: #f0f7ff !important;
+        }
+        .clickable-row td {
+            vertical-align: middle;
+        }
+
+        /* Username styling (no longer a link) */
+        .username-text {
+            font-weight: 600;
+            color: #212529;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+        .modal-overlay.active {
+            display: block;
+        }
+
+        /* User Details Modal */
+        .user-details-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .user-details-modal.active {
+            display: block;
+        }
+        .modal-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9eef5;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6c757d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-close:hover {
+            color: #dc3545;
+        }
+        .user-detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .user-detail-label {
+            font-weight: 600;
+            width: 120px;
+            color: #495057;
+        }
+        .user-detail-value {
+            flex: 1;
+            color: #212529;
+        }
+
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .role-pill {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #334155;
+        }
+
+        /* Username and Email validation feedback */
+        .validation-feedback {
+            display: none;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .validation-feedback.valid {
+            color: #198754;
+            display: block;
+        }
+        .validation-feedback.invalid {
+            color: #dc3545;
+            display: block;
+        }
+        .validation-feedback.checking {
+            color: #0d6efd;
+            display: block;
+        }
+
+        /* Input validation states */
+        .form-control.is-valid {
+            border-color: #198754;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -73,20 +240,13 @@
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
+    <div class="main-content flex-grow-1 p-4">
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="mb-1">User Management</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="javascript:void(0);"
-                               onclick="goBack()"
-                               class="text-decoration-none">
-                                <i class="bi bi-arrow-left me-1"></i> Back
-                            </a>
-                        </li>
                         <li class="breadcrumb-item">
                             <a th:href="@{/documents}" class="text-decoration-none">
                                 <i class="bi bi-house me-1"></i> Home
@@ -101,30 +261,34 @@
             </button>
         </div>
 
-        <!-- Statistics Cards -->
+        <!-- Statistics Cards (Now clickable filters) -->
         <div class="row mb-4">
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row " style="background-color: #1e3a5f">
+                <div class="stat-card d-flex flex-row active" style="background-color: #1e3a5f"
+                     data-filter="all" onclick="filterByStatCard(this)">
+                    <div class="stat-label d-flex justify-content-center">All Users</div>
                     <div class="stat-number" th:text="${totalUsers}">5</div>
-                    <div class="stat-label d-flex justify-content-center">Total Users</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row " style="background-color: #0A3D91">
-                    <div class="stat-number" th:text="${adminCount}">1</div>
+                <div class="stat-card d-flex flex-row" style="background-color: #0A3D91"
+                     data-filter="Admin" onclick="filterByStatCard(this)">
                     <div class="stat-label d-flex justify-content-center">Admins</div>
+                    <div class="stat-number" th:text="${adminCount}">1</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row " style="background-color: #4DA3FF">
-                    <div class="stat-number" th:text="${managerCount}">2</div>
+                <div class="stat-card d-flex flex-row" style="background-color: #4DA3FF"
+                     data-filter="Manager" onclick="filterByStatCard(this)">
                     <div class="stat-label d-flex justify-content-center">Managers</div>
+                    <div class="stat-number" th:text="${managerCount}">2</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row " style="background-color: #82b3e0">
-                    <div class="stat-number" th:text="${viewerCount}">2</div>
+                <div class="stat-card d-flex flex-row" style="background-color: #82b3e0"
+                     data-filter="Viewer" onclick="filterByStatCard(this)">
                     <div class="stat-label d-flex justify-content-center">Viewers</div>
+                    <div class="stat-number" th:text="${viewerCount}">2</div>
                 </div>
             </div>
         </div>
@@ -145,22 +309,14 @@
         <!-- Search and Filters -->
         <div class="search-box mb-4">
             <div class="row g-3 align-items-center">
-                <div class="col-md-6">
+                <div class="col-md-9">
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select class="form-select" id="roleFilter">
-                        <option value="">All Roles</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Manager">Manager</option>
-                        <option value="Viewer">Viewer</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-muted">
+                    <div class="text-muted text-end">
                         <i class="bi bi-people me-2"></i>
                         Users (<span id="userCount" th:text="${totalUsers}">5</span>)
                     </div>
@@ -183,8 +339,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="user : ${users}">
-                        <!-- Username with Avatar -->
+                    <tr th:each="user : ${users}"
+                        th:attr="data-role=${user.roleName},data-user-id=${user.id}"
+                        class="clickable-row">
+                        <!-- Username with Avatar (No longer clickable link) -->
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
@@ -194,7 +352,8 @@
                                         '??'}">JD</span>
                                 </div>
                                 <div>
-                                    <span th:text="${user.username != null ? user.username : 'N/A'}">username</span>
+                                    <span class="username-text"
+                                          th:text="${user.username != null ? user.username : 'N/A'}">username</span>
                                 </div>
                             </div>
                         </td>
@@ -224,7 +383,7 @@
                         </td>
 
                         <!-- Actions -->
-                        <td>
+                        <td class="actions-cell">
                             <button class="btn btn-sm btn-outline-primary me-1"
                                     th:attr="data-id=${user.id},
                                              data-firstname=${user.firstName != null ? user.firstName : ''},
@@ -232,7 +391,7 @@
                                              data-username=${user.username != null ? user.username : ''},
                                              data-email=${user.email != null ? user.email : ''},
                                              data-roleid=${user.roleId != null ? user.roleId : ''}"
-                                    onclick="openEditModal(this)" title="Edit">
+                                    onclick="openEditModal(this); event.stopPropagation();" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <a href="#"
@@ -241,7 +400,8 @@
                                data-bs-target="#deleteModal"
                                th:data-userid="${user.id}"
                                th:data-username="${(user.firstName != null and user.lastName != null) ? (user.firstName + ' ' + user.lastName) : (user.username != null ? user.username : 'Unknown User')}"
-                               title="Delete">
+                               title="Delete"
+                               onclick="event.stopPropagation();">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -260,11 +420,27 @@
     </div>
 </div>
 
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeUserModal()"></div>
+
+<!-- User Details Modal -->
+<div class="user-details-modal" id="userDetailsModal">
+    <div class="modal-header-custom">
+        <h4>User Details</h4>
+        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+    </div>
+    <div id="userDetailsContent">
+        <div class="text-center py-4">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1">
+<div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <form method="post" th:action="@{/add/save}">
+            <form method="post" th:action="@{/add/save}" id="addUserForm">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New User</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -283,11 +459,13 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Username <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="username" required>
+                            <input type="text" class="form-control" name="username" id="addUsername" required>
+                            <div class="validation-feedback" id="addUsernameFeedback"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" name="email" required>
+                            <input type="email" class="form-control" name="email" id="addEmail" required>
+                            <div class="validation-feedback" id="addEmailFeedback"></div>
                         </div>
                     </div>
                     <div class="row">
@@ -306,7 +484,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-2"></i>Add User</button>
+                    <button type="submit" class="btn btn-primary" id="addUserSubmitBtn"><i class="bi bi-check-circle me-2"></i>Add User</button>
                 </div>
             </form>
         </div>
@@ -314,11 +492,14 @@
 </div>
 
 <!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1">
+<div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="post" id="editForm">
-                <div class="modal-header " style="background-color:#87CEEB;">
+                <!-- CSRF token -->
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <div class="modal-header" style="background-color:#87CEEB;">
                     <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit User</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -341,6 +522,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="editEmail" name="email" required>
+                            <div class="validation-feedback" id="editEmailFeedback"></div>
                         </div>
                     </div>
                     <div class="row">
@@ -359,15 +541,18 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn " style="background-color:#87CEEB;"><i class="bi bi-check-circle me-2"></i>Update</button>
+                    <button type="submit" class="btn" style="background-color:#87CEEB;">
+                        <i class="bi bi-check-circle me-2"></i>Update
+                    </button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-3 shadow">
             <div class="modal-header">
@@ -385,17 +570,490 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
+
+<script th:inline="javascript">
+    // Pass server-side context path to JavaScript
+    var contextPath = /*[[@{/}]]*/ '/';
+</script>
+
 <script>
+    let currentFilter = 'all';
+    let usernameCheckTimeout = null;
+    let emailCheckTimeout = null;
+    let isUsernameValid = false;
+    let isEmailValid = false;
+
+    // Edit form validation state
+    let isEditEmailValid = true;  // Default true since we're editing existing user
+    let editEmailCheckTimeout = null;
+    let originalEmail = '';  // Store original email to exclude from uniqueness check
+
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Event delegation for clickable rows
+        const table = document.getElementById('usersTable');
+
+        if (table) {
+            table.addEventListener('click', function(e) {
+                // Check if clicked on a clickable row (but not on action buttons)
+                const clickableRow = e.target.closest('.clickable-row');
+                const actionsCell = e.target.closest('.actions-cell');
+
+                // If clicked on row but not on actions cell
+                if (clickableRow && !actionsCell) {
+                    const userId = clickableRow.getAttribute('data-user-id');
+
+                    if (userId && userId !== '0') {
+                        showUserDetails(parseInt(userId));
+                    }
+                }
+            });
+        }
+
+        // Initialize search input listener
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                applyFilters();
+            });
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeUserModal();
+            }
+        });
+
+        // Username validation for Add User form
+        const addUsernameInput = document.getElementById('addUsername');
+        if (addUsernameInput) {
+            addUsernameInput.addEventListener('input', function() {
+                clearTimeout(usernameCheckTimeout);
+                const username = this.value.trim();
+                const feedback = document.getElementById('addUsernameFeedback');
+
+                if (username.length < 1) {
+                    feedback.className = 'validation-feedback';
+                    feedback.textContent = '';
+                    this.classList.remove('is-valid', 'is-invalid');
+                    isUsernameValid = false;
+                    updateSubmitButton();
+                    return;
+                }
+
+                feedback.className = 'validation-feedback checking';
+                feedback.innerHTML = '<i class="bi bi-arrow-repeat"></i> Checking username...';
+                this.classList.remove('is-valid', 'is-invalid');
+
+                usernameCheckTimeout = setTimeout(() => {
+                    checkUsernameAvailability(username);
+                }, 500);
+            });
+        }
+
+        // Email validation for Add User form
+        const addEmailInput = document.getElementById('addEmail');
+        if (addEmailInput) {
+            addEmailInput.addEventListener('input', function() {
+                clearTimeout(emailCheckTimeout);
+                const email = this.value.trim();
+                const feedback = document.getElementById('addEmailFeedback');
+
+                // Basic email format validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (email.length === 0) {
+                    feedback.className = 'validation-feedback';
+                    feedback.textContent = '';
+                    this.classList.remove('is-valid', 'is-invalid');
+                    isEmailValid = false;
+                    updateSubmitButton();
+                    return;
+                }
+
+                if (!emailRegex.test(email)) {
+                    feedback.className = 'validation-feedback invalid';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Invalid email format.';
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                    isEmailValid = false;
+                    updateSubmitButton();
+                    return;
+                }
+
+                feedback.className = 'validation-feedback checking';
+                feedback.innerHTML = '<i class="bi bi-arrow-repeat"></i> Checking email...';
+                this.classList.remove('is-valid', 'is-invalid');
+
+                emailCheckTimeout = setTimeout(() => {
+                    checkEmailAvailability(email);
+                }, 500);
+            });
+        }
+
+        // Email validation for Edit User form
+        const editEmailInput = document.getElementById('editEmail');
+        if (editEmailInput) {
+            editEmailInput.addEventListener('input', function() {
+                clearTimeout(editEmailCheckTimeout);
+                const email = this.value.trim();
+                const feedback = document.getElementById('editEmailFeedback');
+
+                // Basic email format validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                if (email.length === 0) {
+                    feedback.className = 'validation-feedback';
+                    feedback.textContent = '';
+                    this.classList.remove('is-valid', 'is-invalid');
+                    isEditEmailValid = false;
+                    updateEditSubmitButton();
+                    return;
+                }
+
+                if (!emailRegex.test(email)) {
+                    feedback.className = 'validation-feedback invalid';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Invalid email format.';
+                    this.classList.remove('is-valid');
+                    this.classList.add('is-invalid');
+                    isEditEmailValid = false;
+                    updateEditSubmitButton();
+                    return;
+                }
+
+                // If email is same as original, it's valid (no need to check)
+                if (email === originalEmail) {
+                    feedback.className = 'validation-feedback valid';
+                    feedback.innerHTML = '<i class="bi bi-check-circle"></i> Current email.';
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                    isEditEmailValid = true;
+                    updateEditSubmitButton();
+                    return;
+                }
+
+                feedback.className = 'validation-feedback checking';
+                feedback.innerHTML = '<i class="bi bi-arrow-repeat"></i> Checking email...';
+                this.classList.remove('is-valid', 'is-invalid');
+
+                editEmailCheckTimeout = setTimeout(() => {
+                    checkEditEmailAvailability(email);
+                }, 500);
+            });
+        }
+
+        // Form submission validation
+        const addUserForm = document.getElementById('addUserForm');
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', function(e) {
+                if (!isUsernameValid || !isEmailValid) {
+                    e.preventDefault();
+                    let message = 'Please fix the following issues:\n';
+                    if (!isUsernameValid) {
+                        message += '- Username is not available or invalid\n';
+                    }
+                    if (!isEmailValid) {
+                        message += '- Email is not available or invalid\n';
+                    }
+                    alert(message);
+                    return false;
+                }
+            });
+        }
+
+        // Form submission validation for Edit User form
+        const editUserForm = document.getElementById('editForm');
+        if (editUserForm) {
+            editUserForm.addEventListener('submit', function(e) {
+                if (!isEditEmailValid) {
+                    e.preventDefault();
+                    alert('Please fix the email - it is already in use by another user.');
+                    return false;
+                }
+            });
+        }
+
+        // Format dates on page load
+        formatAllDates();
+    });
+
+    // Check username availability
+    function checkUsernameAvailability(username) {
+        const feedback = document.getElementById('addUsernameFeedback');
+        const input = document.getElementById('addUsername');
+
+        // Updated URL: removed 'api/' since your controller is at /users
+        fetch(contextPath + `users/check-username?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    feedback.className = 'validation-feedback invalid';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Username already exists. Please choose a different one.';
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    isUsernameValid = false;
+                } else {
+                    feedback.className = 'validation-feedback valid';
+                    feedback.innerHTML = '<i class="bi bi-check-circle"></i> Username is available.';
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    isUsernameValid = true;
+                }
+                updateSubmitButton();
+            })
+            .catch(error => {
+                console.error('Error checking username:', error);
+                feedback.className = 'validation-feedback';
+                feedback.textContent = '';
+                input.classList.remove('is-valid', 'is-invalid');
+                isUsernameValid = false;
+                updateSubmitButton();
+            });
+    }
+
+    // Check email availability
+    function checkEmailAvailability(email) {
+        const feedback = document.getElementById('addEmailFeedback');
+        const input = document.getElementById('addEmail');
+
+        // Updated URL: removed 'api/' since your controller is at /users
+        fetch(contextPath + `users/check-email?email=${encodeURIComponent(email)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    feedback.className = 'validation-feedback invalid';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists. Please use a different email.';
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    isEmailValid = false;
+                } else {
+                    feedback.className = 'validation-feedback valid';
+                    feedback.innerHTML = '<i class="bi bi-check-circle"></i> Email is available.';
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    isEmailValid = true;
+                }
+                updateSubmitButton();
+            })
+            .catch(error => {
+                console.error('Error checking email:', error);
+                feedback.className = 'validation-feedback';
+                feedback.textContent = '';
+                input.classList.remove('is-valid', 'is-invalid');
+                isEmailValid = false;
+                updateSubmitButton();
+            });
+    }
+
+    // Check email availability for edit form
+    function checkEditEmailAvailability(email) {
+        const feedback = document.getElementById('editEmailFeedback');
+        const input = document.getElementById('editEmail');
+
+        fetch(contextPath + `users/check-email?email=${encodeURIComponent(email)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.exists) {
+                    feedback.className = 'validation-feedback invalid';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists. Please use a different email.';
+                    input.classList.remove('is-valid');
+                    input.classList.add('is-invalid');
+                    isEditEmailValid = false;
+                } else {
+                    feedback.className = 'validation-feedback valid';
+                    feedback.innerHTML = '<i class="bi bi-check-circle"></i> Email is available.';
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    isEditEmailValid = true;
+                }
+                updateEditSubmitButton();
+            })
+            .catch(error => {
+                console.error('Error checking email:', error);
+                feedback.className = 'validation-feedback';
+                feedback.textContent = '';
+                input.classList.remove('is-valid', 'is-invalid');
+                isEditEmailValid = true; // Allow submission on error
+                updateEditSubmitButton();
+            });
+    }
+
+    // Update edit form submit button state
+    function updateEditSubmitButton() {
+        const submitBtn = document.querySelector('#editUserModal button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = !isEditEmailValid;
+        }
+    }
+
+    // Update submit button state
+    function updateSubmitButton() {
+        const submitBtn = document.getElementById('addUserSubmitBtn');
+        const usernameInput = document.getElementById('addUsername');
+        const emailInput = document.getElementById('addEmail');
+
+        const usernameHasValue = usernameInput && usernameInput.value.trim().length >= 1;
+        const emailHasValue = emailInput && emailInput.value.trim().length > 0;
+
+        if (usernameHasValue && emailHasValue && isUsernameValid && isEmailValid) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+
+    // Function to show user details modal
+    function showUserDetails(userId) {
+        const modal = document.getElementById('userDetailsModal');
+        const overlay = document.getElementById('modalOverlay');
+        const content = document.getElementById('userDetailsContent');
+
+        // Show modal and overlay
+        modal.classList.add('active');
+        overlay.classList.add('active');
+
+        // Show loading spinner
+        content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
+
+        // Fetch user details via AJAX
+        fetch(contextPath + `api/users/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('User not found');
+                }
+                return response.json();
+            })
+            .then(user => {
+                let createdDate = 'N/A';
+                if (user.createdAt) {
+                    const date = new Date(user.createdAt);
+                    createdDate = date.toLocaleString('en-IN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                }
+
+                let roleName = user.roleName || 'N/A';
+
+                content.innerHTML = `
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">First Name:</div>
+                        <div class="user-detail-value">${user.firstName || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Last Name:</div>
+                        <div class="user-detail-value">${user.lastName || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Username:</div>
+                        <div class="user-detail-value">${user.username || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Email:</div>
+                        <div class="user-detail-value">${user.email || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Role:</div>
+                        <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Created At:</div>
+                        <div class="user-detail-value">${createdDate}</div>
+                    </div>
+                    <div class="user-detail-row" style="border-bottom: none;">
+                        <div class="user-detail-label">Created By:</div>
+                        <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load user details. ${error.message}
+                    </div>
+                `;
+            });
+    }
+
+    // Function to close user details modal
+    function closeUserModal() {
+        document.getElementById('userDetailsModal').classList.remove('active');
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    // Filter by stat card
+    function filterByStatCard(card) {
+        const filter = card.getAttribute('data-filter');
+
+        // Remove active class from all cards
+        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+
+        // Add active class to clicked card
+        card.classList.add('active');
+
+        currentFilter = filter;
+        applyFilters();
+    }
+
+    // Apply all filters (stat card + search)
+    function applyFilters() {
+        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+
+        const allRows = document.querySelectorAll('#usersTable tbody tr');
+        let visibleCount = 0;
+
+        allRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length < 6) return; // Skip empty/header rows
+
+            let show = true;
+
+            // Get role from data attribute
+            const rowRole = row.getAttribute('data-role') || '';
+
+            // Stat card filter
+            if (currentFilter !== 'all') {
+                if (rowRole !== currentFilter) {
+                    show = false;
+                }
+            }
+
+            // Search filter (search in username, full name, email)
+            if (searchQuery && show) {
+                let searchText = '';
+                for (let i = 0; i < 3; i++) { // First 3 columns: username, name, email
+                    searchText += cells[i].textContent.toLowerCase() + ' ';
+                }
+                if (!searchText.includes(searchQuery)) {
+                    show = false;
+                }
+            }
+
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        document.getElementById('userCount').textContent = visibleCount;
+    }
+
     // Date formatting function
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';
 
         try {
             const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString; // Return original if invalid
+            if (isNaN(date.getTime())) return dateString;
 
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -414,41 +1072,12 @@
     }
 
     // Format all dates on page load
-    window.addEventListener('DOMContentLoaded', function() {
+    function formatAllDates() {
         const dateElements = document.querySelectorAll('#usersTable tbody tr td:nth-child(5) small');
         dateElements.forEach(element => {
             const originalDate = element.textContent.trim();
             element.textContent = formatDate(originalDate);
         });
-    });
-
-    // Search functionality
-    document.getElementById('searchInput')?.addEventListener('keyup', filterTable);
-    document.getElementById('roleFilter')?.addEventListener('change', filterTable);
-
-    function filterTable() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const roleFilter = document.getElementById('roleFilter').value;
-        const table = document.getElementById('usersTable');
-        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-        let visibleCount = 0;
-
-        for (let row of rows) {
-            const text = row.textContent.toLowerCase();
-            const roleCell = row.cells[3]?.textContent || '';
-
-            const matchesSearch = text.includes(searchTerm);
-            const matchesRole = !roleFilter || roleCell.includes(roleFilter);
-
-            if (matchesSearch && matchesRole) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        }
-
-        document.getElementById('userCount').textContent = visibleCount;
     }
 
     // Open Edit Modal
@@ -467,6 +1096,22 @@
         document.getElementById('editRoleId').value = roleId;
         document.getElementById('editPassword').value = '';
 
+        // Store original email for comparison
+        originalEmail = email;
+
+        // Reset validation state
+        isEditEmailValid = true; // Default to true since we're editing existing user
+        const feedback = document.getElementById('editEmailFeedback');
+        const input = document.getElementById('editEmail');
+        if (feedback) {
+            feedback.className = 'validation-feedback';
+            feedback.textContent = '';
+        }
+        if (input) {
+            input.classList.remove('is-valid', 'is-invalid');
+        }
+        updateEditSubmitButton();
+
         document.getElementById('editForm').action = '/edit/' + userId;
         new bootstrap.Modal(document.getElementById('editUserModal')).show();
     }
@@ -484,38 +1129,50 @@
         deleteModalMessage.textContent = `Are you sure you want to delete ${username}? This action cannot be undone.`;
         confirmDeleteBtn.setAttribute('href', `/delete/${userId}`);
     });
-    // Auto-dismiss alerts and reset form if success message is shown
+
+    // Auto-dismiss alerts and reset form
     window.addEventListener('load', function() {
-      const successAlert = document.querySelector('.alert-success');
-      const errorAlert = document.querySelector('.alert-error');
+        const successAlert = document.querySelector('.alert-success');
 
-      if (successAlert) {
-        // Reset form after successful upload
-        setTimeout(() => {
-          resetForm();
-        }, 100);
-      }
+        if (successAlert) {
+            setTimeout(() => {
+                // Reset add user form
+                const addUserForm = document.getElementById('addUserForm');
+                if (addUserForm) {
+                    addUserForm.reset();
+                }
+                // Reset username feedback
+                const usernameFeedback = document.getElementById('addUsernameFeedback');
+                if (usernameFeedback) {
+                    usernameFeedback.className = 'validation-feedback';
+                    usernameFeedback.textContent = '';
+                }
+                // Reset email feedback
+                const emailFeedback = document.getElementById('addEmailFeedback');
+                if (emailFeedback) {
+                    emailFeedback.className = 'validation-feedback';
+                    emailFeedback.textContent = '';
+                }
+                // Reset validation states
+                const usernameInput = document.getElementById('addUsername');
+                const emailInput = document.getElementById('addEmail');
+                if (usernameInput) usernameInput.classList.remove('is-valid', 'is-invalid');
+                if (emailInput) emailInput.classList.remove('is-valid', 'is-invalid');
 
-      // Auto-dismiss alerts after 5 seconds
-      setTimeout(() => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-          const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-          if (bsAlert) bsAlert.close();
-        });
-      }, 5000);
-    });
-</script>
-<script>
-    function goBack() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
-            window.history.back();
-        } else {
-            // Fallback if there's no referrer (like direct load)
-            window.location.href = '/documents';
+                isUsernameValid = false;
+                isEmailValid = false;
+                document.getElementById('addUserSubmitBtn').disabled = true;
+            }, 100);
         }
-    }
+
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                if (bsAlert) bsAlert.close();
+            });
+        }, 5000);
+    });
 </script>
 </body>
 </html>

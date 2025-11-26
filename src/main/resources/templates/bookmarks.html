@@ -4,13 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookmarks - Codes & Standards</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+    <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
     <style>
         body {
             background-color: #f5f7fa;
+            margin: 0;
+            padding: 0;
             padding-top: 70px;
         }
 
@@ -210,7 +215,7 @@
             transition: all 0.2s;
             border: 1px solid transparent;
             position: relative;
-
+            cursor: pointer;
         }
 
         .bookmark-card-grid:hover {
@@ -282,6 +287,21 @@
             padding-top: 12px;
             border-top: 1px solid #f7fafc;
         }
+        .btn-outline-view {
+            background-color: #ffffff !important;
+            border: 1px solid #4285f4 !important;
+            color: #4285f4 !important;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-view:hover {
+            background-color: #4285f4 !important;
+            color: white !important;
+            border-color: #4285f4 !important;
+            transform: translateY(-1px);
+        }
+
 
         /* List View */
         .list-view {
@@ -304,6 +324,7 @@
             position: relative;
             display: flex;
             gap: 16px;
+            cursor: pointer;
         }
 
         .bookmark-card-list:hover {
@@ -442,6 +463,15 @@
         .alert {
           transition: all 0.4s ease;
         }
+        .edit-icon-btn {
+    background: #fbbf24;
+    color: white;
+}
+.edit-icon-btn:hover {
+    background: #f59e0b;
+    transform: translateY(-1px);
+}
+
 
     </style>
 </head>
@@ -455,7 +485,7 @@
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
     <!-- Main Content -->
-    <div class="flex-grow-1 p-4">
+    <div class="main-content flex-grow-1 p-4">
         <!-- Page Header -->
         <div class="page-header-section">
             <div class="header-top">
@@ -481,7 +511,7 @@
                 </div>
                 <div class="view-toggle">
                     <button class="view-btn active" id="gridViewBtn" onclick="toggleView('grid')">
-                        <i class="bi bi-grid-3x3-gap"></i>
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
                     </button>
                     <button class="view-btn" id="listViewBtn" onclick="toggleView('list')">
                         <i class="bi bi-list-ul"></i>
@@ -557,7 +587,34 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center pt-0 pb-4">
+                <div style="width: 70px; height: 70px; background: #fff7ed; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="bi bi-pencil" style="font-size: 32px; color: #f59e0b;"></i>
+                </div>
+                <h5 style="font-size: 20px; font-weight: 600; color: #1a2332;">Edit Bookmark Name</h5>
+                <p class="text-muted mb-3" style="font-size: 14px;">Update the name for this bookmark.</p>
+
+                <input type="text" id="editBookmarkName" class="form-control" placeholder="Enter new name" style="max-width: 400px; margin: 0 auto;">
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center gap-2">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="border-radius: 6px;">Cancel</button>
+                <button type="button" class="btn btn-warning px-4" id="saveEditBtn" style="border-radius: 6px;">
+                    <i class="bi bi-save me-2"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>-->
+<script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
@@ -639,14 +696,19 @@
             const productCode = escapeHtml(bookmark.documentCode || bookmark.productCode || 'N/A');
             const pageNumber = bookmark.pageNumber || 1;
             const description = escapeHtml(bookmark.description || bookmark.notes || '');
+            // Escape bookmark name for onclick attribute
+            const escapedBookmarkName = (bookmark.bookmarkName || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
 
             gridHTML += `
-                <div class="bookmark-card-grid">
+                <div class="bookmark-card-grid" onclick="handleCardClick(event, ${bookmark.documentId}, ${pageNumber})">
                     <div class="bookmark-actions">
-                        <button class="action-icon-btn view-icon-btn" onclick="viewDocument(${bookmark.documentId}, ${pageNumber})" title="View Document">
+                        <button class="btn btn-sm btn-outline-view me-1" onclick="event.stopPropagation(); viewDocument(${bookmark.documentId}, ${pageNumber})" title="View Document">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="action-icon-btn delete-icon-btn" onclick="confirmDelete(${bookmark.id})" title="Delete Bookmark">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); openEditModal(${bookmark.id}, '${escapedBookmarkName}')" title="Edit Bookmark">
+                             <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); confirmDelete(${bookmark.id})" title="Delete Bookmark">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -655,20 +717,11 @@
                     </div>
                     <div class="bookmark-title">${bookmarkName}</div>
                     <div class="bookmark-meta">
-<!--                        <div class="bookmark-meta-item">-->
-<!--                            <i class="bi bi-file-text"></i>-->
-<!--                            ${productCode}-->
-<!--                        </div>-->
-<!--                        <div class="bookmark-meta-item">-->
-<!--                            <i class="bi bi-file-earmark"></i>-->
-<!--                            Page ${pageNumber}-->
-<!--                        </div>-->
                         <div class="bookmark-meta-item">
                             <i class="bi bi-calendar3"></i>
                             ${date}
                         </div>
                     </div>
-<!--                    <div class="bookmark-description">${description || documentTitle}</div>-->
                     <div class="bookmark-footer">
                         <span style="font-size: 13px; color: #718096;">${documentTitle}</span>
                     </div>
@@ -686,14 +739,19 @@
             const productCode = escapeHtml(bookmark.documentCode || bookmark.productCode || 'N/A');
             const pageNumber = bookmark.pageNumber || 1;
             const description = escapeHtml(bookmark.description || bookmark.notes || '');
+            // Escape bookmark name for onclick attribute
+            const escapedBookmarkName = (bookmark.bookmarkName || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
 
             listHTML += `
-                <div class="bookmark-card-list">
+                <div class="bookmark-card-list" onclick="handleCardClick(event, ${bookmark.documentId}, ${pageNumber})">
                     <div class="bookmark-actions">
-                        <button class="action-icon-btn view-icon-btn" onclick="viewDocument(${bookmark.documentId}, ${pageNumber})" title="View Document">
+                        <button class="btn btn-sm btn-outline-view me-1" onclick="event.stopPropagation(); viewDocument(${bookmark.documentId}, ${pageNumber})" title="View Document">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="action-icon-btn delete-icon-btn" onclick="confirmDelete(${bookmark.id})" title="Delete Bookmark">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="event.stopPropagation(); openEditModal(${bookmark.id}, '${escapedBookmarkName}')" title="Edit Bookmark">
+                             <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); confirmDelete(${bookmark.id})" title="Delete Bookmark">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -703,20 +761,11 @@
                     <div class="bookmark-content">
                         <div class="bookmark-title">${bookmarkName}</div>
                         <div class="bookmark-meta">
-<!--                            <div class="bookmark-meta-item">-->
-<!--                                <i class="bi bi-file-text"></i>-->
-<!--                                ${productCode}-->
-<!--                            </div>-->
-<!--                            <div class="bookmark-meta-item">-->
-<!--                                <i class="bi bi-file-earmark"></i>-->
-<!--                                Page ${pageNumber}-->
-<!--                            </div>-->
                             <div class="bookmark-meta-item">
                                 <i class="bi bi-calendar3"></i>
                                 ${date}
                             </div>
                         </div>
-<!--                        <div class="bookmark-description">${description || documentTitle}</div>-->
                     <div class="bookmark-footer">
                         <span style="font-size: 13px; color: #718096;">${documentTitle}</span>
                     </div>
@@ -725,6 +774,15 @@
             `;
         });
         listContainer.innerHTML = listHTML;
+    }
+
+    // Handle card click - opens document in new tab
+    function handleCardClick(event, documentId, pageNumber) {
+        // Don't trigger if clicking on action buttons
+        if (event.target.closest('.bookmark-actions')) {
+            return;
+        }
+        viewDocument(documentId, pageNumber);
     }
 
     // Format date
@@ -770,10 +828,10 @@
         document.getElementById('totalCount').textContent = `${total} Total Bookmarks`;
     }
 
-    // ✅ View document - Navigate to DocViewer with page number
+    // ✅ View document - Navigate to DocViewer with page number (opens in new tab)
     function viewDocument(documentId, pageNumber) {
         if (documentId) {
-            window.location.href = `/DocViewer?id=${documentId}&page=${pageNumber || 1}`;
+            window.open(`/DocViewer?id=${documentId}&page=${pageNumber || 1}`, '_blank');
         }
     }
 
@@ -783,11 +841,18 @@
         deleteModal.show();
     }
 
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+   document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (!bookmarkToDelete) return;
 
+    // ✅ Get CSRF token and header name from meta tags
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
     fetch(`/bookmarks/${bookmarkToDelete}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+            [csrfHeader]: csrfToken   // ✅ Add CSRF header
+        }
     })
     .then(response => {
         if (response.ok) {
@@ -815,6 +880,7 @@
         showAlert('danger', 'An error occurred while deleting the bookmark.');
     });
 });
+
 
 
     // Search functionality
@@ -896,6 +962,56 @@
             window.location.href = '/documents';
         }
     }
+
+    let bookmarkToEdit = null;
+const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+// Open modal
+function openEditModal(id, currentName) {
+    bookmarkToEdit = id;
+    document.getElementById('editBookmarkName').value = currentName || '';
+    editModal.show();
+}
+
+// Save edited name
+document.getElementById('saveEditBtn').addEventListener('click', function() {
+    const newName = document.getElementById('editBookmarkName').value.trim();
+    if (!newName) {
+        showAlert('warning', 'Bookmark name cannot be empty.');
+        return;
+    }
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    fetch(`/bookmarks/${bookmarkToEdit}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+        },
+        body: JSON.stringify({ bookmarkName: newName })
+    })
+    .then(response => {
+        if (response.ok) {
+            // Update in memory
+            const bookmark = allBookmarks.find(b => b.id === bookmarkToEdit);
+            if (bookmark) bookmark.bookmarkName = newName;
+
+            // Refresh UI
+            renderBookmarks();
+            editModal.hide();
+            showAlert('success', 'Bookmark name updated successfully!');
+        } else {
+            showAlert('danger', 'Failed to update bookmark. Please try again.');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating bookmark:', error);
+        showAlert('danger', 'An error occurred while updating the bookmark.');
+    });
+});
+
 </script>
 </body>
 </html>

@@ -650,6 +650,12 @@ public class AuthController {
     @Autowired
     private ClassificationService classificationService;
 
+
+    @GetMapping("/bulk-upload")
+    public String showBulkUpload() {
+        return "Bulk-Upload-Documents";
+    }
+
     // Load upload page: Uploading new document, admin and manager both have permission for this -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/upload")

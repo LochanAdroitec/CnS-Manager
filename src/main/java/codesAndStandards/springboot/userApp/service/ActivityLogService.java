@@ -61,7 +61,8 @@ public class ActivityLogService {
     public static final String CLASSIFICATION_EDIT_FAIL = "CLASSIFICATION_EDIT_FAIL";
     public static final String CLASSIFICATION_DELETE_FAIL = "CLASSIFICATION_DELETE_FAIL";
 
-
+    public static final String BULK_DOCUMENT_UPLOADED = "BULK_DOCUMENT_UPLOADED";
+    public static final String BULK_DOCUMENT_UPLOAD_FAIL = "BULK_DOCUMENT_UPLOAD_FAIL";
 
     /**
      * Simple method to log activity

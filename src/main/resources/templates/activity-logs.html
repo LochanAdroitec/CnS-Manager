@@ -4,15 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Activity Logs</title>
-
     <!-- Bootstrap -->
-    <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">-->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
-
     <!-- Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
     <!-- Include Sidebar Styles -->
-
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
     <style>
         :root{
@@ -355,16 +351,9 @@
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1">Activity Logs</h2>
+                <h2 class="mb-1"><i class="bi bi-activity"></i> Activity Logs</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item">
-                            <a href="javascript:void(0);"
-                               onclick="goBack()"
-                               class="text-decoration-none">
-                                <i class="bi bi-arrow-left me-1"></i> Back
-                            </a>
-                        </li>
                         <li class="breadcrumb-item">
                             <a th:href="@{/documents}" class="text-decoration-none">
                                 <i class="bi bi-house me-1"></i> Home
@@ -515,7 +504,8 @@
                                    log.action == 'CLASSIFICATION_DELETE' ? 'badge-success' :
                                    log.action == 'CLASSIFICATION_ADD_FAIL' ? 'badge-danger' :
                                    log.action == 'CLASSIFICATION_EDIT_FAIL' ? 'badge-danger' :
-                                   log.action == 'CLASSIFICATION_DELETE_FAIL' ? 'badge-danger' : ''}"
+                                   log.action == 'BULK_DOCUMENT_UPLOADED' ? 'badge-success' :
+                                   log.action == 'BULK_DOCUMENT_UPLOAD_FAIL' ? 'badge-danger' : ''}"
                   th:text="${log.action}">
                 ACTION
             </span>
@@ -777,8 +767,8 @@
                 const action = row.getAttribute('data-action') || '';
                 if (!action.includes('FAILED') && !action.includes('FAIL')) show = false;
             } else if (currentFilter === 'downloads') {
-               const action = row.getAttribute('data-action') || '';
-               if (action !== 'DOCUMENT_DOWNLOAD') show = false;
+                const action = row.getAttribute('data-action') || '';
+                if (action !== 'DOCUMENT_DOWNLOAD') show = false;
             }
 
             // Search filter (excluding date/time column)

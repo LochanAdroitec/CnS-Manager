@@ -11,48 +11,46 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(
-        name = "GroupUser",
+        name = "AccessControlLogic",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "UQ_UserGroup",
-                        columnNames = {"user_id", "groupId"}
+                        name = "UQ_AccessControlLogic",
+                        columnNames = {"document_id", "groupId"}
                 )
         }
 )
-public class GroupUser {
+public class AccessControlLogic {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "groupUserId")
-    private Long groupUserId;
+    @Column(name = "accessId")
+    private Long accessId;
 
-    // FK: User
+    // FK: Document
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "user_id",
-            referencedColumnName = "user_id",
-            nullable = true,
-            foreignKey = @ForeignKey(name = "FK_GroupUser_User")
+            name = "document_id",
+            referencedColumnName = "document_id",
+            foreignKey = @ForeignKey(name = "FK_AccessControlLogic_Document")
     )
-    private User user;
+    private Document document;
 
     // FK: Group
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "groupId",
             referencedColumnName = "groupId",
-            nullable = true,
-            foreignKey = @ForeignKey(name = "FK_GroupUser_Group")
+            foreignKey = @ForeignKey(name = "FK_AccessControlLogic_Group")
     )
-    private codesAndStandards.springboot.userApp.entity.Group group;
+    private Group group;
 
-    // created_by WITHOUT FK constraint
+    // FK: Created By User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "created_by",
             nullable = true,
-//            referencedColumnName = "user_id",
-            foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
+            referencedColumnName = "user_id",
+            foreignKey = @ForeignKey(name = "FK_AccessControlLogic_User")
     )
     private User createdBy;
 

@@ -628,7 +628,7 @@
         content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
 
         // Fetch user details via AJAX
-        fetch(contextPath + `api/users/${userId}`)
+        fetch(contextPath + `apis/users/${userId}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('User not found');

@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
+    <!-- ==================== META TAGS ==================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Document - Codes & Standards</title>
+
+    <!-- ==================== STYLESHEETS ==================== -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
     <script src="/pdfjs/pdf.js"></script>
     <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+
     <style>
+        /* ==================== GLOBAL STYLES ==================== */
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
-
         }
 
         body {
@@ -23,7 +27,7 @@
           padding-top: 70px;
         }
 
-        /* ============== WIZARD STYLES ============== */
+        /* ==================== WIZARD CONTAINER ==================== */
         .wizard-container {
           max-width: 1200px;
           margin: 0 auto;
@@ -51,7 +55,7 @@
           font-size: 14px;
         }
 
-        /* Step Progress Bar */
+        /* ==================== STEP PROGRESS BAR ==================== */
         .wizard-steps {
           display: flex;
           justify-content: space-between;
@@ -126,7 +130,7 @@
           color: #10b981;
         }
 
-        /* Wizard Content */
+        /* ==================== WIZARD CONTENT ==================== */
         .wizard-content {
           padding: 40px 50px;
           min-height: 450px;
@@ -146,7 +150,7 @@
           to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Wizard Navigation */
+        /* ==================== WIZARD NAVIGATION ==================== */
         .wizard-navigation {
           display: flex;
           justify-content: space-between;
@@ -199,7 +203,7 @@
           background: #059669;
         }
 
-        /* ============== STEP 1: FILE UPLOAD ============== */
+        /* ==================== FILE UPLOAD ZONE ==================== */
         .drop-zone {
           border: 3px dashed #d1d5db;
           border-radius: 12px;
@@ -265,7 +269,7 @@
           box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
-        /* File Upload Success Message */
+        /* ==================== FILE UPLOAD SUCCESS MESSAGE ==================== */
         .file-uploaded-message {
           display: none;
           background: #ecfdf5;
@@ -331,7 +335,7 @@
           background: #059669;
         }
 
-        /* ============== STEP 2: DOCUMENT DETAILS ============== */
+        /* ==================== FORM SECTIONS ==================== */
         .form-section {
           margin-bottom: 30px;
         }
@@ -396,7 +400,7 @@
           gap: 20px;
         }
 
-        /* Tags and Classifications */
+        /* ==================== TAGS AND CLASSIFICATIONS SELECTION ==================== */
         .selection-area-flex {
           border: 2px solid #e5e7eb;
           border-radius: 8px;
@@ -440,6 +444,8 @@
         .selection-item-flex.blink {
           animation: blinkAnimation 0.6s ease 3;
         }
+
+        /* Classification-specific styling */
         .selection-item-flex.selected[data-classification-name] {
             border-color: #1e3a5f !important;
             background: #E3E8EF !important;
@@ -450,7 +456,16 @@
             background: #E3E8EF !important;
         }
 
-
+        /* Group-specific styling */
+        .selection-item-flex.selected[data-group-id] {
+            border-color: #10b981 !important;
+            background: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+        .selection-item-flex[data-group-id]:hover {
+            border-color: #10b981 !important;
+            background: #d1fae5 !important;
+        }
 
         @keyframes blinkAnimation {
           0%, 100% { border-color: #e5e7eb; background: white; }
@@ -484,6 +499,11 @@
 
         .classification-chip {
           background: #1e3a5f !important;
+          color: white !important;
+        }
+
+        .group-chip {
+          background: #10b981 !important;
           color: white !important;
         }
 
@@ -547,7 +567,7 @@
           gap: 5px;
         }
 
-        /* ============== STEP 4: REVIEW SECTION ============== */
+        /* ==================== REVIEW SECTION ==================== */
         .review-container {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -596,7 +616,7 @@
           margin: 15px 0;
         }
 
-        .review-tags, .review-classifications {
+        .review-tags, .review-classifications, .review-groups {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
@@ -637,7 +657,7 @@
           border-radius: 4px;
         }
 
-        /* ============== CUSTOM MODALS ============== */
+        /* ==================== CUSTOM MODALS ==================== */
         .custom-modal-overlay {
           display: none;
           position: fixed;
@@ -798,7 +818,7 @@
           background: #d97706;
         }
 
-        /* Alert Styles */
+        /* ==================== ALERT STYLES ==================== */
         .alert {
           border-radius: 8px;
           padding: 15px 20px;
@@ -822,7 +842,7 @@
           to { opacity: 0; transform: translateX(100px); }
         }
 
-        /* Responsive */
+        /* ==================== RESPONSIVE STYLES ==================== */
         @media (max-width: 992px) {
           .wizard-steps {
             padding: 20px 30px;
@@ -864,17 +884,20 @@
     </style>
 </head>
 <body>
+<!-- ==================== TOP NAVBAR ==================== -->
 <!-- Include Top Navbar -->
 <div th:replace="~{common/navbar :: navbar}"></div>
 
+<!-- ==================== SIDEBAR + CONTENT ==================== -->
 <!-- Sidebar + Content -->
 <div class="d-flex">
     <!-- Include Sidebar -->
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
     <!-- Main Content -->
     <div class="main-content flex-grow-1 p-4">
-        <!-- Alert Messages -->
+        <!-- Alert Messages for Success/Error -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i>
             <span th:text="${success}">Document uploaded successfully!</span>
@@ -887,14 +910,16 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
+        <!-- ==================== WIZARD CONTAINER ==================== -->
         <!-- Wizard Container -->
         <div class="wizard-container">
             <!-- Wizard Header -->
             <div class="wizard-header">
-                <h2><i class="bi bi-file-earmark-arrow-up me-2"></i></i>Upload Document</h2>
+                <h2><i class="bi bi-file-earmark-arrow-up me-2"></i>Upload Document</h2>
                 <p>Follow the steps below to upload your document</p>
             </div>
 
+            <!-- ==================== STEP PROGRESS BAR ==================== -->
             <!-- Step Progress Bar -->
             <div class="wizard-steps">
                 <div class="wizard-step active" data-step="1">
@@ -913,7 +938,7 @@
                     <div class="wizard-step-circle">
                         <i class="bi bi-tags"></i>
                     </div>
-                    <div class="wizard-step-label">Tags & Classifications</div>
+                    <div class="wizard-step-label">Tags & Access</div>
                 </div>
                 <div class="wizard-step" data-step="4">
                     <div class="wizard-step-circle">
@@ -923,15 +948,20 @@
                 </div>
             </div>
 
+            <!-- ==================== WIZARD FORM ==================== -->
             <!-- Wizard Form -->
             <form id="uploadForm" th:action="@{/upload}" method="post" enctype="multipart/form-data" th:object="${document}">
+                <!-- Hidden fields for form submission -->
                 <input type="hidden" name="tagNames" id="tagNamesField" />
                 <input type="hidden" name="classificationNames" id="classificationNamesField" />
+                <input type="hidden" name="groupIds" id="groupIdsField" />
                 <input type="hidden" name="publishMonth" id="publishMonthField" />
                 <input type="hidden" name="publishYear" id="publishYearField" />
 
+                <!-- ==================== WIZARD CONTENT AREA ==================== -->
                 <!-- Wizard Content Area -->
                 <div class="wizard-content">
+                    <!-- ==================== STEP 1: UPLOAD FILE ==================== -->
                     <!-- Step 1: Upload File -->
                     <div class="wizard-step-content active" data-step="1">
                         <div class="drop-zone" id="dropZone">
@@ -958,8 +988,7 @@
                             </div>
                             <div class="file-uploaded-title">File Uploaded Successfully!</div>
                             <div class="file-uploaded-details">
-                                <strong id="uploadedFileName">document.pdf</strong>
-
+                                <strong id="uploadedFileName">document.pdf</strong> •
                                 <span id="uploadedFileSize">0 KB</span> • <span id="uploadedFilePages">0 pages</span>
                             </div>
                             <button type="button" class="change-file-btn" onclick="changeFile()">
@@ -968,6 +997,7 @@
                         </div>
                     </div>
 
+                    <!-- ==================== STEP 2: DOCUMENT DETAILS ==================== -->
                     <!-- Step 2: Document Details -->
                     <div class="wizard-step-content" data-step="2">
                         <div class="form-section">
@@ -1043,8 +1073,10 @@
                         </div>
                     </div>
 
-                    <!-- Step 3: Tags & Classifications -->
+                    <!-- ==================== STEP 3: TAGS, CLASSIFICATIONS & GROUPS ==================== -->
+                    <!-- Step 3: Tags, Classifications & Groups -->
                     <div class="wizard-step-content" data-step="3">
+                        <!-- Tags Section -->
                         <div class="form-section">
                             <div class="form-section-title">
                                 <i class="bi bi-tags"></i>
@@ -1091,6 +1123,7 @@
                             </div>
                         </div>
 
+                        <!-- Classifications Section -->
                         <div class="form-section">
                             <div class="form-section-title">
                                 <i class="bi bi-folder"></i>
@@ -1121,8 +1154,46 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- ==================== GROUPS SECTION (NEW) ==================== -->
+                        <!-- Groups Section - Access Control -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-people"></i>
+                                Access Control - Groups (Optional)
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Groups for Access Control</label>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    Only users in selected groups will have access to this document
+                                </p>
+                                <div class="selection-area-flex" id="groupsSelectionArea">
+                                    <div th:if="${allGroups == null or allGroups.isEmpty()}" class="empty-state">
+                                        No existing groups available
+                                    </div>
+                                    <!-- Groups will be populated from backend -->
+                                    <div th:each="group : ${allGroups}" class="selection-item-flex"
+                                         th:attr="data-group-id=${group.id}, data-group-name=${group.groupName}">
+                                        <input type="checkbox" class="selection-checkbox group-checkbox"
+                                               th:attr="data-group-id=${group.id}, data-group-name=${group.groupName}"
+                                               style="display: none;">
+                                        <span class="selection-label" th:text="${group.groupName}">Group Name</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Selected Groups</label>
+                                <div class="selected-items-container" id="selectedGroupsContainer">
+                                    <div class="empty-state">No groups selected</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- ==================== STEP 4: REVIEW & SUBMIT ==================== -->
                     <!-- Step 4: Review & Submit -->
                     <div class="wizard-step-content" data-step="4">
                         <div class="form-section">
@@ -1173,6 +1244,15 @@
                                             <span style="color: #9ca3af; font-size: 14px;">No classifications selected</span>
                                         </div>
                                     </div>
+
+                                    <hr class="review-divider">
+
+                                    <div class="review-section">
+                                        <h6>ACCESS CONTROL - GROUPS</h6>
+                                        <div class="review-groups" id="reviewGroups">
+                                            <span style="color: #9ca3af; font-size: 14px;">No groups selected (Document will be accessible to all users)</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Right Side: PDF Preview -->
@@ -1189,6 +1269,7 @@
                     </div>
                 </div>
 
+                <!-- ==================== WIZARD NAVIGATION ==================== -->
                 <!-- Wizard Navigation -->
                 <div class="wizard-navigation">
                     <div>
@@ -1211,6 +1292,7 @@
             </form>
         </div>
 
+        <!-- ==================== CONFIRMATION MODAL ==================== -->
         <!-- Custom Confirmation Modal -->
         <div class="custom-modal-overlay" id="confirmationModal">
             <div class="custom-modal">
@@ -1239,64 +1321,81 @@
                 </div>
             </div>
         </div>
+
+        <!-- ==================== PDF PROTECTION MODAL ==================== -->
+        <!-- PDF Protection Warning Modal -->
+        <div class="custom-modal-overlay" id="pdfProtectionModal">
+            <div class="custom-modal">
+                <div class="modal-header-custom modal-header-warning">
+                    <div class="modal-icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <div class="modal-title-custom">
+                        <h3>Protected PDF Detected</h3>
+                        <p>This document has restrictions</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="closePdfProtectionModal()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-custom">
+                    <p>The selected PDF has the following restrictions:</p>
+                    <ul id="protectionList"></ul>
+                    <p style="margin-top: 15px;"><strong>Do you want to continue with this document?</strong></p>
+                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
+                        <i class="bi bi-info-circle"></i> You will be able to manually enter the number of pages in the next step.
+                    </p>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelProtectedPdf()">
+                        Cancel & Select Another
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-warning" id="forceUploadBtn">
+                        <i class="bi bi-shield-exclamation"></i> Continue Anyway
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-<!-- PDF Protection Warning Modal -->
-<div class="custom-modal-overlay" id="pdfProtectionModal">
-    <div class="custom-modal">
-        <div class="modal-header-custom modal-header-warning">
-            <div class="modal-icon">
-                <i class="bi bi-shield-lock"></i>
-            </div>
-            <div class="modal-title-custom">
-                <h3>Protected PDF Detected</h3>
-                <p>This document has restrictions</p>
-            </div>
-            <button type="button" class="modal-close-btn" onclick="closePdfProtectionModal()">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <div class="modal-body-custom">
-            <p>The selected PDF has the following restrictions:</p>
-            <ul id="protectionList"></ul>
-            <p style="margin-top: 15px;"><strong>Do you want to continue with this document?</strong></p>
-            <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
-                <i class="bi bi-info-circle"></i> You will be able to manually enter the number of pages in the next step.
-            </p>
-        </div>
-        <div class="modal-footer-custom">
-            <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelProtectedPdf()">
-                Cancel & Select Another
-            </button>
-            <button type="button" class="modal-btn modal-btn-warning" id="forceUploadBtn">
-                <i class="bi bi-shield-exclamation"></i> Continue Anyway
-            </button>
-        </div>
-    </div>
-</div>
+
+<!-- ==================== JAVASCRIPT INCLUDES ==================== -->
 <script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
+<!-- ==================== MAIN APPLICATION SCRIPT ==================== -->
 <script>
-    // ============== WIZARD STATE MANAGEMENT ==============
-    let currentStep = 1;
-    let formChanged = false;
-    let selectedTags = [];
-    let selectedClassifications = [];
-    let uploadedFile = null;
-    let pdfDoc = null;
-    let isPasswordProtected = false;
-    let allExistingTags = [];
-    let allExistingClassifications = [];
+    // ==================== WIZARD STATE MANAGEMENT ====================
+    /**
+     * Global state variables for the wizard
+     */
+    let currentStep = 1; // Current wizard step (1-4)
+    let formChanged = false; // Track if form has been modified
+    let selectedTags = []; // Array of selected tag names
+    let selectedClassifications = []; // Array of selected classification names
+    let selectedGroups = []; // Array of selected group objects {id, name}
+    let uploadedFile = null; // Currently uploaded PDF file
+    let pdfDoc = null; // PDF.js document object
+    let isPasswordProtected = false; // Flag for password-protected PDFs
+    let allExistingTags = []; // All available tags
+    let allExistingClassifications = []; // All available classifications
+    let allExistingGroups = []; // All available groups
 
-    // ============== INITIALIZE ==============
+    // ==================== INITIALIZATION ====================
+    /**
+     * Initialize the wizard when DOM is loaded
+     */
     document.addEventListener('DOMContentLoaded', function() {
         populateYearDropdown();
         initializeTagsAndClassifications();
+        initializeGroups(); // Initialize groups functionality
     });
 
-    // ============== INITIALIZE TAGS AND CLASSIFICATIONS ==============
+    // ==================== INITIALIZE TAGS AND CLASSIFICATIONS ====================
+    /**
+     * Initialize tags and classifications selection handlers
+     */
     function initializeTagsAndClassifications() {
         // Get all existing tags from the DOM
         document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
@@ -1359,7 +1458,52 @@
         });
     }
 
-    // ============== POPULATE YEAR DROPDOWN ==============
+    // ==================== INITIALIZE GROUPS (NEW) ====================
+    /**
+     * Initialize groups selection handlers
+     * Works the same way as classifications
+     */
+    function initializeGroups() {
+        // Get all existing groups from the DOM
+        document.querySelectorAll('.group-checkbox').forEach(checkbox => {
+            const groupId = checkbox.getAttribute('data-group-id');
+            const groupName = checkbox.getAttribute('data-group-name');
+            if (groupId && groupName) {
+                allExistingGroups.push({ id: groupId, name: groupName });
+            }
+        });
+
+        // Attach click handlers to group selection items
+        document.querySelectorAll('.selection-item-flex[data-group-id]').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.group-checkbox');
+                const groupId = this.getAttribute('data-group-id');
+                const groupName = this.getAttribute('data-group-name');
+
+                if (checkbox.checked) {
+                    // Deselect group
+                    checkbox.checked = false;
+                    this.classList.remove('selected');
+                    selectedGroups = selectedGroups.filter(g => g.id !== groupId);
+                } else {
+                    // Select group
+                    checkbox.checked = true;
+                    this.classList.add('selected');
+                    const existingGroup = selectedGroups.find(g => g.id === groupId);
+                    if (!existingGroup) {
+                        selectedGroups.push({ id: groupId, name: groupName });
+                    }
+                }
+                renderSelectedGroups();
+                formChanged = true;
+            });
+        });
+    }
+
+    // ==================== POPULATE YEAR DROPDOWN ====================
+    /**
+     * Populate the publication year dropdown with years from current to 1900
+     */
     function populateYearDropdown() {
         const yearSelect = document.getElementById('publishYear');
         const currentYear = new Date().getFullYear();
@@ -1372,17 +1516,24 @@
         }
     }
 
-    // ============== WIZARD NAVIGATION ==============
+    // ==================== WIZARD NAVIGATION ====================
+    /**
+     * Update wizard step display and navigation buttons
+     * @param {number} step - Target step number (1-4)
+     */
     function updateWizardStep(step) {
+        // Hide all step contents
         document.querySelectorAll('.wizard-step-content').forEach(content => {
             content.classList.remove('active');
         });
 
+        // Show current step content
         const currentContent = document.querySelector(`.wizard-step-content[data-step="${step}"]`);
         if (currentContent) {
             currentContent.classList.add('active');
         }
 
+        // Update step indicators
         document.querySelectorAll('.wizard-step').forEach(stepEl => {
             const stepNum = parseInt(stepEl.getAttribute('data-step'));
             stepEl.classList.remove('active', 'completed');
@@ -1394,6 +1545,7 @@
             }
         });
 
+        // Update navigation buttons
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         const submitBtn = document.getElementById('submitBtn');
@@ -1414,14 +1566,18 @@
             prevBtn.style.display = 'inline-flex';
             nextBtn.style.display = 'none';
             submitBtn.style.display = 'inline-flex';
-            updateReviewSection();
+            updateReviewSection(); // Populate review section
         }
 
         currentStep = step;
     }
 
+    /**
+     * Next button handler - validates and moves to next step
+     */
     document.getElementById('nextBtn').addEventListener('click', function() {
         if (currentStep === 1) {
+            // Validate file upload
             if (!uploadedFile) {
                 showCustomAlert('Please upload a PDF file before proceeding.');
                 return;
@@ -1429,6 +1585,7 @@
             formChanged = true;
             updateWizardStep(2);
         } else if (currentStep === 2) {
+            // Validate required fields
             const title = document.getElementById('title').value.trim();
             const productCode = document.getElementById('productCode').value.trim();
             const publishYear = document.getElementById('publishYear').value.trim();
@@ -1455,29 +1612,39 @@
         }
     });
 
+    /**
+     * Previous button handler - moves to previous step
+     */
     document.getElementById('prevBtn').addEventListener('click', function() {
         if (currentStep > 1) {
             updateWizardStep(currentStep - 1);
         }
     });
 
-    // ============== FILE UPLOAD HANDLING ==============
+    // ==================== FILE UPLOAD HANDLING ====================
+    /**
+     * Setup drag-and-drop and file input handlers
+     */
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const fileUploadedMessage = document.getElementById('fileUploadedMessage');
 
+    // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
+    // Add dragover effect
     ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
     });
 
+    // Remove dragover effect
     ['dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
     });
 
+    // Handle dropped files
     dropZone.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = dt.files;
@@ -1485,20 +1652,27 @@
         handleFiles(files);
     });
 
+    // Handle file input change
     fileInput.addEventListener('change', (e) => {
         handleFiles(e.target.files);
     });
 
+    /**
+     * Process uploaded files
+     * @param {FileList} files - Uploaded files
+     */
     async function handleFiles(files) {
         if (files.length > 0) {
             const file = files[0];
 
+            // Validate file type
             if (file.type !== 'application/pdf') {
                 showCustomAlert('Please upload only PDF files');
                 fileInput.value = '';
                 return;
             }
 
+            // Validate file size (50MB max)
             if (file.size > 50 * 1024 * 1024) {
                 showCustomAlert('File size must be less than 50MB');
                 fileInput.value = '';
@@ -1510,6 +1684,10 @@
         }
     }
 
+    /**
+     * Check if PDF has protection/restrictions
+     * @param {File} file - PDF file to check
+     */
     async function checkPdfProtection(file) {
         try {
             const arrayBuffer = await file.arrayBuffer();
@@ -1556,6 +1734,10 @@
         }
     }
 
+    /**
+     * Show PDF protection warning modal
+     * @param {Array} restrictions - List of detected restrictions
+     */
     function showProtectionWarning(restrictions) {
         const protectionList = document.getElementById('protectionList');
         protectionList.innerHTML = '';
@@ -1569,22 +1751,36 @@
         document.getElementById('pdfProtectionModal').classList.add('show');
     }
 
+    /**
+     * Close PDF protection modal
+     */
     function closePdfProtectionModal() {
         document.getElementById('pdfProtectionModal').classList.remove('show');
     }
 
+    /**
+     * Cancel protected PDF upload
+     */
     function cancelProtectedPdf() {
         fileInput.value = '';
         uploadedFile = null;
         closePdfProtectionModal();
     }
 
+    /**
+     * Force upload of protected PDF
+     */
     document.getElementById('forceUploadBtn').addEventListener('click', async function() {
         closePdfProtectionModal();
         isPasswordProtected = true;
         await proceedWithUpload(uploadedFile, null);
     });
 
+    /**
+     * Proceed with file upload after validation
+     * @param {File} file - PDF file
+     * @param {Object} pdf - PDF.js document object (can be null for protected PDFs)
+     */
     async function proceedWithUpload(file, pdf) {
         displayFileSuccess(file);
         await extractPdfMetadata(file, pdf);
@@ -1594,6 +1790,11 @@
         formChanged = true;
     }
 
+    /**
+     * Extract metadata from PDF
+     * @param {File} file - PDF file
+     * @param {Object} pdf - PDF.js document object
+     */
     async function extractPdfMetadata(file, pdf) {
         try {
             let pageCount = 0;
@@ -1637,6 +1838,10 @@
         }
     }
 
+    /**
+     * Display file upload success message
+     * @param {File} file - Uploaded file
+     */
     function displayFileSuccess(file) {
         document.getElementById('uploadedFileName').textContent = file.name;
         document.getElementById('uploadedFileSize').textContent = formatFileSize(file.size);
@@ -1644,6 +1849,9 @@
         fileUploadedMessage.classList.add('show');
     }
 
+    /**
+     * Change uploaded file (reset)
+     */
     function changeFile() {
         fileInput.value = '';
         uploadedFile = null;
@@ -1657,6 +1865,11 @@
         document.getElementById('pagesInfoText').style.color = '#6b7280';
     }
 
+    /**
+     * Format file size in human-readable format
+     * @param {number} bytes - File size in bytes
+     * @returns {string} Formatted file size
+     */
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -1665,7 +1878,7 @@
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    // ============== TAGS HANDLING ==============
+    // ==================== TAGS HANDLING ====================
     const newTagInput = document.getElementById('newTagInput');
     const addTagBtn = document.getElementById('addTagBtn');
     const tagErrorMessage = document.getElementById('tagErrorMessage');
@@ -1683,6 +1896,9 @@
         hideTagError();
     });
 
+    /**
+     * Add a new tag
+     */
     function addNewTag() {
         let tagName = newTagInput.value.trim();
 
@@ -1747,6 +1963,12 @@
         formChanged = true;
     }
 
+    /**
+     * Create a new selection item (tag, classification, or group)
+     * @param {string} name - Item name
+     * @param {string} type - Item type ('tag', 'classification', or 'group')
+     * @returns {HTMLElement} Selection item element
+     */
     function createNewSelectionItem(name, type) {
         const item = document.createElement('div');
         item.className = 'selection-item-flex';
@@ -1791,6 +2013,10 @@
         return item;
     }
 
+    /**
+     * Show tag error message
+     * @param {string} message - Error message HTML
+     */
     function showTagError(message) {
         tagErrorMessage.innerHTML = message;
         tagErrorMessage.classList.add('show');
@@ -1799,10 +2025,16 @@
         }, 3000);
     }
 
+    /**
+     * Hide tag error message
+     */
     function hideTagError() {
         tagErrorMessage.classList.remove('show');
     }
 
+    /**
+     * Render selected tags as chips
+     */
     function renderSelectedTags() {
         const container = document.getElementById('selectedTagsContainer');
         container.innerHTML = '';
@@ -1823,9 +2055,14 @@
             });
         }
 
+        // Update hidden form field
         document.getElementById('tagNamesField').value = selectedTags.join(',');
     }
 
+    /**
+     * Remove a selected tag
+     * @param {string} tagName - Tag name to remove
+     */
     function removeSelectedTag(tagName) {
         selectedTags = selectedTags.filter(t => t !== tagName);
 
@@ -1839,7 +2076,10 @@
         renderSelectedTags();
     }
 
-    // ============== CLASSIFICATIONS HANDLING ==============
+    // ==================== CLASSIFICATIONS HANDLING ====================
+    /**
+     * Render selected classifications as chips
+     */
     function renderSelectedClassifications() {
         const container = document.getElementById('selectedClassificationsContainer');
         container.innerHTML = '';
@@ -1860,9 +2100,14 @@
             });
         }
 
+        // Update hidden form field
         document.getElementById('classificationNamesField').value = selectedClassifications.join(',');
     }
 
+    /**
+     * Remove a selected classification
+     * @param {string} classificationName - Classification name to remove
+     */
     function removeSelectedClassification(classificationName) {
         selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
 
@@ -1876,7 +2121,57 @@
         renderSelectedClassifications();
     }
 
-    // ============== BLINK ANIMATION ==============
+    // ==================== GROUPS HANDLING (NEW) ====================
+    /**
+     * Render selected groups as chips
+     * Similar to classifications but stores group IDs
+     */
+    function renderSelectedGroups() {
+        const container = document.getElementById('selectedGroupsContainer');
+        container.innerHTML = '';
+
+        if (selectedGroups.length === 0) {
+            container.innerHTML = '<div class="empty-state">No groups selected</div>';
+        } else {
+            selectedGroups.forEach(group => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip group-chip';
+                chip.innerHTML = `
+                    ${group.name}
+                    <span class="chip-remove" onclick="removeSelectedGroup('${group.id}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        // Update hidden form field with comma-separated group IDs
+        document.getElementById('groupIdsField').value = selectedGroups.map(g => g.id).join(',');
+    }
+
+    /**
+     * Remove a selected group
+     * @param {string} groupId - Group ID to remove
+     */
+    function removeSelectedGroup(groupId) {
+        selectedGroups = selectedGroups.filter(g => g.id !== groupId);
+
+        const checkbox = document.querySelector(`.group-checkbox[data-group-id="${groupId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedGroups();
+    }
+
+    // ==================== BLINK ANIMATION ====================
+    /**
+     * Blink animation for existing items
+     * @param {HTMLElement} element - Element to blink
+     */
     function blinkItem(element) {
         element.classList.add('blink');
         setTimeout(() => {
@@ -1884,7 +2179,10 @@
         }, 1800);
     }
 
-    // ============== REVIEW SECTION ==============
+    // ==================== REVIEW SECTION ====================
+    /**
+     * Update review section with all form data
+     */
     async function updateReviewSection() {
         // File Information
         document.getElementById('reviewFileName').textContent = uploadedFile ? uploadedFile.name : '-';
@@ -1940,6 +2238,20 @@
             });
         }
 
+        // Groups (NEW)
+        const reviewGroupsContainer = document.getElementById('reviewGroups');
+        reviewGroupsContainer.innerHTML = '';
+        if (selectedGroups.length === 0) {
+            reviewGroupsContainer.innerHTML = '<span style="color: #9ca3af; font-size: 14px;">No groups selected (Document will be accessible to all users)</span>';
+        } else {
+            selectedGroups.forEach(group => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip group-chip';
+                chip.textContent = group.name;
+                reviewGroupsContainer.appendChild(chip);
+            });
+        }
+
         // Render PDF Preview
         if (pdfDoc && !isPasswordProtected) {
             await renderReviewPdfPreview();
@@ -1959,6 +2271,9 @@
         }
     }
 
+    /**
+     * Render PDF preview in review section
+     */
     async function renderReviewPdfPreview() {
         try {
             const page = await pdfDoc.getPage(1);
@@ -1980,7 +2295,10 @@
         }
     }
 
-    // ============== MODAL FUNCTIONS ==============
+    // ==================== MODAL FUNCTIONS ====================
+    /**
+     * Cancel button handler - shows confirmation if form changed
+     */
     document.getElementById('cancelBtn').addEventListener('click', function() {
         if (formChanged || uploadedFile) {
             document.getElementById('confirmationModal').classList.add('show');
@@ -1989,15 +2307,24 @@
         }
     });
 
+    /**
+     * Close confirmation modal
+     */
     function closeConfirmationModal() {
         document.getElementById('confirmationModal').classList.remove('show');
     }
 
+    /**
+     * Confirm cancel action
+     */
     document.getElementById('confirmCancelBtn').addEventListener('click', function() {
         closeConfirmationModal();
         navigateAway();
     });
 
+    /**
+     * Navigate away from page
+     */
     function navigateAway() {
         formChanged = false;
         isSubmitting = true;
@@ -2011,7 +2338,7 @@
         }
     }
 
-    // Prevent accidental navigation
+    // ==================== PREVENT ACCIDENTAL NAVIGATION ====================
     let isSubmitting = false;
 
     window.addEventListener('beforeunload', function(e) {
@@ -2022,7 +2349,10 @@
         }
     });
 
-    // ============== FORM SUBMISSION ==============
+    // ==================== FORM SUBMISSION ====================
+    /**
+     * Form submit handler
+     */
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
         if (!uploadedFile) {
             e.preventDefault();
@@ -2052,6 +2382,10 @@
         formChanged = true;
     });
 
+    /**
+     * Show custom alert notification
+     * @param {string} message - Alert message
+     */
     function showCustomAlert(message) {
         const alertDiv = document.createElement('div');
         alertDiv.style.cssText = `
@@ -2096,7 +2430,7 @@
         }, 5000);
     });
 
-    // ============== INTERCEPT ALL NAVIGATION ATTEMPTS ==============
+    // ==================== INTERCEPT ALL NAVIGATION ATTEMPTS ====================
     let navigationConfirmed = false;
     let pendingNavigationUrl = null;
 
@@ -2175,10 +2509,12 @@
             showNavigationConfirmation(e.target.action);
         }
     }, true);
-
 </script>
 
 <script>
+    /**
+     * Go back function for back button in navbar
+     */
     function goBack() {
         if (formChanged || uploadedFile) {
             document.getElementById('confirmationModal').classList.add('show');
@@ -2206,3 +2542,4 @@
 
 </body>
 </html>
+

@@ -55,14 +55,16 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final DocumentService documentService;
     private final ActivityLogService activityLogService;
+    private final GroupService groupService;
 
     public AuthController(UserService userService, UserServiceImpl userServiceImpl,
-                          RoleRepository roleRepository, DocumentService documentService, ActivityLogService activityLogService) {
+                          RoleRepository roleRepository, DocumentService documentService, ActivityLogService activityLogService, GroupService groupService) {
         this.userService = userService;
         this.userServiceImpl = userServiceImpl;
         this.roleRepository = roleRepository;
         this.documentService = documentService;
         this.activityLogService = activityLogService;
+        this.groupService = groupService;
     }
 
     @GetMapping("/")
@@ -226,18 +228,18 @@ public class AuthController {
         String adminUsername = principal != null ? principal.getName() : "Unknown";
 
         logger.info("Admin attempting to add user: {}", userDto.getUsername());
-        // Set createdBy to current logged-in user
+
         if (principal != null) {
             userDto.setCreatedByUsername(adminUsername);
         }
-        // Basic validation first
+
         if (userDto.getPassword().length() < 1) {
             result.rejectValue("password", null, "Password should have at least 1 characters");
         }
+
         if (result.hasErrors()) {
             logger.warn("Validation errors for user: {}", userDto.getUsername());
 
-            // LOG ACTIVITY - USER_CREATE_FAILED due to validation
             activityLogService.logByUsername(
                     adminUsername,
                     ActivityLogService.USER_CREATE_FAILED,
@@ -250,11 +252,23 @@ public class AuthController {
         }
 
         try {
-            // Try stored procedure first
+            // Save user first
             userService.saveUserWithStoredProcedure(userDto);
             logger.info("User added successfully using stored procedure: {}", userDto.getUsername());
 
-            // LOG ACTIVITY - USER_CREATED
+            // Get the created user to obtain the ID
+            User createdUser = userService.findUserByUsername(userDto.getUsername());
+
+            if (createdUser != null) {
+                // Save user-group associations - DIRECTLY USE getGroupIds()
+                try {
+                    userService.saveUserGroupAssociations(createdUser.getId(), userDto.getGroupIds());
+                    logger.info("User-group associations saved for user: {}", userDto.getUsername());
+                } catch (Exception e) {
+                    logger.error("Failed to save user-group associations: {}", e.getMessage());
+                }
+            }
+
             activityLogService.logByUsername(
                     adminUsername,
                     ActivityLogService.USER_CREATE,
@@ -274,7 +288,17 @@ public class AuthController {
                 userServiceImpl.saveUserFallback(userDto);
                 logger.info("User added successfully using fallback method: {}", userDto.getUsername());
 
-                // LOG ACTIVITY - USER_CREATED
+                User createdUser = userService.findUserByUsername(userDto.getUsername());
+
+                if (createdUser != null) {
+                    try {
+                        userService.saveUserGroupAssociations(createdUser.getId(), userDto.getGroupIds());
+                        logger.info("User-group associations saved for user: {}", userDto.getUsername());
+                    } catch (Exception ex) {
+                        logger.error("Failed to save user-group associations: {}", ex.getMessage());
+                    }
+                }
+
                 activityLogService.logByUsername(
                         adminUsername,
                         ActivityLogService.USER_CREATE,
@@ -289,7 +313,6 @@ public class AuthController {
             } catch (RuntimeException fallbackError) {
                 logger.error("Both stored procedure and fallback failed for add user", fallbackError);
 
-                // LOG ACTIVITY - USER_CREATE_FAILED due to exception
                 activityLogService.logByUsername(
                         adminUsername,
                         ActivityLogService.USER_CREATE_FAILED,
@@ -309,21 +332,6 @@ public class AuthController {
         }
     }
 
-    //Editing user details(only by admin) -AJ
-    @PreAuthorize("hasAuthority('Admin')")
-    @GetMapping("/edit/{id}")
-    public String editUser(@PathVariable Long id, Model model) {
-        UserDto user = userService.findUserById(id);
-        if (user == null) {
-            return "redirect:/users?error=userNotFound";
-        }
-        model.addAttribute("user", user);
-        // Add roles to the model for dropdown
-        List<Role> roles = roleRepository.findAll();
-        model.addAttribute("roles", roles);
-        return "edit";
-    }
-
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/edit/{id}")
     public String updateUserById(@Valid @ModelAttribute("user") UserDto updatedUserDto,
@@ -335,9 +343,7 @@ public class AuthController {
 
         String adminUsername = principal != null ? principal.getName() : "Unknown";
 
-        // Validation errors
         if (result.hasErrors()) {
-            // LOG ACTIVITY - USER_EDIT_FAILED due to validation
             activityLogService.logByUsername(
                     adminUsername,
                     ActivityLogService.USER_EDIT_FAILED,
@@ -352,7 +358,6 @@ public class AuthController {
         try {
             UserDto currentUser = userService.findUserById(id);
             if (currentUser == null) {
-                // LOG ACTIVITY - USER_EDIT_FAILED due to user not found
                 activityLogService.logByUsername(
                         adminUsername,
                         ActivityLogService.USER_EDIT_FAILED,
@@ -366,18 +371,15 @@ public class AuthController {
             String username = currentUser.getUsername();
 
             try {
-                // Try stored procedure first
                 userService.editUserByAdminWithStoredProcedure(username, updatedUserDto);
                 logger.info("User updated using stored procedure: {}", username);
             } catch (RuntimeException e) {
                 logger.warn("Stored procedure failed, using fallback: {}", e.getMessage());
 
                 try {
-                    // Fallback to JPA method
                     userService.editUser(updatedUserDto, id);
                     logger.info("User updated successfully using fallback: {}", username);
                 } catch (RuntimeException fallbackError) {
-                    // LOG ACTIVITY - USER_EDIT_FAILED due to exception
                     activityLogService.logByUsername(
                             adminUsername,
                             ActivityLogService.USER_EDIT_FAILED,
@@ -389,7 +391,14 @@ public class AuthController {
                 }
             }
 
-            // LOG ACTIVITY - USER_EDIT (success)
+            // Update user-group associations - DIRECTLY USE getGroupIds()
+            try {
+                userService.updateUserGroupAssociations(id, updatedUserDto.getGroupIds());
+                logger.info("User-group associations updated for user: {}", username);
+            } catch (Exception e) {
+                logger.error("Failed to update user-group associations: {}", e.getMessage());
+            }
+
             activityLogService.logByUsername(
                     adminUsername,
                     ActivityLogService.USER_EDIT,
@@ -400,7 +409,6 @@ public class AuthController {
             return "redirect:/users?success=true";
 
         } catch (Exception e) {
-            // LOG ACTIVITY - USER_EDIT_FAILED due to general exception
             activityLogService.logByUsername(
                     adminUsername,
                     ActivityLogService.USER_EDIT_FAILED,
@@ -411,6 +419,24 @@ public class AuthController {
             redirectAttributes.addFlashAttribute("error", "Failed to update user: " + e.getMessage());
             return "redirect:/users?error=true";
         }
+    }
+
+// DELETE this method - no longer needed
+// private List<Long> parseGroupIdsFromString(String groupIds) { ... }
+
+    //Editing user details(only by admin) -AJ
+    @PreAuthorize("hasAuthority('Admin')")
+    @GetMapping("/edit/{id}")
+    public String editUser(@PathVariable Long id, Model model) {
+        UserDto user = userService.findUserById(id);
+        if (user == null) {
+            return "redirect:/users?error=userNotFound";
+        }
+        model.addAttribute("user", user);
+        // Add roles to the model for dropdown
+        List<Role> roles = roleRepository.findAll();
+        model.addAttribute("roles", roles);
+        return "edit";
     }
 
 
@@ -656,6 +682,7 @@ public class AuthController {
         return "Bulk-Upload-Documents";
     }
 
+
     // Load upload page: Uploading new document, admin and manager both have permission for this -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping("/upload")
@@ -664,7 +691,7 @@ public class AuthController {
         // Add existing tags and classifications for the dropdown
         List<TagDto> allTags = tagService.getAllTags();
         List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
-
+        List<GroupListDTO> allGroups = groupService.getAllGroups();
         // Limit to only 3 most recent
         List<TagDto> limitedTags = allTags.stream()
 //                .limit(3)
@@ -676,6 +703,7 @@ public class AuthController {
 
         model.addAttribute("allTags", limitedTags);
         model.addAttribute("allClassifications", limitedClassifications);
+        model.addAttribute("allGroups", allGroups);
 
         return "upload";
     }
@@ -688,6 +716,7 @@ public class AuthController {
 
                                  @RequestParam(value = "tagNames", required = false) String tagsJson,
                                  @RequestParam(value = "classificationNames", required = false) String classificationsJson,
+                                 @RequestParam(value = "groupIds", required = false) String groupIds,
                                  Principal principal,
                                  Model model,
                                  RedirectAttributes redirectAttributes,
@@ -696,6 +725,7 @@ public class AuthController {
         String username = principal != null ? principal.getName() : "Unknown";
         documentDto.setTagNames(tagsJson);
         documentDto.setClassificationNames(classificationsJson);
+        documentDto.setGroupIds(groupIds);
 
         // Get current user ID
         Long userId = getCurrentUserId(authentication);
@@ -774,7 +804,7 @@ public class AuthController {
 
         try {
             // Save document (tags already set above)
-            documentService.saveDocument(documentDto, file, username);
+            documentService.saveDocument(documentDto, file, username, groupIds);
 
             // LOG SUCCESS - DOCUMENT_UPLOAD
             activityLogService.logByUsername(
@@ -849,26 +879,35 @@ public class AuthController {
     // ================== DOCUMENT LIST - SHOW ALL DOCUMENTS ==================
 
     //DOCUMENT LIBRARY: Show all the uploaded document -AJ
-    @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin', 'Viewer')")
     @GetMapping("/documents")
     public String listDocuments(Model model, Principal principal) {
-        // Get ALL documents uploaded by ANY manager
-        List<DocumentDto> allDocuments = documentService.findAllDocuments();
 
-        // Get all tags for filter dropdown
-        List<TagDto> allTags = tagService.getAllTags();
-        model.addAttribute("allTags", allTags);
-        // Get all classifications for filter dropdown
-        List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
-        model.addAttribute("allClassifications", allClassifications);
-
-        model.addAttribute("documents", allDocuments);
-        model.addAttribute("currentUsername", principal.getName());
-
-        // Get user role and pass to template (same as DocViewer method)
+        // Get logged-in user
         User user = userRepository.findByUsername(principal.getName());
+        Long userId = user.getId();
         String userRole = user.getRole().getRoleName();
+
+        List<DocumentDto> documentsToShow;
+
+        // 🔥 If ADMIN → show all documents
+        if ("Admin".equalsIgnoreCase(userRole)) {
+            documentsToShow = documentService.findAllDocuments();
+        } else {
+            // 🔥 Otherwise → show only accessible documents
+            documentsToShow = documentService.findDocumentsAccessibleByUser(userId);
+        }
+
+        // Add filtered documents to model
+        model.addAttribute("documents", documentsToShow);
+        model.addAttribute("currentUsername", principal.getName());
         model.addAttribute("userRole", userRole);
+
+        // Tag dropdown
+        model.addAttribute("allTags", tagService.getAllTags());
+
+        // Classification dropdown
+        model.addAttribute("allClassifications", classificationService.getAllClassifications());
 
         return "document-list";
     }
@@ -886,13 +925,31 @@ public class AuthController {
         logger.info("Current tags: {}", document.getTagNames());
         logger.info("Current classifications: {}", document.getClassificationNames());
 
+        // ✅ NEW: Get current document's groups
+        try {
+            List<Long> documentGroupIds = groupService.getGroupIdsByDocumentId(id);
+            String groupIds = documentGroupIds.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+            document.setGroupIds(groupIds);
+            logger.info("Current groups: {}", groupIds);
+        } catch (Exception e) {
+            logger.error("Error loading groups for document: {}", e.getMessage());
+            document.setGroupIds("");
+        }
+
         model.addAttribute("document", document);
         model.addAttribute("allTags", tagService.getAllTags());
         model.addAttribute("allClassifications", classificationService.getAllClassifications());
+        model.addAttribute("allGroups", groupService.getAllGroups()); // ✅ NEW: Add all groups
 
         return "edit-document";
     }
 
+    @Autowired
+    private NetworkFileService fileStorageService;
+
+    //Tags can be created while updating document also and that will also be stored in Tags table -AJ
     //Tags can be created while updating document also and that will also be stored in Tags table -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @PostMapping("/document/edit/{id}")
@@ -902,6 +959,7 @@ public class AuthController {
                                  @RequestParam(value = "file", required = false) MultipartFile file,
                                  @RequestParam(value = "tagNames", required = false) String tagsJson,
                                  @RequestParam(value = "classificationNames", required = false) String classificationsJson,
+                                 @RequestParam(value = "groupIds", required = false) String groupIds,
                                  Principal principal,
                                  Model model,
                                  RedirectAttributes redirectAttributes,
@@ -953,6 +1011,7 @@ public class AuthController {
         // Set tag/classification names in DTO before validation
         documentDto.setTagNames(String.join(",", tagNames));
         documentDto.setClassificationNames(String.join(",", classificationNames));
+        documentDto.setGroupIds(groupIds);
 
         // Validation errors
         if (result.hasErrors()) {
@@ -977,7 +1036,7 @@ public class AuthController {
             String oldFilePath = oldDoc.getFilePath();
 
             // Update document including optional file
-            documentService.updateDocument(id, documentDto, file, username);
+            documentService.updateDocument(id, documentDto, file, username, groupIds);
 
             // Build change log
             StringBuilder changes = new StringBuilder();
@@ -1023,7 +1082,7 @@ public class AuthController {
 
     @Autowired
 
-    private NetworkFileService fileStorageService;
+//    private NetworkFileService fileStorageService;
 
     @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/diagnose-network-share")

@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Control - Codes & Standards</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
+    <!-- Include Sidebar Styles -->
+    <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            padding-top: 70px;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-home, .btn-back {
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-home:hover, .btn-back:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            color: #374151;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-create-group {
+            background:#1e3a5f;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-create-group:hover {
+            background: #1e3a5f;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .groups-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .group-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .group-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .group-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .group-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            background: #eff6ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .group-icon-wrapper i {
+            font-size: 1.5rem;
+            color: #3b82f6;
+        }
+
+        .group-info {
+            flex: 1;
+        }
+
+        .group-name {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .group-description {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .group-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action-icon {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .btn-action-icon.btn-view:hover {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-action-icon.btn-edit-group:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+            color: #374151;
+        }
+
+        .btn-action-icon.btn-delete-group:hover {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .group-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .stat-item i {
+            color: #9ca3af;
+        }
+
+        .group-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-manage {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-manage:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .btn-manage i {
+            font-size: 1rem;
+        }
+
+        .group-meta {
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin-top: 12px;
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 60px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #e5e7eb;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h5 {
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
+
+        /* Modal Styles */
+        .modal-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .documents-list, .users-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .document-checkbox-item, .user-checkbox-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .document-checkbox-item:last-child, .user-checkbox-item:last-child {
+            border-bottom: none;
+        }
+
+        .document-checkbox-item:hover, .user-checkbox-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .document-checkbox-item input[type="checkbox"],
+        .user-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .document-checkbox-item label,
+        .user-checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.95rem;
+        }
+
+        .search-in-modal {
+            margin-bottom: 15px;
+        }
+
+        .select-all-container {
+            padding: 10px 15px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .select-all-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .select-all-container label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .tab-button:hover {
+            color: #3b82f6;
+        }
+
+        .tab-button.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content-section {
+            display: none;
+        }
+
+        .tab-content-section.active {
+            display: block;
+        }
+
+        .counter-badge {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .inline-error {
+            color: #dc3545;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        /* View Details Styles */
+        .view-section {
+            margin-bottom: 20px;
+        }
+
+        .view-section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-items-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .view-item {
+            padding: 10px 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .view-item i {
+            color: #3b82f6;
+        }
+
+        .view-item-text {
+            flex: 1;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .view-empty {
+            text-align: center;
+            padding: 30px;
+            color: #9ca3af;
+        }
+
+        #scrollTopBtn {
+            display: none;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            outline: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s;
+        }
+
+        #scrollTopBtn:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .btn-home, .btn-back, .btn-create-group {
+                flex: 1;
+            }
+
+            .search-section {
+                flex-direction: column;
+            }
+
+            .group-actions {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-top: 12px;
+            }
+
+            .group-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Hidden input to store user role from Thymeleaf -->
+<input type="hidden" id="userRole" th:value="${#authentication.principal.authorities.iterator().next().authority}">
+<input type="hidden" id="userName" th:value="${#authentication.name}">
+
+<!-- Include Top Navbar -->
+<div th:replace="~{common/navbar :: navbar}"></div>
+
+<!-- Sidebar + Content -->
+<div class="d-flex">
+    <!-- Include Sidebar -->
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-grow-1 p-4">
+        <!-- Breadcrumb and Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-shield-lock"></i> Access Control</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/documents}" class="text-decoration-none">
+                                <i class="bi bi-house me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">Access Control</li>
+                    </ol>
+                </nav>
+            </div>
+            <!-- Create group button  -->
+            <button class="btn-create-group" id="createGroupBtn"
+                    data-bs-toggle="modal" data-bs-target="#createGroupModal"
+                    style="display: none;">
+                <i class="bi bi-plus-lg"></i>
+                Create Group
+            </button>
+        </div>
+
+        <!-- Alert Messages Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Search Section -->
+        <div class="search-section d-flex align-items-center gap-3">
+            <div class="search-wrapper">
+                <i class="bi bi-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput"
+                       placeholder="Search access groups...">
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading groups...</p>
+        </div>
+
+        <!-- Groups Container -->
+        <div class="groups-container" id="groupsContainer">
+            <div id="groupsList">
+                <!-- Groups will be loaded here dynamically -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="bi bi-shield-lock"></i>
+                <h5>No access groups found</h5>
+                <p>Create your first access group to manage document permissions</p>
+                <button class="btn-create-group" id="emptyCreateBtn"
+                        data-bs-toggle="modal" data-bs-target="#createGroupModal"
+                        style="display: none;">
+                    <i class="bi bi-plus-lg"></i>
+                    Create Group
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="createGroupForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Access Group
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Group Name -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="createGroupName" name="groupName"
+                               placeholder="Enter group name" required minlength="3" maxlength="100">
+                        <small class="text-muted">3-100 characters</small>
+                    </div>
+
+                    <!-- Group Description -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" id="createGroupDescription" name="description"
+                                  placeholder="Enter group description" rows="2" maxlength="200"></textarea>
+                        <small class="text-muted">Optional, up to 200 characters</small>
+                    </div>
+
+                    <!-- Tabs for Documents and Users -->
+                    <div class="tab-buttons">
+                        <button type="button" class="tab-button active" data-tab="documents">
+                            <i class="bi bi-file-earmark me-2"></i>Documents
+                            <span class="counter-badge" id="createDocsCount">0</span>
+                        </button>
+                        <button type="button" class="tab-button" data-tab="users">
+                            <i class="bi bi-people me-2"></i>Users
+                            <span class="counter-badge" id="createUsersCount">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Documents Tab -->
+                    <div class="tab-content-section active" id="createDocumentsTab">
+                        <div class="search-in-modal">
+                            <input type="text" class="form-control" id="createSearchDocuments"
+                                   placeholder="Search documents...">
+                        </div>
+
+                        <div class="select-all-container">
+                            <input type="checkbox" id="createSelectAllDocs">
+                            <label for="createSelectAllDocs">Select All Documents</label>
+                        </div>
+
+                        <div class="documents-list" id="createDocumentsList">
+                            <!-- Documents will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Users Tab -->
+                    <div class="tab-content-section" id="createUsersTab">
+                        <div class="search-in-modal">
+                            <input type="text" class="form-control" id="createSearchUsers"
+                                   placeholder="Search users...">
+                        </div>
+
+                        <div class="select-all-container">
+                            <input type="checkbox" id="createSelectAllUsers">
+                            <label for="createSelectAllUsers">Select All Users</label>
+                        </div>
+
+                        <div class="users-list" id="createUsersList">
+                            <!-- Users will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Create Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Group Details Modal -->
+<div class="modal fade" id="viewGroupModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-eye me-2"></i>Group Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Group Info -->
+                <div class="mb-4">
+                    <h6 class="text-muted mb-1">Group Name</h6>
+                    <h5 id="viewGroupName" class="mb-0"></h5>
+                </div>
+                <div class="mb-4">
+                    <h6 class="text-muted mb-1">Description</h6>
+                    <p id="viewGroupDescription" class="mb-0"></p>
+                </div>
+
+                <!-- Documents Section -->
+                <div class="view-section">
+                    <div class="view-section-title">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Documents (<span id="viewDocsCount">0</span>)
+                    </div>
+                    <div class="view-items-list" id="viewDocumentsList">
+                        <!-- Documents will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div class="view-section">
+                    <div class="view-section-title">
+                        <i class="bi bi-people"></i>
+                        Users (<span id="viewUsersCount">0</span>)
+                    </div>
+                    <div class="view-items-list" id="viewUsersList">
+                        <!-- Users will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Group Name & Description Modal -->
+<div class="modal fade" id="editGroupModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="editGroupForm">
+                <input type="hidden" id="editGroupId">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square me-2"></i>Edit Access Group
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Group Name -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="editGroupName" name="groupName"
+                               required minlength="3" maxlength="100">
+                        <small class="text-muted">3-100 characters</small>
+                    </div>
+
+                    <!-- Group Description -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" id="editGroupDescription" name="description"
+                                  rows="2" maxlength="200"></textarea>
+                        <small class="text-muted">Optional, up to 200 characters</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Update Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Documents Modal -->
+<div class="modal fade" id="manageDocumentsModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="manageDocumentsForm">
+                <input type="hidden" id="manageDocsGroupId">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-file-earmark me-2"></i>Manage Documents
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-in-modal">
+                        <input type="text" class="form-control" id="manageSearchDocuments"
+                               placeholder="Search documents...">
+                    </div>
+
+                    <div class="select-all-container">
+                        <input type="checkbox" id="manageSelectAllDocs">
+                        <label for="manageSelectAllDocs">Select All Documents</label>
+                    </div>
+
+                    <div class="documents-list" id="manageDocumentsList">
+                        <!-- Documents will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Users Modal -->
+<div class="modal fade" id="manageUsersModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="manageUsersForm">
+                <input type="hidden" id="manageUsersGroupId">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-people me-2"></i>Manage Users
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="search-in-modal">
+                        <input type="text" class="form-control" id="manageSearchUsers"
+                               placeholder="Search users...">
+                    </div>
+
+                    <div class="select-all-container">
+                        <input type="checkbox" id="manageSelectAllUsers">
+                        <label for="manageSelectAllUsers">Select All Users</label>
+                    </div>
+
+                    <div class="users-list" id="manageUsersList">
+                        <!-- Users will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Access Group
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteModalMessage">Are you sure you want to delete this access group? This action cannot be undone.</p>
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> Users in this group will lose access to the associated documents.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+                    <i class="bi bi-trash me-2"></i> Delete Group
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scroll to Top Button -->
+<button id="scrollTopBtn" title="Go to top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<!-- Include Navbar JavaScript -->
+<div th:replace="~{common/navbar :: navbar-js}"></div>
+
+<script>
+    // Configuration
+    const API_BASE_URL = '/api/access-groups';
+
+    let allGroups = [];
+    let allDocuments = [];
+    let allUsers = [];
+    let createModal, viewGroupModal, editGroupModal, manageDocsModal, manageUsersModal, deleteModal;
+    let deleteGroupId = null;
+    let currentManageGroupData = null; // Store full group data
+    let currentEditGroupData = null; // Store full group data for editing
+
+    // Get user role from hidden input
+    const userRole = document.getElementById('userRole')?.value || 'Viewer';
+    const userName = document.getElementById('userName')?.value || 'User';
+
+    console.log('====== ACCESS CONTROL ======');
+    console.log('User:', userName);
+    console.log('Role:', userRole);
+    console.log('============================');
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Initialize modals
+        createModal = new bootstrap.Modal(document.getElementById('createGroupModal'));
+        viewGroupModal = new bootstrap.Modal(document.getElementById('viewGroupModal'));
+        editGroupModal = new bootstrap.Modal(document.getElementById('editGroupModal'));
+        manageDocsModal = new bootstrap.Modal(document.getElementById('manageDocumentsModal'));
+        manageUsersModal = new bootstrap.Modal(document.getElementById('manageUsersModal'));
+        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        // Apply role-based restrictions
+        applyRoleBasedRestrictions();
+
+        // Load initial data
+        await Promise.all([
+            loadGroups(),
+            loadDocuments(),
+            loadUsers()
+        ]);
+
+        // Setup event listeners
+        setupEventListeners();
+    });
+
+    // Scroll to top button
+    const scrollTopBtn = document.getElementById("scrollTopBtn");
+    if (scrollTopBtn) {
+        window.onscroll = function() {
+            if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+                scrollTopBtn.style.display = "block";
+            } else {
+                scrollTopBtn.style.display = "none";
+            }
+        };
+
+        scrollTopBtn.addEventListener("click", function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    // Apply role-based restrictions (Only Admin can manage)
+    function applyRoleBasedRestrictions() {
+        const isAdmin = userRole === 'Admin';
+
+        console.log('Is Admin?', isAdmin);
+
+        const createBtn = document.getElementById('createGroupBtn');
+        const emptyCreateBtn = document.getElementById('emptyCreateBtn');
+
+        if (isAdmin) {
+            if (createBtn) createBtn.style.display = 'flex';
+            if (emptyCreateBtn) emptyCreateBtn.style.display = 'inline-flex';
+        } else {
+            if (createBtn) createBtn.style.display = 'none';
+            if (emptyCreateBtn) emptyCreateBtn.style.display = 'none';
+        }
+    }
+
+    // Setup all event listeners
+    function setupEventListeners() {
+        // Create form submit
+        document.getElementById('createGroupForm').addEventListener('submit', handleCreateGroup);
+
+        // Edit group form submit
+        document.getElementById('editGroupForm').addEventListener('submit', handleEditGroup);
+
+        // Manage documents form submit
+        document.getElementById('manageDocumentsForm').addEventListener('submit', handleManageDocuments);
+
+        // Manage users form submit
+        document.getElementById('manageUsersForm').addEventListener('submit', handleManageUsers);
+
+        // Delete confirmation
+        document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteGroup);
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+        // Tab switching for create modal
+        setupTabSwitching('create');
+
+        // Search in create modal
+        document.getElementById('createSearchDocuments').addEventListener('input', function() {
+            filterCheckboxList('createDocumentsList', this.value);
+        });
+
+        document.getElementById('createSearchUsers').addEventListener('input', function() {
+            filterCheckboxList('createUsersList', this.value);
+        });
+
+        // Search in manage documents modal
+        document.getElementById('manageSearchDocuments').addEventListener('input', function() {
+            filterCheckboxList('manageDocumentsList', this.value);
+        });
+
+        // Search in manage users modal
+        document.getElementById('manageSearchUsers').addEventListener('input', function() {
+            filterCheckboxList('manageUsersList', this.value);
+        });
+
+        // Select all functionality - Create Modal
+        document.getElementById('createSelectAllDocs').addEventListener('change', function() {
+            toggleSelectAll('createDocumentsList', this.checked);
+            updateSelectedCount('create', 'documents');
+        });
+
+        document.getElementById('createSelectAllUsers').addEventListener('change', function() {
+            toggleSelectAll('createUsersList', this.checked);
+            updateSelectedCount('create', 'users');
+        });
+
+        // Select all functionality - Manage Modals
+        document.getElementById('manageSelectAllDocs').addEventListener('change', function() {
+            toggleSelectAll('manageDocumentsList', this.checked);
+        });
+
+        document.getElementById('manageSelectAllUsers').addEventListener('change', function() {
+            toggleSelectAll('manageUsersList', this.checked);
+        });
+
+        // Reset forms when modals are closed
+        document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('createGroupForm').reset();
+            document.getElementById('createDocumentsList').innerHTML = '';
+            document.getElementById('createUsersList').innerHTML = '';
+        });
+
+        document.getElementById('editGroupModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('editGroupForm').reset();
+            document.getElementById('editGroupId').value = '';
+            currentEditGroupData = null;
+        });
+
+        document.getElementById('manageDocumentsModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('manageDocumentsForm').reset();
+            document.getElementById('manageDocsGroupId').value = '';
+            document.getElementById('manageDocumentsList').innerHTML = '';
+            currentManageGroupData = null;
+        });
+
+        document.getElementById('manageUsersModal').addEventListener('hidden.bs.modal', function() {
+            document.getElementById('manageUsersForm').reset();
+            document.getElementById('manageUsersGroupId').value = '';
+            document.getElementById('manageUsersList').innerHTML = '';
+            currentManageGroupData = null;
+        });
+    }
+
+    // Setup tab switching
+    function setupTabSwitching(prefix) {
+        const modal = document.getElementById(`${prefix}GroupModal`);
+        const tabButtons = modal.querySelectorAll('.tab-button');
+        const tabContents = modal.querySelectorAll('.tab-content-section');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const targetTab = this.getAttribute('data-tab');
+
+                // Update active states
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // Show/hide content
+                tabContents.forEach(content => {
+                    if (content.id === `${prefix}${capitalizeFirst(targetTab)}Tab`) {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            });
+        });
+    }
+
+    // Load all groups
+    async function loadGroups() {
+        showLoading(true);
+        try {
+            const response = await fetch(API_BASE_URL, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/login';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            allGroups = await response.json();
+            console.log('Groups loaded:', allGroups.length);
+            displayGroups(allGroups);
+
+        } catch (error) {
+            console.error('Error loading groups:', error);
+            showAlert('Failed to load access groups. Please try again.', 'danger');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Load all documents
+    async function loadDocuments() {
+        try {
+            const response = await fetch('/api/documents', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load documents');
+
+            allDocuments = await response.json();
+            console.log('Documents loaded:', allDocuments.length);
+
+        } catch (error) {
+            console.error('Error loading documents:', error);
+            showAlert('Failed to load documents.', 'warning');
+        }
+    }
+
+    // Load all users
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/users', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load users');
+
+            allUsers = await response.json();
+            console.log('Users loaded:', allUsers.length);
+
+        } catch (error) {
+            console.error('Error loading users:', error);
+            showAlert('Failed to load users.', 'warning');
+        }
+    }
+
+    // Display groups in the list
+    function displayGroups(groups) {
+        const groupsList = document.getElementById('groupsList');
+        const emptyState = document.getElementById('emptyState');
+
+        if (groups.length === 0) {
+            groupsList.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        groupsList.innerHTML = '';
+
+        groups.forEach(group => {
+            const groupCard = createGroupCard(group);
+            groupsList.appendChild(groupCard);
+        });
+    }
+
+    // Create group card element
+    function createGroupCard(group) {
+        const div = document.createElement('div');
+        div.className = 'group-card';
+        div.setAttribute('data-group-id', group.id);
+
+        const createdDate = formatDate(group.createdAt);
+        const createdBy = group.createdByUsername || 'Unknown';
+        const documentCount = group.documentCount || 0;
+        const userCount = group.userCount || 0;
+        const description = group.description || 'Access to all ' + escapeHtml(group.groupName).toLowerCase() + ' documents';
+
+        const isAdmin = userRole === 'Admin';
+
+        const actionsHTML = isAdmin ? `
+            <div class="group-actions">
+                <button class="btn-action-icon btn-view" title="View details"
+                    onclick="openViewGroupModal(${group.id})">
+                    <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn-action-icon btn-edit-group" title="Edit group name & description"
+                    onclick="openEditGroupModal(${group.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn-action-icon btn-delete-group" title="Delete group"
+                    onclick="openDeleteModal(${group.id}, '${escapeHtml(group.groupName).replace(/'/g, "\\'")}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        ` : '';
+
+        div.innerHTML = `
+            <div class="group-header">
+                <div class="group-icon-wrapper">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div class="group-info">
+                    <div class="group-name">
+                        ${escapeHtml(group.groupName)}
+                    </div>
+                    <p class="group-description">${escapeHtml(description)}</p>
+                </div>
+                ${actionsHTML}
+            </div>
+
+            <div class="group-stats">
+                <div class="stat-item">
+                    <i class="bi bi-file-earmark"></i>
+                    <span>${documentCount} document${documentCount !== 1 ? 's' : ''}</span>
+                </div>
+                <div class="stat-item">
+                    <i class="bi bi-people"></i>
+                    <span>${userCount} user${userCount !== 1 ? 's' : ''}</span>
+                </div>
+            </div>
+
+            <div class="group-buttons">
+                <button class="btn-manage" onclick="openManageDocumentsModal(${group.id})">
+                    <i class="bi bi-file-earmark"></i>
+                    Manage Documents
+                </button>
+                <button class="btn-manage" onclick="openManageUsersModal(${group.id})">
+                    <i class="bi bi-people"></i>
+                    Manage Users
+                </button>
+            </div>
+
+            <div class="group-meta">
+                Created on ${createdDate} by ${escapeHtml(createdBy)}
+            </div>
+        `;
+
+        return div;
+    }
+
+    // Open create modal and populate documents/users
+    document.getElementById('createGroupBtn').addEventListener('click', function() {
+        populateDocumentsList('create');
+        populateUsersList('create');
+    });
+
+    document.getElementById('emptyCreateBtn').addEventListener('click', function() {
+        populateDocumentsList('create');
+        populateUsersList('create');
+    });
+
+    // Populate documents list
+    function populateDocumentsList(prefix, selectedDocIds = []) {
+        const container = document.getElementById(`${prefix}DocumentsList`);
+        container.innerHTML = '';
+
+        if (allDocuments.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-3">No documents available</p>';
+            return;
+        }
+
+        allDocuments.forEach(doc => {
+            const isChecked = selectedDocIds.includes(doc.id);
+            const item = document.createElement('div');
+            item.className = 'document-checkbox-item';
+            item.innerHTML = `
+                <input type="checkbox" id="${prefix}Doc${doc.id}"
+                       value="${doc.id}" ${isChecked ? 'checked' : ''}
+                       onchange="updateSelectedCount('${prefix}', 'documents')">
+                <label for="${prefix}Doc${doc.id}">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    ${escapeHtml(doc.title)}
+                </label>
+            `;
+            container.appendChild(item);
+        });
+
+        if (prefix === 'create') {
+            updateSelectedCount(prefix, 'documents');
+        }
+    }
+
+    // Populate users list
+    function populateUsersList(prefix, selectedUserIds = []) {
+        const container = document.getElementById(`${prefix}UsersList`);
+        container.innerHTML = '';
+
+        if (allUsers.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-3">No users available</p>';
+            return;
+        }
+
+        allUsers.forEach(user => {
+            const isChecked = selectedUserIds.includes(user.id);
+            const item = document.createElement('div');
+            item.className = 'user-checkbox-item';
+            item.innerHTML = `
+                <input type="checkbox" id="${prefix}User${user.id}"
+                       value="${user.id}" ${isChecked ? 'checked' : ''}
+                       onchange="updateSelectedCount('${prefix}', 'users')">
+                <label for="${prefix}User${user.id}">
+                    <i class="bi bi-person me-2"></i>
+                    ${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span>
+                </label>
+            `;
+            container.appendChild(item);
+        });
+
+        if (prefix === 'create') {
+            updateSelectedCount(prefix, 'users');
+        }
+    }
+
+    // Update selected count
+    function updateSelectedCount(prefix, type) {
+        const container = document.getElementById(`${prefix}${capitalizeFirst(type)}List`);
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        const count = checkboxes.length;
+
+        const countElement = document.getElementById(`${prefix}${type === 'documents' ? 'Docs' : 'Users'}Count`);
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    // Filter checkbox list
+    function filterCheckboxList(containerId, searchTerm) {
+        const container = document.getElementById(containerId);
+        const items = container.querySelectorAll('.document-checkbox-item, .user-checkbox-item');
+
+        searchTerm = searchTerm.toLowerCase();
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    // Toggle select all
+    function toggleSelectAll(containerId, checked) {
+        const container = document.getElementById(containerId);
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+            // Only change visible checkboxes
+            if (checkbox.parentElement.style.display !== 'none') {
+                checkbox.checked = checked;
+            }
+        });
+    }
+
+    // Handle create group
+    async function handleCreateGroup(e) {
+        e.preventDefault();
+
+        const groupName = document.getElementById('createGroupName').value.trim();
+        const description = document.getElementById('createGroupDescription').value.trim();
+        const errorEl = getOrCreateErrorElement(document.getElementById('createGroupName'));
+
+        errorEl.textContent = '';
+
+        if (groupName.length < 3 || groupName.length > 100) {
+            errorEl.textContent = 'Group name must be between 3 and 100 characters.';
+            return;
+        }
+
+        // Get selected documents
+        const selectedDocs = Array.from(
+            document.querySelectorAll('#createDocumentsList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        // Get selected users
+        const selectedUsers = Array.from(
+            document.querySelectorAll('#createUsersList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        try {
+            const response = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    groupName: groupName,
+                    description: description,
+                    documentIds: selectedDocs,
+                    userIds: selectedUsers
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create group');
+            }
+
+            createModal.hide();
+            await loadGroups();
+            showAlert('Access group created successfully!', 'success');
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Failed to create group.';
+        }
+    }
+
+    // Open view group modal
+    async function openViewGroupModal(groupId) {
+        try {
+            // Fetch group details
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load group details');
+
+            const group = await response.json();
+
+            // Set group name and description
+            document.getElementById('viewGroupName').textContent = group.groupName;
+            document.getElementById('viewGroupDescription').textContent = group.description || 'No description provided';
+
+            // Get selected documents
+            const selectedDocuments = allDocuments.filter(doc =>
+                (group.documentIds || []).includes(doc.id)
+            );
+
+            // Get selected users
+            const selectedUsers = allUsers.filter(user =>
+                (group.userIds || []).includes(user.id)
+            );
+
+            // Update counts
+            document.getElementById('viewDocsCount').textContent = selectedDocuments.length;
+            document.getElementById('viewUsersCount').textContent = selectedUsers.length;
+
+            // Display documents
+            const docsContainer = document.getElementById('viewDocumentsList');
+            docsContainer.innerHTML = '';
+
+            if (selectedDocuments.length === 0) {
+                docsContainer.innerHTML = '<div class="view-empty">No documents assigned to this group</div>';
+            } else {
+                selectedDocuments.forEach(doc => {
+                    const item = document.createElement('div');
+                    item.className = 'view-item';
+                    item.innerHTML = `
+                        <i class="bi bi-file-earmark-text"></i>
+                        <span class="view-item-text">${escapeHtml(doc.title)}</span>
+                    `;
+                    docsContainer.appendChild(item);
+                });
+            }
+
+            // Display users
+            const usersContainer = document.getElementById('viewUsersList');
+            usersContainer.innerHTML = '';
+
+            if (selectedUsers.length === 0) {
+                usersContainer.innerHTML = '<div class="view-empty">No users assigned to this group</div>';
+            } else {
+                selectedUsers.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'view-item';
+                    item.innerHTML = `
+                        <i class="bi bi-person"></i>
+                        <span class="view-item-text">${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span></span>
+                    `;
+                    usersContainer.appendChild(item);
+                });
+            }
+
+            viewGroupModal.show();
+
+        } catch (error) {
+            console.error('Error loading group for view:', error);
+            showAlert('Failed to load group details.', 'danger');
+        }
+    }
+
+    // Open edit group modal (only name and description)
+    async function openEditGroupModal(groupId) {
+        try {
+            // Fetch group details
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load group details');
+
+            const group = await response.json();
+            currentEditGroupData = group; // Store full group data
+
+            // Set group name and description
+            document.getElementById('editGroupId').value = group.id;
+            document.getElementById('editGroupName').value = group.groupName;
+            document.getElementById('editGroupDescription').value = group.description || '';
+
+            editGroupModal.show();
+
+        } catch (error) {
+            console.error('Error loading group for edit:', error);
+            showAlert('Failed to load group details.', 'danger');
+        }
+    }
+
+    // Handle edit group (only name and description)
+    async function handleEditGroup(e) {
+        e.preventDefault();
+
+        const groupId = document.getElementById('editGroupId').value;
+        const groupName = document.getElementById('editGroupName').value.trim();
+        const description = document.getElementById('editGroupDescription').value.trim();
+        const errorEl = getOrCreateErrorElement(document.getElementById('editGroupName'));
+
+        errorEl.textContent = '';
+
+        if (groupName.length < 3 || groupName.length > 100) {
+            errorEl.textContent = 'Group name must be between 3 and 100 characters.';
+            return;
+        }
+
+        if (!currentEditGroupData) {
+            showAlert('Group data not loaded. Please try again.', 'danger');
+            return;
+        }
+
+        try {
+            // Use PUT with full group data, only updating name and description
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    groupName: groupName,
+                    description: description,
+                    documentIds: currentEditGroupData.documentIds || [],
+                    userIds: currentEditGroupData.userIds || []
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update group');
+            }
+
+            editGroupModal.hide();
+            await loadGroups();
+            showAlert('Group updated successfully!', 'success');
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Failed to update group.';
+        }
+    }
+
+    // Open manage documents modal
+    async function openManageDocumentsModal(groupId) {
+        try {
+            // Fetch group details
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load group details');
+
+            const group = await response.json();
+            currentManageGroupData = group; // Store full group data
+
+            document.getElementById('manageDocsGroupId').value = group.id;
+
+            // Populate documents with pre-selected items
+            const container = document.getElementById('manageDocumentsList');
+            container.innerHTML = '';
+
+            if (allDocuments.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center p-3">No documents available</p>';
+            } else {
+                allDocuments.forEach(doc => {
+                    const isChecked = (group.documentIds || []).includes(doc.id);
+                    const item = document.createElement('div');
+                    item.className = 'document-checkbox-item';
+                    item.innerHTML = `
+                        <input type="checkbox" id="manageDoc${doc.id}"
+                               value="${doc.id}" ${isChecked ? 'checked' : ''}>
+                        <label for="manageDoc${doc.id}">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            ${escapeHtml(doc.title)}
+                        </label>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            manageDocsModal.show();
+
+        } catch (error) {
+            console.error('Error loading group for manage documents:', error);
+            showAlert('Failed to load group details.', 'danger');
+        }
+    }
+
+    // Handle manage documents
+    async function handleManageDocuments(e) {
+        e.preventDefault();
+
+        const groupId = document.getElementById('manageDocsGroupId').value;
+
+        if (!currentManageGroupData) {
+            showAlert('Group data not loaded. Please try again.', 'danger');
+            return;
+        }
+
+        // Get selected documents
+        const selectedDocs = Array.from(
+            document.querySelectorAll('#manageDocumentsList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        try {
+            // Use PUT with full group data, only updating documents
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    groupName: currentManageGroupData.groupName,
+                    description: currentManageGroupData.description || '',
+                    documentIds: selectedDocs,
+                    userIds: currentManageGroupData.userIds || []
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update documents');
+            }
+
+            manageDocsModal.hide();
+            await loadGroups();
+            showAlert('Documents updated successfully!', 'success');
+
+        } catch (error) {
+            showAlert(error.message || 'Failed to update documents.', 'danger');
+        }
+    }
+
+    // Open manage users modal
+    async function openManageUsersModal(groupId) {
+        try {
+            // Fetch group details
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error('Failed to load group details');
+
+            const group = await response.json();
+            currentManageGroupData = group; // Store full group data
+
+            document.getElementById('manageUsersGroupId').value = group.id;
+
+            // Populate users with pre-selected items
+            const container = document.getElementById('manageUsersList');
+            container.innerHTML = '';
+
+            if (allUsers.length === 0) {
+                container.innerHTML = '<p class="text-muted text-center p-3">No users available</p>';
+            } else {
+                allUsers.forEach(user => {
+                    const isChecked = (group.userIds || []).includes(user.id);
+                    const item = document.createElement('div');
+                    item.className = 'user-checkbox-item';
+                    item.innerHTML = `
+                        <input type="checkbox" id="manageUser${user.id}"
+                               value="${user.id}" ${isChecked ? 'checked' : ''}>
+                        <label for="manageUser${user.id}">
+                            <i class="bi bi-person me-2"></i>
+                            ${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span>
+                        </label>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            manageUsersModal.show();
+
+        } catch (error) {
+            console.error('Error loading group for manage users:', error);
+            showAlert('Failed to load group details.', 'danger');
+        }
+    }
+
+    // Handle manage users
+    async function handleManageUsers(e) {
+        e.preventDefault();
+
+        const groupId = document.getElementById('manageUsersGroupId').value;
+
+        if (!currentManageGroupData) {
+            showAlert('Group data not loaded. Please try again.', 'danger');
+            return;
+        }
+
+        // Get selected users
+        const selectedUsers = Array.from(
+            document.querySelectorAll('#manageUsersList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        try {
+            // Use PUT with full group data, only updating users
+            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    groupName: currentManageGroupData.groupName,
+                    description: currentManageGroupData.description || '',
+                    documentIds: currentManageGroupData.documentIds || [],
+                    userIds: selectedUsers
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update users');
+            }
+
+            manageUsersModal.hide();
+            await loadGroups();
+            showAlert('Users updated successfully!', 'success');
+
+        } catch (error) {
+            showAlert(error.message || 'Failed to update users.', 'danger');
+        }
+    }
+
+    // Open delete modal
+    function openDeleteModal(groupId, groupName) {
+        deleteGroupId = groupId;
+
+        document.getElementById('deleteModalMessage').innerHTML =
+            `Are you sure you want to delete the access group "<strong>${groupName}</strong>"? This action cannot be undone.`;
+
+        deleteModal.show();
+    }
+
+    // Handle delete group
+    async function handleDeleteGroup() {
+        if (!deleteGroupId) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${deleteGroupId}`, {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to delete group');
+            }
+
+            showAlert('Access group deleted successfully!', 'success');
+            deleteModal.hide();
+            deleteGroupId = null;
+            await loadGroups();
+
+        } catch (error) {
+            console.error('Error deleting group:', error);
+            showAlert(error.message || 'Failed to delete group. Please try again.', 'danger');
+            deleteModal.hide();
+        }
+    }
+
+    // Handle search
+    function handleSearch(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const groupCards = document.querySelectorAll('.group-card');
+
+        groupCards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            card.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    // Helper function to show inline error message
+    function getOrCreateErrorElement(input) {
+        let errorEl = input.parentElement.querySelector('.inline-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'inline-error';
+            input.parentElement.appendChild(errorEl);
+        }
+        return errorEl;
+    }
+
+    // Date formatting function
+    function formatDate(dateString) {
+        if (!dateString || dateString === 'N/A') return 'N/A';
+
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return dateString;
+        }
+    }
+
+    // Show alert message
+    function showAlert(message, type) {
+        const alertContainer = document.getElementById('alertContainer');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+
+        const icon = type === 'success' ? 'check-circle-fill' :
+                     type === 'danger' ? 'exclamation-circle-fill' :
+                     type === 'warning' ? 'exclamation-triangle-fill' :
+                     'info-circle-fill';
+
+        alertDiv.innerHTML = `
+            <i class="bi bi-${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        alertContainer.appendChild(alertDiv);
+
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+
+    // Show/hide loading spinner
+    function showLoading(show) {
+        document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+        document.getElementById('groupsContainer').style.display = show ? 'none' : 'block';
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    // Capitalize first letter
+    function capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+</script>
+</body>
+</html>

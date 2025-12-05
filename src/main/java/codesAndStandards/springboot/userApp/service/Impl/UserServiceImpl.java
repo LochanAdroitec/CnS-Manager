@@ -1,14 +1,17 @@
 package codesAndStandards.springboot.userApp.service.Impl;
 
+import codesAndStandards.springboot.userApp.dto.GroupListDTO;
 import codesAndStandards.springboot.userApp.dto.UserDto;
+import codesAndStandards.springboot.userApp.entity.Group;
+import codesAndStandards.springboot.userApp.entity.GroupUser;
 import codesAndStandards.springboot.userApp.entity.Role;
 import codesAndStandards.springboot.userApp.entity.User;
-import codesAndStandards.springboot.userApp.repository.ClassificationRepository;
+import codesAndStandards.springboot.userApp.repository.GroupRepository;
+import codesAndStandards.springboot.userApp.repository.GroupUserRepository;
 import codesAndStandards.springboot.userApp.repository.RoleRepository;
-import codesAndStandards.springboot.userApp.repository.TagRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,8 @@ import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,16 +40,22 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final GroupUserRepository groupUserRepository;
+    private final GroupRepository groupRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           GroupUserRepository groupUserRepository,
+                           GroupRepository groupRepository) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.groupUserRepository = groupUserRepository;
+        this.groupRepository = groupRepository;
     }
 
     // =====================================================
@@ -54,10 +65,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void saveUserWithStoredProcedure(UserDto userDto) throws RuntimeException {
+
         logger.info("Starting saveUserWithStoredProcedure for user: {}", userDto.getUsername());
 
         try {
-            // Prepare parameters for stored procedure
+            // =============================
+            // 1. Prepare variables
+            // =============================
             String firstName = userDto.getFirstName();
             String lastName = userDto.getLastName();
             String username = userDto.getUsername();
@@ -65,8 +79,7 @@ public class UserServiceImpl implements UserService {
             String encodedPassword = passwordEncoder.encode(userDto.getPassword());
             Long roleId = userDto.getRoleId();
 
-
-            // Get createdBy user ID if provided
+            // created_by
             Long createdById = null;
             if (userDto.getCreatedByUsername() != null && !userDto.getCreatedByUsername().isEmpty()) {
                 User createdByUser = userRepository.findByUsername(userDto.getCreatedByUsername());
@@ -75,42 +88,70 @@ public class UserServiceImpl implements UserService {
                 }
             }
 
-            logger.info("Calling stored procedure with parameters: firstName={}, lastName={}, username={}, email={}, roleId={}",
-                    firstName, lastName, username, email, roleId);
+            logger.info("Calling AddUser stored procedure...");
 
-            // Create and execute stored procedure
-            StoredProcedureQuery storedProcedure = entityManager.createStoredProcedureQuery("AddUser");
+            // =============================
+            // 2. Call stored procedure
+            // =============================
+            StoredProcedureQuery sp = entityManager.createStoredProcedureQuery("AddUser");
 
-            // Register input parameters (match your stored procedure parameter names exactly)
-            storedProcedure.registerStoredProcedureParameter(1, String.class, ParameterMode.IN);  // firstName
-            storedProcedure.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);  // lastName
-            storedProcedure.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);  // username
-            storedProcedure.registerStoredProcedureParameter(4, String.class, ParameterMode.IN);  // email
-            storedProcedure.registerStoredProcedureParameter(5, String.class, ParameterMode.IN);  // password
-            storedProcedure.registerStoredProcedureParameter(6, Long.class, ParameterMode.IN);    // roleId
-            storedProcedure.registerStoredProcedureParameter(7, Long.class, ParameterMode.IN);    // createdById (nullable)
+            sp.registerStoredProcedureParameter(1, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(2, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(3, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(4, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(5, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(6, Long.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(7, Long.class, ParameterMode.IN);
 
-            // Set parameter values
-            storedProcedure.setParameter(1, firstName);
-            storedProcedure.setParameter(2, lastName);
-            storedProcedure.setParameter(3, username);
-            storedProcedure.setParameter(4, email);
-            storedProcedure.setParameter(5, encodedPassword);
-            storedProcedure.setParameter(6, roleId);
-            storedProcedure.setParameter(7, createdById);
+            sp.setParameter(1, firstName);
+            sp.setParameter(2, lastName);
+            sp.setParameter(3, username);
+            sp.setParameter(4, email);
+            sp.setParameter(5, encodedPassword);
+            sp.setParameter(6, roleId);
+            sp.setParameter(7, createdById);
 
-            logger.info("About to execute stored procedure...");
+            sp.execute();
 
-            // Execute the stored procedure
-            storedProcedure.execute();
+            logger.info("Stored procedure executed successfully.");
 
-            logger.info("Stored procedure executed successfully for user: {}", username);
+            // =============================
+            // 3. Get newly created user ID
+            // =============================
+            User createdUser = userRepository.findByUsername(username);
+            if (createdUser == null) {
+                throw new RuntimeException("User created but cannot fetch userId.");
+            }
+            Long userId = createdUser.getId();
+
+            logger.info("New user created with userId: {}", userId);
+
+            // =============================
+            // 4. Save Group Mappings
+            // =============================
+
+            // Remove old groups (in case of update)
+            groupUserRepository.deleteByUserId(userId);
+            logger.info("Old group mappings removed for userId: {}", userId);
+
+            // Insert new groups
+            if (userDto.getGroupIds() != null && !userDto.getGroupIds().isEmpty()) {
+                for (Long groupId : userDto.getGroupIds()) {
+                    groupUserRepository.insertUserGroup(userId, groupId, createdById);
+                    logger.info("Added groupId {} for userId {}", groupId, userId);
+                }
+            } else {
+                logger.info("No groupIds provided for this user.");
+            }
+
+            logger.info("User and group mapping saved successfully.");
 
         } catch (Exception e) {
-            logger.error("Error executing stored procedure for user: {}", userDto.getUsername(), e);
-            handleStoredProcedureException(e, "Failed to create user");
+            logger.error("Error in saveUserWithStoredProcedure: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to create/update user");
         }
     }
+
 
     @Override
     @Transactional
@@ -446,25 +487,144 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
-    @Autowired
-    private TagRepository tagRepository;
+    @Override
+    public Long getLoggedInUserId() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Optional<User> user = findByUsername(username);
+        return user.map(User::getId).orElse(null);
+    }
 
-    @Autowired
-    private ClassificationRepository classificationRepository;
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findOptionalByUsername(username);
+    }
 
-    public void deleteUser(Long userId) {
+    /**
+     * Save user-group associations after creating a user
+     */
+    @Transactional
+    public void saveUserGroupAssociations(Long userId, List<Long> groupIds) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            logger.info("No groups to assign for user ID: {}", userId);
+            return;
+        }
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-        // Clear tag references
-        tagRepository.clearCreatedByUser(userId);
-        tagRepository.clearUpdatedByUser(userId);
+        // Get current logged-in user for audit
+        User currentUser = getCurrentUser();
+        Long createdById = currentUser != null ? currentUser.getId() : null;
 
-        // Clear classification references
-        classificationRepository.clearCreatedByUser(userId);
-        classificationRepository.clearUpdatedByUser(userId);
+        logger.info("Assigning {} groups to user ID: {}", groupIds.size(), userId);
 
-        // Now delete the user
-        userRepository.delete(user);
+        for (Long groupId : groupIds) {
+            try {
+                // Verify group exists
+                Group group = groupRepository.findById(groupId)
+                        .orElseThrow(() -> new RuntimeException("Group not found with ID: " + groupId));
+
+                // Check if association already exists
+                if (!groupUserRepository.existsByUserIdAndGroupId(userId, groupId)) {
+                    // Use native query to insert
+                    groupUserRepository.insertUserGroup(userId, groupId, createdById);
+                    logger.info("✅ Assigned user {} to group {} ({})", userId, groupId, group.getGroupName());
+                } else {
+                    logger.info("ℹ️ User {} already in group {} ({})", userId, groupId, group.getGroupName());
+                }
+            } catch (Exception e) {
+                logger.error("❌ Failed to assign user {} to group {}: {}", userId, groupId, e.getMessage());
+                // Continue with other groups even if one fails
+            }
+        }
+
+        logger.info("✅ Group assignment completed for user ID: {}", userId);
+    }
+
+    /**
+     * Update user-group associations when editing a user
+     */
+    @Transactional
+    public void updateUserGroupAssociations(Long userId, List<Long> groupIds) {
+        logger.info("🔄 Updating group associations for user ID: {}", userId);
+
+        try {
+            // Delete existing associations
+            groupUserRepository.deleteByUserId(userId);
+            logger.info("🗑️ Deleted existing group associations for user ID: {}", userId);
+
+            // Add new associations
+            if (groupIds != null && !groupIds.isEmpty()) {
+                saveUserGroupAssociations(userId, groupIds);
+            } else {
+                logger.info("ℹ️ No groups selected for user ID: {}", userId);
+            }
+        } catch (Exception e) {
+            logger.error("❌ Error updating group associations for user {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Failed to update group associations: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Parse comma-separated group IDs from form input
+     */
+    private List<Long> parseGroupIds(String groupIds) {
+        if (groupIds == null || groupIds.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(groupIds.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get groups for a specific user
+     */
+    @Transactional
+    public List<GroupListDTO> getUserGroups(Long userId) {
+        logger.info("Fetching groups for user ID: {}", userId);
+
+        List<GroupUser> groupUsers = groupUserRepository.findByUserId(userId);
+
+        return groupUsers.stream()
+                .map(gu -> {
+                    Group group = gu.getGroup();
+                    return GroupListDTO.builder()
+                            .id(group.getId())
+                            .groupName(group.getGroupName())
+                            .description(group.getDescription())
+                            .build();
+                })
+                .collect(Collectors.toList());
+    }
+
+
+    /**
+     * Parse comma-separated group IDs
+     */
+//    private List<Long> parseGroupIds(String groupIds) {
+//        if (groupIds == null || groupIds.trim().isEmpty()) {
+//            return Collections.emptyList();
+//        }
+//
+//        return Arrays.stream(groupIds.split(","))
+//                .map(String::trim)
+//                .filter(s -> !s.isEmpty())
+//                .map(Long::parseLong)
+//                .collect(Collectors.toList());
+//    }
+
+    /**
+     * Get current logged-in user
+     */
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("Current user not found");
+        }
+        return user;
     }
 }

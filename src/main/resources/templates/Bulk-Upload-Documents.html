@@ -551,7 +551,7 @@
             color: #6b7280;
         }
 
-        /* Error Action Buttons */
+        /* Error Action Buttons - Updated */
         .validation-error-actions {
             display: none;
             margin-top: 20px;
@@ -616,6 +616,16 @@
 
         .error-action-btn.reupload-excel:hover {
             background: #059669;
+        }
+
+        /* Upload Valid Documents Button */
+        .error-action-btn.upload-valid {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .error-action-btn.upload-valid:hover {
+            background: #d97706;
         }
 
         /* ============== STEP 4: UPLOAD PROGRESS ============== */
@@ -719,11 +729,6 @@
         .log-icon.processing {
             background: #dbeafe;
             color: #3b82f6;
-        }
-
-        .log-text {
-            flex: 1;
-            color: #374151;
         }
 
         /* ============== CUSTOM MODALS ============== */
@@ -1122,13 +1127,9 @@
                             <ul style="margin-top: 10px;">
                                 <li>Download the template using the button below</li>
                                 <li>Fill in all required metadata for each document</li>
-                                <!--                                <li><strong>Classification Column:</strong> Use the dropdown to select existing classifications</li>-->
                                 <li>For multiple classifications, separate them with comma (e.g., "Safety, Quality")</li>
                                 <li>Upload the completed Excel file</li>
                             </ul>
-                            <!--                            <div class="info-box-highlight">-->
-                            <!--                                <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> You can only select classifications that already exist in the system. The Classification column has a dropdown with all available options.-->
-                            <!--                            </div>-->
                         </div>
                     </div>
 
@@ -1200,14 +1201,17 @@
                             <!-- Issues will be populated here -->
                         </div>
 
-                        <!-- Error Action Buttons (shown only when errors exist) -->
+                        <!-- Error Action Buttons - Updated with Upload Valid Documents option -->
                         <div class="validation-error-actions" id="validationErrorActions">
                             <h4>
                                 <i class="bi bi-exclamation-triangle-fill"></i>
-                                Fix Validation Errors
+                                Validation Errors Found
                             </h4>
-                            <p>Please fix the errors above by re-uploading the correct files:</p>
+                            <p>You have the following options:</p>
                             <div class="error-action-buttons">
+                                <button type="button" class="error-action-btn upload-valid" id="uploadValidBtn">
+                                    <i class="bi bi-cloud-upload"></i> Upload Valid Documents Only
+                                </button>
                                 <button type="button" class="error-action-btn reupload-folder" id="reuploadFolderBtn">
                                     <i class="bi bi-folder2-open"></i> Re-upload Folder
                                 </button>
@@ -1288,6 +1292,43 @@
             </div>
         </div>
 
+        <!-- Upload Valid Documents Confirmation Modal -->
+        <div class="custom-modal-overlay" id="uploadValidConfirmModal">
+            <div class="custom-modal">
+                <div class="modal-header-custom modal-header-warning">
+                    <div class="modal-icon">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="modal-title-custom">
+                        <h3>Upload Valid Documents Only</h3>
+                        <p>Some documents have validation errors</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="closeUploadValidConfirmModal()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-custom">
+                    <p><strong>You are about to upload only the valid documents.</strong></p>
+                    <p>
+                        <span id="validDocsCount" style="color: #10b981; font-weight: 600;">0</span> documents will be uploaded successfully.<br>
+                        <span id="errorDocsCount" style="color: #ef4444; font-weight: 600;">0</span> documents with errors will be skipped.
+                    </p>
+                    <p style="margin-top: 15px;">Do you want to proceed with uploading only the valid documents?</p>
+                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
+                        <i class="bi bi-info-circle"></i> You can fix the errors and upload the remaining documents later.
+                    </p>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="closeUploadValidConfirmModal()">
+                        Cancel
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-warning" id="confirmUploadValidBtn">
+                        <i class="bi bi-cloud-upload"></i> Yes, Upload Valid Documents
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- PDF Protection Warning Modal -->
         <div class="custom-modal-overlay" id="pdfProtectionModal">
             <div class="custom-modal">
@@ -1343,6 +1384,7 @@
     let navigationConfirmed = false;
     let pendingNavigationUrl = null;
     let isDownloadingTemplate = false;
+    let uploadOnlyValid = false; // New flag to track if uploading only valid documents
 
     // ============== INITIALIZE ==============
     document.addEventListener('DOMContentLoaded', function() {
@@ -1419,11 +1461,13 @@
         const nextBtn = document.getElementById('nextBtn');
 
         if (hasErrors) {
-            // Hide standard navigation buttons - error action buttons will be shown instead
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
+            // Show "Upload Valid Documents" button in the navigation even when errors exist
+            prevBtn.style.display = 'inline-flex';
+            nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-warning';
+            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Valid Documents';
         } else {
-            // Show "Upload" button when validation passes
+            // Show standard "Upload" button when no errors
             prevBtn.style.display = 'inline-flex';
             nextBtn.style.display = 'inline-flex';
             nextBtn.className = 'wizard-btn wizard-btn-success';
@@ -1451,8 +1495,14 @@
             await validateFiles();
             formChanged = originalFormChanged;
         } else if (currentStep === 3) {
-            // This is now the "Upload" button - start upload process
-            await startUpload();
+            // Check if there are errors
+            if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
+                // Show confirmation modal for uploading only valid documents
+                showUploadValidConfirmation();
+            } else {
+                // No errors, proceed with normal upload
+                await startUpload(false);
+            }
         }
     });
 
@@ -1494,6 +1544,33 @@
         formChanged = originalFormChanged;
 
         showCustomAlert('Please upload the corrected metadata Excel file.', 'info');
+    });
+
+    // New: Upload Valid Documents button in error actions
+    document.getElementById('uploadValidBtn').addEventListener('click', function() {
+        showUploadValidConfirmation();
+    });
+
+    // ============== UPLOAD VALID DOCUMENTS CONFIRMATION ==============
+    function showUploadValidConfirmation() {
+        if (!validationResult) return;
+
+        const validCount = validationResult.validDocuments || 0;
+        const errorCount = validationResult.errors ? validationResult.errors.length : 0;
+
+        document.getElementById('validDocsCount').textContent = validCount;
+        document.getElementById('errorDocsCount').textContent = errorCount;
+
+        document.getElementById('uploadValidConfirmModal').classList.add('show');
+    }
+
+    function closeUploadValidConfirmModal() {
+        document.getElementById('uploadValidConfirmModal').classList.remove('show');
+    }
+
+    document.getElementById('confirmUploadValidBtn').addEventListener('click', async function() {
+        closeUploadValidConfirmModal();
+        await startUpload(true); // Pass true to indicate uploading only valid documents
     });
 
     // ============== FOLDER SELECTION ==============
@@ -1940,12 +2017,12 @@
             issuesContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #10b981;"><i class="bi bi-check-circle" style="font-size: 24px;"></i><br><br>No issues found! All documents are ready to upload.</div>';
         }
 
-        // Update navigation based on validation result
+        // Update navigation based on validation result - ALWAYS show upload option
         updateStep3Navigation(hasErrors);
 
         // Show appropriate message
         if (hasErrors) {
-            showCustomAlert('Validation found errors. Please fix them before uploading.', 'error');
+            showCustomAlert(`Validation complete. ${result.validDocuments} documents are ready to upload.`, 'warning');
         } else {
             showCustomAlert('Validation successful! Click "Upload" to proceed.', 'success');
         }
@@ -1967,12 +2044,7 @@
     }
 
     // ============== UPLOAD PROCESS ==============
-    async function startUpload() {
-        if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
-            showCustomAlert('Please fix validation errors before uploading.', 'error');
-            return;
-        }
-
+    async function startUpload(onlyValid = false) {
         // Move to Step 4
         updateWizardStep(4);
 
@@ -1985,6 +2057,11 @@
             formData.append('pdfFiles', pdfFiles[i]);
         }
         formData.append('excelFile', excelFile);
+
+        // Add flag to indicate if uploading only valid documents
+        if (onlyValid) {
+            formData.append('uploadOnlyValid', 'true');
+        }
 
         try {
             const response = await fetch('/api/bulk-upload/process', {
@@ -2001,8 +2078,11 @@
                 throw new Error('Upload failed');
             }
 
+            // Determine document count for progress simulation
+            const docsToUpload = onlyValid ? (validationResult?.validDocuments || 0) : (validationResult?.totalDocuments || pdfFiles.length);
+
             // Simulate progress
-            await simulateProgress(validationResult.totalDocuments || pdfFiles.length);
+            await simulateProgress(docsToUpload);
 
             const result = await response.json();
             console.log('Upload result:', result);
@@ -2057,7 +2137,12 @@
         const successCount = result.successCount || 0;
         const failedCount = result.failedCount || 0;
 
-        showCustomAlert(`Bulk upload complete! ${successCount} documents uploaded successfully.`, 'success');
+        let message = `Bulk upload complete! ${successCount} documents uploaded successfully.`;
+        if (failedCount > 0) {
+            message += ` ${failedCount} documents were skipped due to errors.`;
+        }
+
+        showCustomAlert(message, 'success');
 
         // Redirect to documents page after 2 seconds
         setTimeout(() => {
@@ -2121,7 +2206,7 @@
         }
 
         if (button) {
-            const wizardButtons = ['nextBtn', 'prevBtn', 'cancelBtn', 'downloadTemplateBtn', 'reuploadFolderBtn', 'reuploadExcelBtn'];
+            const wizardButtons = ['nextBtn', 'prevBtn', 'cancelBtn', 'downloadTemplateBtn', 'reuploadFolderBtn', 'reuploadExcelBtn', 'uploadValidBtn'];
             if (wizardButtons.includes(button.id)) {
                 return;
             }

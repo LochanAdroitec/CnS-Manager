@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Documents - Codes & Standards</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- Include Sidebar Styles -->
+    <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            padding-top: 70px;
+        }
+
+        .upload-selection-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .page-header h1 i {
+            font-size: 40px;
+            color: #667eea;
+        }
+
+        .page-header p {
+            font-size: 18px;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .upload-option-card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            border: 3px solid transparent;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .upload-option-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .upload-option-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .upload-option-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .upload-option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
+            border-color: #667eea;
+        }
+
+        .upload-option-card.single-upload:hover {
+            border-color: #667eea;
+        }
+
+        .upload-option-card.bulk-upload:hover {
+            border-color: #10b981;
+        }
+
+        .upload-option-card.bulk-upload::before {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .option-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: white;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-option-card.bulk-upload .option-icon {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .upload-option-card:hover .option-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .option-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a2332;
+            margin-bottom: 15px;
+        }
+
+        .option-description {
+            font-size: 16px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            min-height: 75px;
+        }
+
+        .option-features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f9fafb;
+            border-radius: 12px;
+        }
+
+        .option-features ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-features li {
+            display: flex;
+            align-items: start;
+            gap: 12px;
+            padding: 10px 0;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .option-features li i {
+            color: #667eea;
+            font-size: 18px;
+            margin-top: 2px;
+        }
+
+        .upload-option-card.bulk-upload .option-features li i {
+            color: #10b981;
+        }
+
+        .option-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-option-card.bulk-upload .option-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .option-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .upload-option-card.bulk-upload .option-button:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .option-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: #eff6ff;
+            color: #1e40af;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .upload-option-card.bulk-upload .option-badge {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .comparison-section {
+            margin-top: 60px;
+            padding: 40px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 0.6s ease 0.4s both;
+        }
+
+        .comparison-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a2332;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: #f9fafb;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            color: #10b981;
+            font-size: 20px;
+        }
+
+        .times-icon {
+            color: #ef4444;
+            font-size: 20px;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .upload-options {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .page-header h1 {
+                font-size: 28px;
+            }
+
+            .option-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 50px;
+            }
+
+            .option-title {
+                font-size: 24px;
+            }
+
+            .comparison-section {
+                padding: 30px 20px;
+            }
+
+            .comparison-table {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .upload-selection-container {
+                padding: 20px 15px;
+            }
+
+            .page-header h1 {
+                font-size: 24px;
+                flex-direction: column;
+            }
+
+            .page-header p {
+                font-size: 16px;
+            }
+
+            .upload-option-card {
+                padding: 40px 30px;
+            }
+
+            .option-description {
+                min-height: auto;
+            }
+
+            .comparison-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Include Top Navbar -->
+<div th:replace="~{common/navbar :: navbar}"></div>
+
+<!-- Sidebar + Content -->
+<div class="d-flex">
+    <!-- Include Sidebar -->
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-grow-1 p-4">
+        <div class="upload-selection-container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>
+                    <i class="bi bi-cloud-upload"></i>
+                    Upload Documents
+                </h1>
+                <p>Choose how you want to upload your documents to the system</p>
+            </div>
+
+            <!-- Upload Options -->
+            <div class="upload-options">
+                <!-- Single Document Upload -->
+                <div class="upload-option-card single-upload" onclick="window.location.href='/upload'">
+                    <span class="option-badge">
+                        <i class="bi bi-file-earmark-plus"></i> Quick Upload
+                    </span>
+                    <div class="option-icon">
+                        <i class="bi bi-file-earmark-arrow-up"></i>
+                    </div>
+                    <h2 class="option-title">Upload Single Document</h2>
+                    <p class="option-description">
+                        Upload one document at a time with detailed metadata entry using our step-by-step wizard
+                    </p>
+
+                    <div class="option-features">
+                        <ul>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Step-by-step guided wizard</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>PDF preview before upload</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Automatic metadata extraction</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Add tags & classifications</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Review before submission</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a th:href="@{/upload}" class="option-button">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Start Single Upload
+                    </a>
+                </div>
+
+                <!-- Bulk Document Upload -->
+                <div class="upload-option-card bulk-upload" onclick="window.location.href='/Bulk-Upload-Documents'">
+                    <span class="option-badge">
+                        <i class="bi bi-lightning-charge"></i> Fast Upload
+                    </span>
+                    <div class="option-icon">
+                        <i class="bi bi-cloud-upload-fill"></i>
+                    </div>
+                    <h2 class="option-title">Upload Bulk Documents</h2>
+                    <p class="option-description">
+                        Upload multiple documents at once using Excel metadata sheet for efficient batch processing
+                    </p>
+
+                    <div class="option-features">
+                        <ul>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Upload multiple PDFs at once</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Excel metadata integration</span>
+                            </li>
+<!--                            <li>-->
+<!--                                <i class="bi bi-check-circle-fill"></i>-->
+<!--                                <span>ZIP file support</span>-->
+<!--                            </li>-->
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Validation before processing</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Progress tracking & logs</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <a th:href="@{/Bulk-Upload-Documents}" class="option-button">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        Start Bulk Upload
+                    </a>
+                </div>
+            </div>
+
+            <!-- Comparison Section -->
+            <div class="comparison-section">
+                <h3 class="comparison-title">
+                    <i class="bi bi-bar-chart"></i>
+                    Quick Comparison
+                </h3>
+                <table class="comparison-table">
+                    <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th style="text-align: center;">Single Upload</th>
+                        <th style="text-align: center;">Bulk Upload</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><strong>Number of Documents</strong></td>
+                        <td style="text-align: center;">One at a time</td>
+                        <td style="text-align: center;">Multiple (unlimited)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Metadata Entry</strong></td>
+                        <td style="text-align: center;">Manual form entry</td>
+                        <td style="text-align: center;">Excel sheet import</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PDF Preview</strong></td>
+                        <td style="text-align: center;"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                        <td style="text-align: center;"><i class="bi bi-x-circle-fill times-icon"></i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best For</strong></td>
+                        <td style="text-align: center;">Individual documents</td>
+                        <td style="text-align: center;">Large batches</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Processing Time</strong></td>
+                        <td style="text-align: center;">Instant</td>
+                        <td style="text-align: center;">Based on quantity</td>
+                    </tr>
+<!--                    <tr>-->
+<!--                        <td><strong>ZIP File Support</strong></td>-->
+<!--                        <td style="text-align: center;"><i class="bi bi-x-circle-fill times-icon"></i></td>-->
+<!--                        <td style="text-align: center;"><i class="bi bi-check-circle-fill check-icon"></i></td>-->
+<!--                    </tr>-->
+                    <tr>
+                        <td><strong>Excel Template</strong></td>
+                        <td style="text-align: center;"><i class="bi bi-x-circle-fill times-icon"></i></td>
+                        <td style="text-align: center;"><i class="bi bi-check-circle-fill check-icon"></i></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{common/navbar :: navbar-js}"></div>
+
+<script>
+    // Add smooth scrolling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Optional: Add any additional interactivity here
+        console.log('Upload selection page loaded');
+    });
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '1') {
+            window.location.href = '/upload';
+        } else if (e.key === '2') {
+            window.location.href = '/Bulk-Upload-Documents';
+        }
+    });
+</script>
+</body>
+</html>

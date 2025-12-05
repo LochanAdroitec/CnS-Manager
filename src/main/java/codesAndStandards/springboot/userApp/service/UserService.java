@@ -1,5 +1,6 @@
 package codesAndStandards.springboot.userApp.service;
 
+import codesAndStandards.springboot.userApp.dto.GroupListDTO;
 import codesAndStandards.springboot.userApp.dto.UserDto;
 import codesAndStandards.springboot.userApp.entity.User;
 
@@ -38,4 +39,10 @@ public interface UserService {
      */
     boolean existsByEmail(String email);
     Optional<User> findById(Long id);
+
+    Long getLoggedInUserId();
+    void saveUserGroupAssociations(Long userId, List<Long> groupIds);
+    void updateUserGroupAssociations(Long userId, List<Long> groupIds);
+    List<GroupListDTO> getUserGroups(Long userId);
+
 }

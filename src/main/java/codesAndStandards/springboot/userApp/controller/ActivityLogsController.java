@@ -76,7 +76,7 @@ public class ActivityLogsController {
         return "activity-logs";
     }
 
-    @GetMapping("/api/users/{userId}")
+    @GetMapping("/apis/users/{userId}")
     @ResponseBody
     public ResponseEntity<?> getUserDetails(@PathVariable Long userId) {
         try {

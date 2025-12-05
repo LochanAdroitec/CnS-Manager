@@ -1,7 +1,11 @@
 package codesAndStandards.springboot.userApp.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -41,5 +45,5 @@ public class Group {
 
     // One group → many GroupDocument
     @OneToMany(mappedBy = "group", orphanRemoval = true)
-    private Set<GroupDocument> groupDocument = new HashSet<>();
+    private Set<codesAndStandards.springboot.userApp.entity.AccessControlLogic> groupDocument = new HashSet<>();
 }

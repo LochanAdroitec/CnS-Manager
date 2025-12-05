@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <!-- ==================== META TAGS ==================== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Codes & Standards</title>
+
+    <!-- ==================== STYLESHEETS ==================== -->
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
     <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+
     <style>
+        /* ==================== BODY STYLES ==================== */
         body {
             background-color: #f4f6f9;
             margin: 0;
@@ -16,7 +21,7 @@
             padding-top: 70px;
         }
 
-        /* Stat cards - now clickable */
+        /* ==================== STATISTICS CARDS ==================== */
         .stat-card {
             border-radius: 12px;
             padding: 5px;
@@ -58,6 +63,8 @@
             padding-top:15px;
             padding-right:5px;
         }
+
+        /* ==================== SEARCH AND TABLE CONTAINERS ==================== */
         .search-box {
             background: white;
             border-radius: 10px;
@@ -70,6 +77,8 @@
             padding: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        /* ==================== ROLE BADGES ==================== */
         .role-admin {
           background-color: #0A3D91 !important;
           color: white !important;
@@ -86,7 +95,7 @@
           padding:10px;
         }
 
-        /* Clickable row styling */
+        /* ==================== CLICKABLE TABLE ROWS ==================== */
         .clickable-row {
             cursor: pointer;
             transition: background-color 0.2s;
@@ -97,14 +106,12 @@
         .clickable-row td {
             vertical-align: middle;
         }
-
-        /* Username styling (no longer a link) */
         .username-text {
             font-weight: 600;
             color: #212529;
         }
 
-        /* Modal overlay */
+        /* ==================== MODAL OVERLAY ==================== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -119,7 +126,7 @@
             display: block;
         }
 
-        /* User Details Modal */
+        /* ==================== USER DETAILS MODAL ==================== */
         .user-details-modal {
             display: none;
             position: fixed;
@@ -178,7 +185,7 @@
             color: #212529;
         }
 
-        /* Loading spinner */
+        /* ==================== LOADING SPINNER ==================== */
         .loading-spinner {
             display: inline-block;
             width: 20px;
@@ -193,6 +200,7 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* ==================== ROLE PILL ==================== */
         .role-pill {
             font-size: 12px;
             padding: 4px 12px;
@@ -201,7 +209,7 @@
             color: #334155;
         }
 
-        /* Username and Email validation feedback */
+        /* ==================== FORM VALIDATION FEEDBACK ==================== */
         .validation-feedback {
             display: none;
             font-size: 0.875rem;
@@ -219,28 +227,179 @@
             color: #0d6efd;
             display: block;
         }
-
-        /* Input validation states */
         .form-control.is-valid {
             border-color: #198754;
         }
         .form-control.is-invalid {
             border-color: #dc3545;
         }
+
+        /* ==================== GROUPS DROPDOWN WITH CHECKBOXES ==================== */
+        .groups-dropdown-container {
+            position: relative;
+        }
+
+        .groups-dropdown-btn {
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            background-color: white;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 38px;
+        }
+
+        .groups-dropdown-btn:hover {
+            border-color: #86b7fe;
+        }
+
+        .groups-dropdown-btn:focus {
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .groups-selected-text {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #495057;
+        }
+
+        .groups-selected-text.placeholder {
+            color: #6c757d;
+        }
+
+        .groups-dropdown-arrow {
+            margin-left: 8px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .groups-dropdown-btn.active .groups-dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .groups-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 4px;
+            background: white;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .groups-dropdown-menu.show {
+            display: block;
+        }
+
+        .groups-search-box {
+            padding: 8px;
+            border-bottom: 1px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .groups-search-box input {
+            width: 100%;
+            padding: 6px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .groups-search-box input:focus {
+            outline: none;
+            border-color: #86b7fe;
+        }
+
+        .groups-checkbox-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
+
+        .groups-checkbox-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .groups-checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .groups-checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .groups-no-results {
+            padding: 12px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .groups-select-all {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            background-color: #f8f9fa;
+        }
+
+        .groups-clear-btn {
+            padding: 8px 12px;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            cursor: pointer;
+            color: #dc3545;
+            font-size: 0.875rem;
+            background-color: #f8f9fa;
+        }
+
+        .groups-clear-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .groups-count-badge {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
-<!-- Include Top Navbar -->
+<!-- ==================== TOP NAVBAR ==================== -->
 <div th:replace="~{common/navbar :: navbar}"></div>
 
-<!-- Sidebar + Content -->
+<!-- ==================== SIDEBAR + CONTENT ==================== -->
 <div class="d-flex">
-    <!-- Include Sidebar -->
     <div th:replace="~{common/sidebar :: sidebar}"></div>
 
-    <!-- Main Content -->
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
     <div class="main-content flex-grow-1 p-4">
-        <!-- Breadcrumb -->
+        <!-- ==================== BREADCRUMB AND PAGE HEADER ==================== -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="mb-1"><i class="bi bi-people"></i> User Management</h2>
@@ -260,7 +419,7 @@
             </button>
         </div>
 
-        <!-- Statistics Cards (Now clickable filters) -->
+        <!-- ==================== STATISTICS CARDS ==================== -->
         <div class="row mb-4">
             <div class="col-md-2">
                 <div class="stat-card d-flex flex-row active" style="background-color: #1e3a5f"
@@ -292,7 +451,7 @@
             </div>
         </div>
 
-        <!-- Alert Messages -->
+        <!-- ==================== ALERT MESSAGES ==================== -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i>
             <span th:text="${success}">Document uploaded successfully!</span>
@@ -305,7 +464,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- Search and Filters -->
+        <!-- ==================== SEARCH AND FILTERS ==================== -->
         <div class="search-box mb-4">
             <div class="row g-3 align-items-center">
                 <div class="col-md-9">
@@ -323,7 +482,7 @@
             </div>
         </div>
 
-        <!-- Users Table -->
+        <!-- ==================== USERS TABLE ==================== -->
         <div class="table-container">
             <div class="table-responsive">
                 <table class="table table-hover" id="usersTable">
@@ -341,7 +500,6 @@
                     <tr th:each="user : ${users}"
                         th:attr="data-role=${user.roleName},data-user-id=${user.id}"
                         class="clickable-row">
-                        <!-- Username with Avatar (No longer clickable link) -->
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
@@ -356,16 +514,10 @@
                                 </div>
                             </div>
                         </td>
-
-                        <!-- Full Name -->
                         <td>
                             <div th:text="${(user.firstName != null and user.lastName != null) ? (user.firstName + ' ' + user.lastName) : 'N/A'}">John Doe</div>
                         </td>
-
-                        <!-- Email -->
                         <td th:text="${user.email != null ? user.email : 'N/A'}">email@example.com</td>
-
-                        <!-- Role Badge -->
                         <td>
                             <span class="badge rounded-pill"
                                   th:class="${'badge rounded-pill ' +
@@ -375,13 +527,9 @@
                                           : 'role-viewer')}"
                                   th:text="${user.roleName != null ? user.roleName : 'Unknown'}">Role</span>
                         </td>
-
-                        <!-- Created Date - Updated Format with Time -->
                         <td>
                             <small class="text-muted" th:text="${user.createdAt != null ? user.createdAt : 'N/A'}">15-Jan-2024 14:30:45</small>
                         </td>
-
-                        <!-- Actions -->
                         <td class="actions-cell">
                             <button class="btn btn-sm btn-outline-primary me-1"
                                     th:attr="data-id=${user.id},
@@ -405,7 +553,6 @@
                             </a>
                         </td>
                     </tr>
-
                     <tr th:if="${#lists.isEmpty(users)}">
                         <td colspan="6" class="text-center py-5">
                             <i class="bi bi-inbox" style="font-size: 3rem; opacity: 0.3;"></i>
@@ -419,10 +566,10 @@
     </div>
 </div>
 
-<!-- Modal Overlay -->
+<!-- ==================== MODAL OVERLAY ==================== -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeUserModal()"></div>
 
-<!-- User Details Modal -->
+<!-- ==================== USER DETAILS MODAL ==================== -->
 <div class="user-details-modal" id="userDetailsModal">
     <div class="modal-header-custom">
         <h4>User Details</h4>
@@ -435,7 +582,7 @@
     </div>
 </div>
 
-<!-- Add User Modal -->
+<!-- ==================== ADD USER MODAL ==================== -->
 <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -455,6 +602,7 @@
                             <input type="text" class="form-control" name="lastName" required>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Username <span class="text-danger">*</span></label>
@@ -467,6 +615,7 @@
                             <div class="validation-feedback" id="addEmailFeedback"></div>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
@@ -480,22 +629,55 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Access to Groups</label>
+                            <div class="groups-dropdown-container">
+                                <!-- ✅ FIXED: Text span is now INSIDE the button -->
+                                <div class="groups-dropdown-btn" id="addGroupsBtn" onclick="toggleGroupsDropdown('add')">
+                                    <span class="groups-selected-text placeholder" id="addGroupsSelectedText">Select groups...</span>
+                                    <i class="bi bi-chevron-down groups-dropdown-arrow"></i>
+                                </div>
+                                <div class="groups-dropdown-menu" id="addGroupsMenu">
+                                    <div class="groups-search-box">
+                                        <input type="text" placeholder="Search groups..."
+                                               id="addGroupsSearch"
+                                               onkeyup="filterGroups('add')"
+                                               onclick="event.stopPropagation()">
+                                    </div>
+                                    <div class="groups-select-all groups-checkbox-item" onclick="toggleSelectAll('add')">
+                                        <input type="checkbox" id="addSelectAllCheckbox" onclick="event.stopPropagation(); toggleSelectAll('add')">
+                                        <label for="addSelectAllCheckbox">Select All</label>
+                                    </div>
+                                    <div id="addGroupsCheckboxes">
+                                        <!-- Groups checkboxes will be inserted here by JavaScript -->
+                                    </div>
+                                    <div class="groups-clear-btn" onclick="clearGroupSelection('add')">
+                                        Clear Selection
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="groupIds" id="addGroupIds">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="addUserSubmitBtn"><i class="bi bi-check-circle me-2"></i>Add User</button>
+                    <button type="submit" class="btn btn-primary" id="addUserSubmitBtn">
+                        <i class="bi bi-check-circle me-2"></i>Add User
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Edit User Modal -->
+<!-- ==================== EDIT USER MODAL ==================== -->
 <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="post" id="editForm">
-                <!-- CSRF token -->
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
                 <div class="modal-header" style="background-color:#87CEEB;">
@@ -513,6 +695,7 @@
                             <input type="text" class="form-control" id="editLastName" name="lastName" required>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Username</label>
@@ -524,6 +707,7 @@
                             <div class="validation-feedback" id="editEmailFeedback"></div>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">New Password</label>
@@ -537,6 +721,38 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Access to Groups</label>
+                            <div class="groups-dropdown-container">
+                                <!-- ✅ FIXED: Text span is now INSIDE the button -->
+                                <div class="groups-dropdown-btn" id="editGroupsBtn" onclick="toggleGroupsDropdown('edit')">
+                                    <span class="groups-selected-text placeholder" id="editGroupsSelectedText">Loading groups...</span>
+                                    <i class="bi bi-chevron-down groups-dropdown-arrow"></i>
+                                </div>
+                                <div class="groups-dropdown-menu" id="editGroupsMenu">
+                                    <div class="groups-search-box">
+                                        <input type="text" placeholder="Search groups..."
+                                               id="editGroupsSearch"
+                                               onkeyup="filterGroups('edit')"
+                                               onclick="event.stopPropagation()">
+                                    </div>
+                                    <div class="groups-select-all groups-checkbox-item" onclick="toggleSelectAll('edit')">
+                                        <input type="checkbox" id="editSelectAllCheckbox" onclick="event.stopPropagation(); toggleSelectAll('edit')">
+                                        <label for="editSelectAllCheckbox">Select All</label>
+                                    </div>
+                                    <div id="editGroupsCheckboxes">
+                                        <!-- Groups checkboxes will be inserted here by JavaScript -->
+                                    </div>
+                                    <div class="groups-clear-btn" onclick="clearGroupSelection('edit')">
+                                        Clear Selection
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="groupIds" id="editGroupIds">
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -545,12 +761,11 @@
                     </button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- ==================== DELETE CONFIRMATION MODAL ==================== -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-3 shadow">
@@ -568,41 +783,39 @@
         </div>
     </div>
 </div>
+
+<!-- ==================== JAVASCRIPT INCLUDES ==================== -->
 <script src="/js/bootstrap.bundle.min.js"></script>
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
 <script th:inline="javascript">
-    // Pass server-side context path to JavaScript
     var contextPath = /*[[@{/}]]*/ '/';
 </script>
 
 <script>
+    // ==================== GLOBAL VARIABLES ====================
     let currentFilter = 'all';
     let usernameCheckTimeout = null;
     let emailCheckTimeout = null;
     let isUsernameValid = false;
     let isEmailValid = false;
-
-    // Edit form validation state
-    let isEditEmailValid = true;  // Default true since we're editing existing user
+    let isEditEmailValid = true;
     let editEmailCheckTimeout = null;
-    let originalEmail = '';  // Store original email to exclude from uniqueness check
+    let originalEmail = '';
+    let allGroups = [];
 
-    // Initialize event listeners when DOM is loaded
+    // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
-        // Event delegation for clickable rows
-        const table = document.getElementById('usersTable');
+        fetchGroups();
 
+        const table = document.getElementById('usersTable');
         if (table) {
             table.addEventListener('click', function(e) {
-                // Check if clicked on a clickable row (but not on action buttons)
                 const clickableRow = e.target.closest('.clickable-row');
                 const actionsCell = e.target.closest('.actions-cell');
 
-                // If clicked on row but not on actions cell
                 if (clickableRow && !actionsCell) {
                     const userId = clickableRow.getAttribute('data-user-id');
-
                     if (userId && userId !== '0') {
                         showUserDetails(parseInt(userId));
                     }
@@ -610,7 +823,6 @@
             });
         }
 
-        // Initialize search input listener
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
@@ -618,14 +830,21 @@
             });
         }
 
-        // Close modal on Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeUserModal();
+                closeGroupsDropdown('add');
+                closeGroupsDropdown('edit');
             }
         });
 
-        // Username validation for Add User form
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.groups-dropdown-container')) {
+                closeGroupsDropdown('add');
+                closeGroupsDropdown('edit');
+            }
+        });
+
         const addUsernameInput = document.getElementById('addUsername');
         if (addUsernameInput) {
             addUsernameInput.addEventListener('input', function() {
@@ -652,15 +871,12 @@
             });
         }
 
-        // Email validation for Add User form
         const addEmailInput = document.getElementById('addEmail');
         if (addEmailInput) {
             addEmailInput.addEventListener('input', function() {
                 clearTimeout(emailCheckTimeout);
                 const email = this.value.trim();
                 const feedback = document.getElementById('addEmailFeedback');
-
-                // Basic email format validation
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
                 if (email.length === 0) {
@@ -692,15 +908,12 @@
             });
         }
 
-        // Email validation for Edit User form
         const editEmailInput = document.getElementById('editEmail');
         if (editEmailInput) {
             editEmailInput.addEventListener('input', function() {
                 clearTimeout(editEmailCheckTimeout);
                 const email = this.value.trim();
                 const feedback = document.getElementById('editEmailFeedback');
-
-                // Basic email format validation
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
                 if (email.length === 0) {
@@ -722,7 +935,6 @@
                     return;
                 }
 
-                // If email is same as original, it's valid (no need to check)
                 if (email === originalEmail) {
                     feedback.className = 'validation-feedback valid';
                     feedback.innerHTML = '<i class="bi bi-check-circle"></i> Current email.';
@@ -743,10 +955,12 @@
             });
         }
 
-        // Form submission validation
         const addUserForm = document.getElementById('addUserForm');
         if (addUserForm) {
             addUserForm.addEventListener('submit', function(e) {
+                updateSelectedGroupsBeforeSubmit('add');
+                console.log('📝 Form submitting with groupIds:', document.getElementById('addGroupIds').value);
+
                 if (!isUsernameValid || !isEmailValid) {
                     e.preventDefault();
                     let message = 'Please fix the following issues:\n';
@@ -762,10 +976,20 @@
             });
         }
 
-        // Form submission validation for Edit User form
         const editUserForm = document.getElementById('editForm');
         if (editUserForm) {
             editUserForm.addEventListener('submit', function(e) {
+                // Update groupIds hidden input before submission
+                updateSelectedGroupsBeforeSubmit('edit');
+
+                const groupIdsValue = document.getElementById('editGroupIds').value;
+                console.log('📝 Edit form submitting with groupIds:', groupIdsValue);
+
+                // Log for debugging
+                if (!groupIdsValue || groupIdsValue.trim() === '') {
+                    console.warn('⚠️ Warning: No groups selected. This will remove all group associations.');
+                }
+
                 if (!isEditEmailValid) {
                     e.preventDefault();
                     alert('Please fix the email - it is already in use by another user.');
@@ -774,22 +998,283 @@
             });
         }
 
-        // Format dates on page load
         formatAllDates();
     });
 
-    // Check username availability
+    // ==================== GROUPS FUNCTIONALITY ====================
+
+    function fetchGroups() {
+        console.log('🔄 Fetching groups...');
+        fetch(contextPath + 'api/access-groups')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch groups');
+                }
+                return response.json();
+            })
+            .then(groups => {
+                console.log('✅ Fetched groups:', groups);
+                allGroups = groups;
+                populateGroupsDropdown('add', groups);
+                populateGroupsDropdown('edit', groups);
+            })
+            .catch(error => {
+                console.error('❌ Error fetching groups:', error);
+                allGroups = [];
+            });
+    }
+
+    function populateGroupsDropdown(modalType, groups) {
+        const container = document.getElementById(`${modalType}GroupsCheckboxes`);
+        if (!container) {
+            console.error(`❌ Container not found: ${modalType}GroupsCheckboxes`);
+            return;
+        }
+
+        container.innerHTML = '';
+
+        if (groups.length === 0) {
+            container.innerHTML = '<div class="groups-no-results">No groups available</div>';
+            return;
+        }
+
+        groups.forEach(group => {
+            const item = document.createElement('div');
+            item.className = 'groups-checkbox-item';
+            item.setAttribute('data-group-name', group.groupName.toLowerCase());
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = `${modalType}-group-checkbox`;
+            checkbox.id = `${modalType}Group${group.id}`;
+            checkbox.value = group.id;
+            checkbox.onchange = function() {
+                updateSelectedGroups(modalType);
+            };
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id;
+            label.textContent = group.groupName;
+            label.style.marginLeft = '8px';
+            label.style.cursor = 'pointer';
+            label.onclick = function() {
+                checkbox.checked = !checkbox.checked;
+                updateSelectedGroups(modalType);
+            };
+
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            container.appendChild(item);
+        });
+
+        console.log(`✅ Populated ${groups.length} groups in ${modalType} dropdown`);
+    }
+
+    function toggleGroupsDropdown(modalType) {
+        const menu = document.getElementById(`${modalType}GroupsMenu`);
+        const btn = document.getElementById(`${modalType}GroupsBtn`);
+
+        if (menu.classList.contains('show')) {
+            closeGroupsDropdown(modalType);
+        } else {
+            const otherType = modalType === 'add' ? 'edit' : 'add';
+            closeGroupsDropdown(otherType);
+
+            menu.classList.add('show');
+            btn.classList.add('active');
+        }
+    }
+
+    function closeGroupsDropdown(modalType) {
+        const menu = document.getElementById(`${modalType}GroupsMenu`);
+        const btn = document.getElementById(`${modalType}GroupsBtn`);
+
+        if (menu && btn) {
+            menu.classList.remove('show');
+            btn.classList.remove('active');
+        }
+    }
+
+    function filterGroups(modalType) {
+        const searchValue = document.getElementById(`${modalType}GroupsSearch`).value.toLowerCase();
+        const items = document.querySelectorAll(`#${modalType}GroupsCheckboxes .groups-checkbox-item`);
+
+        let visibleCount = 0;
+        items.forEach(item => {
+            const groupName = item.getAttribute('data-group-name');
+            if (groupName.includes(searchValue)) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        const container = document.getElementById(`${modalType}GroupsCheckboxes`);
+        let noResults = container.querySelector('.groups-no-results');
+
+        if (visibleCount === 0 && items.length > 0) {
+            if (!noResults) {
+                noResults = document.createElement('div');
+                noResults.className = 'groups-no-results';
+                noResults.textContent = 'No groups found';
+                container.appendChild(noResults);
+            }
+        } else if (noResults) {
+            noResults.remove();
+        }
+    }
+
+    function updateSelectedGroups(modalType) {
+        const checkboxes = document.querySelectorAll(`.${modalType}-group-checkbox:checked`);
+        const selectedIds = Array.from(checkboxes)
+            .map(cb => cb.value)
+            .filter(id => id && id !== 'undefined' && id !== 'null');
+
+        console.log(`🔄 ${modalType} - Selected Group IDs:`, selectedIds);
+
+        const textElement = document.getElementById(`${modalType}GroupsSelectedText`);
+        if (selectedIds.length === 0) {
+            textElement.textContent = 'Select groups...';
+            textElement.classList.add('placeholder');
+        } else {
+            const selectedNames = Array.from(checkboxes)
+                .map(cb => {
+                    const label = cb.parentElement.querySelector('label');
+                    return label ? label.textContent : '';
+                })
+                .filter(name => name);
+
+            if (selectedNames.length === 1) {
+                textElement.textContent = selectedNames[0];
+            } else {
+                textElement.innerHTML = `${selectedNames[0]} <span class="groups-count-badge">+${selectedNames.length - 1}</span>`;
+            }
+            textElement.classList.remove('placeholder');
+        }
+
+        const allCheckboxes = document.querySelectorAll(`.${modalType}-group-checkbox`);
+        const selectAllCheckbox = document.getElementById(`${modalType}SelectAllCheckbox`);
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+        }
+    }
+
+    function updateSelectedGroupsBeforeSubmit(modalType) {
+        const checkboxes = document.querySelectorAll(`.${modalType}-group-checkbox:checked`);
+        const selectedIds = Array.from(checkboxes)
+            .map(cb => cb.value)
+            .filter(id => id && id !== 'undefined' && id !== 'null');
+
+        const hiddenInput = document.getElementById(`${modalType}GroupIds`);
+        hiddenInput.value = selectedIds.join(',');
+
+        console.log(`✅ Updated ${modalType}GroupIds hidden input:`, hiddenInput.value);
+    }
+
+    function toggleSelectAll(modalType) {
+        const selectAllCheckbox = document.getElementById(`${modalType}SelectAllCheckbox`);
+        const allCheckboxes = document.querySelectorAll(`.${modalType}-group-checkbox`);
+
+        allCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+
+        updateSelectedGroups(modalType);
+    }
+
+    function clearGroupSelection(modalType) {
+        const allCheckboxes = document.querySelectorAll(`.${modalType}-group-checkbox`);
+        allCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        const selectAllCheckbox = document.getElementById(`${modalType}SelectAllCheckbox`);
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+
+        updateSelectedGroups(modalType);
+    }
+
+    function loadUserGroups(userId) {
+        console.log('🔄 Loading groups for user:', userId);
+
+        // Show loading state
+        const textElement = document.getElementById('editGroupsSelectedText');
+        textElement.textContent = 'Loading groups...';
+        textElement.classList.add('placeholder');
+
+        fetch(contextPath + `api/access-groups/by-user/${userId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user groups');
+                }
+                return response.json();
+            })
+            .then(userGroups => {
+                console.log('✅ User groups received:', userGroups);
+
+                // IMPORTANT: Wait a bit to ensure DOM is ready
+                setTimeout(() => {
+                    // Clear ALL previous selections first
+                    const allCheckboxes = document.querySelectorAll('.edit-group-checkbox');
+                    allCheckboxes.forEach(cb => {
+                        cb.checked = false;
+                    });
+                    console.log('🧹 Cleared all edit checkboxes');
+
+                    // Check the boxes for user's current groups
+                    let checkedCount = 0;
+                    userGroups.forEach(group => {
+                        const checkbox = document.getElementById(`editGroup${group.id}`);
+                        if (checkbox) {
+                            checkbox.checked = true;
+                            checkedCount++;
+                            console.log(`✅ Checked group: ${group.groupName} (ID: ${group.id})`);
+                        } else {
+                            console.warn(`⚠️ Checkbox not found for group ID: ${group.id}, Name: ${group.groupName}`);
+                        }
+                    });
+
+                    console.log(`📊 Total groups checked: ${checkedCount} out of ${userGroups.length}`);
+
+                    // Update the display text and hidden input
+                    updateSelectedGroups('edit');
+
+                    // CRITICAL: Also update the hidden input immediately to preserve current groups
+                    updateSelectedGroupsBeforeSubmit('edit');
+
+                    // If no groups, show appropriate message
+                    if (userGroups.length === 0) {
+                        textElement.textContent = 'No groups assigned';
+                        textElement.classList.add('placeholder');
+                        // Clear hidden input since no groups
+                        document.getElementById('editGroupIds').value = '';
+                    }
+                }, 100); // Small delay to ensure dropdowns are populated
+
+            })
+            .catch(error => {
+                console.error('❌ Error loading user groups:', error);
+                textElement.textContent = 'Select groups...';
+                textElement.classList.add('placeholder');
+                // Don't clear the hidden input on error - keep any existing values
+            });
+    }
+
+    // ==================== USERNAME VALIDATION ====================
+
     function checkUsernameAvailability(username) {
         const feedback = document.getElementById('addUsernameFeedback');
         const input = document.getElementById('addUsername');
 
-        // Updated URL: removed 'api/' since your controller is at /users
         fetch(contextPath + `users/check-username?username=${encodeURIComponent(username)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.exists) {
                     feedback.className = 'validation-feedback invalid';
-                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Username already exists. Please choose a different one.';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Username already exists.';
                     input.classList.remove('is-valid');
                     input.classList.add('is-invalid');
                     isUsernameValid = false;
@@ -812,18 +1297,18 @@
             });
     }
 
-    // Check email availability
+    // ==================== EMAIL VALIDATION ====================
+
     function checkEmailAvailability(email) {
         const feedback = document.getElementById('addEmailFeedback');
         const input = document.getElementById('addEmail');
 
-        // Updated URL: removed 'api/' since your controller is at /users
         fetch(contextPath + `users/check-email?email=${encodeURIComponent(email)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.exists) {
                     feedback.className = 'validation-feedback invalid';
-                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists. Please use a different email.';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists.';
                     input.classList.remove('is-valid');
                     input.classList.add('is-invalid');
                     isEmailValid = false;
@@ -846,7 +1331,6 @@
             });
     }
 
-    // Check email availability for edit form
     function checkEditEmailAvailability(email) {
         const feedback = document.getElementById('editEmailFeedback');
         const input = document.getElementById('editEmail');
@@ -856,7 +1340,7 @@
             .then(data => {
                 if (data.exists) {
                     feedback.className = 'validation-feedback invalid';
-                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists. Please use a different email.';
+                    feedback.innerHTML = '<i class="bi bi-x-circle"></i> Email already exists.';
                     input.classList.remove('is-valid');
                     input.classList.add('is-invalid');
                     isEditEmailValid = false;
@@ -874,12 +1358,13 @@
                 feedback.className = 'validation-feedback';
                 feedback.textContent = '';
                 input.classList.remove('is-valid', 'is-invalid');
-                isEditEmailValid = true; // Allow submission on error
+                isEditEmailValid = true;
                 updateEditSubmitButton();
             });
     }
 
-    // Update edit form submit button state
+    // ==================== SUBMIT BUTTON CONTROL ====================
+
     function updateEditSubmitButton() {
         const submitBtn = document.querySelector('#editUserModal button[type="submit"]');
         if (submitBtn) {
@@ -887,7 +1372,6 @@
         }
     }
 
-    // Update submit button state
     function updateSubmitButton() {
         const submitBtn = document.getElementById('addUserSubmitBtn');
         const usernameInput = document.getElementById('addUsername');
@@ -903,21 +1387,19 @@
         }
     }
 
-    // Function to show user details modal
+    // ==================== USER DETAILS MODAL ====================
+
     function showUserDetails(userId) {
         const modal = document.getElementById('userDetailsModal');
         const overlay = document.getElementById('modalOverlay');
         const content = document.getElementById('userDetailsContent');
 
-        // Show modal and overlay
         modal.classList.add('active');
         overlay.classList.add('active');
 
-        // Show loading spinner
         content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
 
-        // Fetch user details via AJAX
-        fetch(contextPath + `api/users/${userId}`)
+        fetch(contextPath + `apis/users/${userId}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('User not found');
@@ -982,53 +1464,42 @@
             });
     }
 
-    // Function to close user details modal
     function closeUserModal() {
         document.getElementById('userDetailsModal').classList.remove('active');
         document.getElementById('modalOverlay').classList.remove('active');
     }
 
-    // Filter by stat card
+    // ==================== TABLE FILTERING ====================
+
     function filterByStatCard(card) {
         const filter = card.getAttribute('data-filter');
-
-        // Remove active class from all cards
         document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-
-        // Add active class to clicked card
         card.classList.add('active');
-
         currentFilter = filter;
         applyFilters();
     }
 
-    // Apply all filters (stat card + search)
     function applyFilters() {
         const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-
         const allRows = document.querySelectorAll('#usersTable tbody tr');
         let visibleCount = 0;
 
         allRows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            if (cells.length < 6) return; // Skip empty/header rows
+            if (cells.length < 6) return;
 
             let show = true;
-
-            // Get role from data attribute
             const rowRole = row.getAttribute('data-role') || '';
 
-            // Stat card filter
             if (currentFilter !== 'all') {
                 if (rowRole !== currentFilter) {
                     show = false;
                 }
             }
 
-            // Search filter (search in username, full name, email)
             if (searchQuery && show) {
                 let searchText = '';
-                for (let i = 0; i < 3; i++) { // First 3 columns: username, name, email
+                for (let i = 0; i < 3; i++) {
                     searchText += cells[i].textContent.toLowerCase() + ' ';
                 }
                 if (!searchText.includes(searchQuery)) {
@@ -1043,7 +1514,8 @@
         document.getElementById('userCount').textContent = visibleCount;
     }
 
-    // Date formatting function
+    // ==================== DATE FORMATTING ====================
+
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';
 
@@ -1067,7 +1539,6 @@
         }
     }
 
-    // Format all dates on page load
     function formatAllDates() {
         const dateElements = document.querySelectorAll('#usersTable tbody tr td:nth-child(5) small');
         dateElements.forEach(element => {
@@ -1076,7 +1547,8 @@
         });
     }
 
-    // Open Edit Modal
+    // ==================== EDIT MODAL ====================
+
     function openEditModal(button) {
         const userId = button.getAttribute('data-id');
         const firstName = button.getAttribute('data-firstname');
@@ -1085,6 +1557,8 @@
         const email = button.getAttribute('data-email');
         const roleId = button.getAttribute('data-roleid');
 
+        console.log('📝 Opening edit modal for user ID:', userId);
+
         document.getElementById('editFirstName').value = firstName;
         document.getElementById('editLastName').value = lastName;
         document.getElementById('editUsername').value = username;
@@ -1092,11 +1566,9 @@
         document.getElementById('editRoleId').value = roleId;
         document.getElementById('editPassword').value = '';
 
-        // Store original email for comparison
         originalEmail = email;
 
-        // Reset validation state
-        isEditEmailValid = true; // Default to true since we're editing existing user
+        isEditEmailValid = true;
         const feedback = document.getElementById('editEmailFeedback');
         const input = document.getElementById('editEmail');
         if (feedback) {
@@ -1108,11 +1580,41 @@
         }
         updateEditSubmitButton();
 
+        // IMPORTANT: Ensure groups are loaded before attempting to check them
+        if (allGroups && allGroups.length > 0) {
+            // Groups already loaded, proceed immediately
+            loadUserGroups(userId);
+        } else {
+            // Groups not loaded yet, wait for them
+            console.log('⏳ Groups not loaded yet, waiting...');
+            const checkInterval = setInterval(() => {
+                if (allGroups && allGroups.length > 0) {
+                    clearInterval(checkInterval);
+                    console.log('✅ Groups now available, loading user groups');
+                    loadUserGroups(userId);
+                }
+            }, 100);
+
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (!allGroups || allGroups.length === 0) {
+                    console.error('❌ Timeout: Groups failed to load');
+                }
+            }, 5000);
+        }
+
         document.getElementById('editForm').action = '/edit/' + userId;
-        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+
+        console.log('✅ Edit modal opened for user:', username);
     }
 
-    // Delete modal
+    // ==================== DELETE MODAL ====================
+
     const deleteModal = document.getElementById('deleteModal');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const deleteModalMessage = document.getElementById('deleteModalMessage');
@@ -1126,34 +1628,33 @@
         confirmDeleteBtn.setAttribute('href', `/delete/${userId}`);
     });
 
-    // Auto-dismiss alerts and reset form
+    // ==================== FORM RESET ON SUCCESS ====================
+
     window.addEventListener('load', function() {
         const successAlert = document.querySelector('.alert-success');
 
         if (successAlert) {
             setTimeout(() => {
-                // Reset add user form
                 const addUserForm = document.getElementById('addUserForm');
                 if (addUserForm) {
                     addUserForm.reset();
                 }
-                // Reset username feedback
                 const usernameFeedback = document.getElementById('addUsernameFeedback');
                 if (usernameFeedback) {
                     usernameFeedback.className = 'validation-feedback';
                     usernameFeedback.textContent = '';
                 }
-                // Reset email feedback
                 const emailFeedback = document.getElementById('addEmailFeedback');
                 if (emailFeedback) {
                     emailFeedback.className = 'validation-feedback';
                     emailFeedback.textContent = '';
                 }
-                // Reset validation states
                 const usernameInput = document.getElementById('addUsername');
                 const emailInput = document.getElementById('addEmail');
                 if (usernameInput) usernameInput.classList.remove('is-valid', 'is-invalid');
                 if (emailInput) emailInput.classList.remove('is-valid', 'is-invalid');
+
+                clearGroupSelection('add');
 
                 isUsernameValid = false;
                 isEmailValid = false;

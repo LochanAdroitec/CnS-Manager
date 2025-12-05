@@ -45,4 +45,7 @@ public class DocumentDto {
     // ✅ Add these (needed for dropdown binding in Thymeleaf)
     private String publishMonth;  // Example "01", "02", "12"
     private String publishYear;   // Example "2024"
+
+    private String groupIds;
+
 }

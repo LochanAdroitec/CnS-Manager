@@ -282,7 +282,7 @@
             gap: 5px;
         }
 
-        /* ============== TAGS & CLASSIFICATIONS ============== */
+        /* ============== TAGS & CLASSIFICATIONS & GROUPS ============== */
         .selection-area-flex {
             border: 2px solid #e5e7eb;
             border-radius: 8px;
@@ -345,6 +345,28 @@
             animation: blinkAnimation 0.6s ease 3;
         }
 
+        /* Classification-specific styling */
+        .selection-item-flex.selected[data-classification-name] {
+            border-color: #1e3a5f !important;
+            background: #d9e4f2 !important;
+            color: #1e3a5f !important;
+        }
+        .selection-item-flex[data-classification-name]:hover {
+            border-color: #1e3a5f !important;
+            background: #d9e4f2 !important;
+        }
+
+        /* Group-specific styling */
+        .selection-item-flex.selected[data-group-id] {
+            border-color: #10b981 !important;
+            background: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+        .selection-item-flex[data-group-id]:hover {
+            border-color: #10b981 !important;
+            background: #d1fae5 !important;
+        }
+
         @keyframes blinkAnimation {
             0%, 100% { border-color: #e5e7eb; background: white; }
             50% { border-color: #fbbf24; background: #fef3c7; transform: scale(1.05); }
@@ -376,17 +398,13 @@
         }
 
         .classification-chip {
-            background: #1e3a5f;
-            color: white;
+            background: #1e3a5f !important;
+            color: white !important;
         }
-        .selection-item-flex.selected[data-classification-name] {
-            border-color: #1e3a5f;
-            background: #d9e4f2;
-            color: #1e3a5f;
-        }
-        .selection-item-flex[data-classification-name]:hover {
-            border-color: #1e3a5f;
-            background: #d9e4f2;
+
+        .group-chip {
+            background: #10b981 !important;
+            color: white !important;
         }
 
         @keyframes chipFadeIn {
@@ -525,7 +543,7 @@
             margin: 15px 0;
         }
 
-        .comparison-tags, .comparison-classifications {
+        .comparison-tags, .comparison-classifications, .comparison-groups {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
@@ -831,7 +849,7 @@
                     <div class="wizard-step-circle">
                         <i class="bi bi-tags"></i>
                     </div>
-                    <div class="wizard-step-label">Tags & Classifications</div>
+                    <div class="wizard-step-label">Tags & Access</div>
                 </div>
                 <div class="wizard-step" data-step="3">
                     <div class="wizard-step-circle">
@@ -845,6 +863,7 @@
             <form id="editForm" method="post" th:action="@{/document/edit/{id}(id=${document.id})}" th:object="${document}">
                 <input type="hidden" name="tagNames" id="tagNamesField" />
                 <input type="hidden" name="classificationNames" id="classificationNamesField" />
+                <input type="hidden" name="groupIds" id="groupIdsField" />
                 <input type="hidden" name="publishMonth" id="publishMonthField" />
                 <input type="hidden" name="publishYear" id="publishYearField" />
 
@@ -924,8 +943,9 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Tags & Classifications -->
+                    <!-- Step 2: Tags, Classifications & Groups -->
                     <div class="wizard-step-content" data-step="2">
+                        <!-- Tags Section -->
                         <div class="form-section">
                             <div class="form-section-title">
                                 <i class="bi bi-tags"></i>
@@ -972,6 +992,7 @@
                             </div>
                         </div>
 
+                        <!-- Classifications Section -->
                         <div class="form-section">
                             <div class="form-section-title">
                                 <i class="bi bi-folder"></i>
@@ -999,6 +1020,42 @@
                                 <label class="form-label">Selected Classifications</label>
                                 <div class="selected-items-container" id="selectedClassificationsContainer">
                                     <div class="empty-state">No classifications selected</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Groups Section - Access Control -->
+                        <div class="form-section">
+                            <div class="form-section-title">
+                                <i class="bi bi-people"></i>
+                                Access Control - Groups (Optional)
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Select Groups for Access Control</label>
+                                <p class="info-text">
+                                    <i class="bi bi-info-circle"></i>
+                                    Only users in selected groups will have access to this document
+                                </p>
+                                <div class="selection-area-flex" id="groupsSelectionArea">
+                                    <div th:if="${allGroups == null or allGroups.isEmpty()}" class="empty-state">
+                                        No existing groups available
+                                    </div>
+                                    <!-- Groups will be populated from backend -->
+                                    <div th:each="group : ${allGroups}" class="selection-item-flex"
+                                         th:attr="data-group-id=${group.id}, data-group-name=${group.groupName}">
+                                        <input type="checkbox" class="selection-checkbox group-checkbox"
+                                               th:attr="data-group-id=${group.id}, data-group-name=${group.groupName}"
+                                               style="display: none;">
+                                        <span class="selection-label" th:text="${group.groupName}">Group Name</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Selected Groups</label>
+                                <div class="selected-items-container" id="selectedGroupsContainer">
+                                    <div class="empty-state">No groups selected</div>
                                 </div>
                             </div>
                         </div>
@@ -1049,6 +1106,15 @@
                                             <span style="color: #9ca3af; font-size: 14px;">No classifications</span>
                                         </div>
                                     </div>
+
+                                    <hr class="comparison-divider">
+
+                                    <div class="comparison-section">
+                                        <h6>ACCESS CONTROL - GROUPS</h6>
+                                        <div class="comparison-groups" id="beforeGroups">
+                                            <span style="color: #9ca3af; font-size: 14px;">No groups</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- AFTER: Updated Details -->
@@ -1085,6 +1151,15 @@
                                         <h6>CLASSIFICATIONS</h6>
                                         <div class="comparison-classifications" id="afterClassifications">
                                             <span style="color: #9ca3af; font-size: 14px;">No classifications selected</span>
+                                        </div>
+                                    </div>
+
+                                    <hr class="comparison-divider">
+
+                                    <div class="comparison-section">
+                                        <h6>ACCESS CONTROL - GROUPS</h6>
+                                        <div class="comparison-groups" id="afterGroups">
+                                            <span style="color: #9ca3af; font-size: 14px;">No groups selected</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1165,7 +1240,9 @@
     let formChanged = false;
     let selectedTags = [];
     let selectedClassifications = [];
+    let selectedGroups = []; // NEW: Array of selected group objects {id, name}
     let allExistingTags = [];
+    let allExistingGroups = []; // NEW: All available groups
     let originalFormData = {};
     let pdfDoc = null;
     const documentId = /*[[${document.id}]]*/ 0;
@@ -1192,11 +1269,13 @@
         // Load existing tags from database
         const existingTagsStr = /*[[${document.tagNames}]]*/ '';
         const existingClassificationsStr = /*[[${document.classificationNames}]]*/ '';
+        const existingGroupIdsStr = /*[[${document.groupIds}]]*/ ''; // NEW: Load existing groups
         const publishDate = /*[[${document.publishDate}]]*/ '';
 
         console.log('Document ID:', documentId);
         console.log('Existing tags:', existingTagsStr);
         console.log('Existing classifications:', existingClassificationsStr);
+        console.log('Existing groups:', existingGroupIdsStr); // NEW
         console.log('Publish date:', publishDate);
 
         // Parse publish date if exists
@@ -1231,11 +1310,37 @@
             console.log('Loaded classifications:', selectedClassifications);
         }
 
+        // NEW: Load existing groups
+        if (existingGroupIdsStr && existingGroupIdsStr.trim() !== '') {
+            const groupIdArray = existingGroupIdsStr.split(',')
+                .map(id => id.trim())
+                .filter(id => id !== '');
+
+            // Match group IDs with group names from DOM
+            groupIdArray.forEach(groupId => {
+                const groupItem = document.querySelector(`.selection-item-flex[data-group-id="${groupId}"]`);
+                if (groupItem) {
+                    const groupName = groupItem.getAttribute('data-group-name');
+                    selectedGroups.push({ id: groupId, name: groupName });
+                }
+            });
+            console.log('Loaded groups:', selectedGroups);
+        }
+
         // Store all existing tags for validation
         document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
             const tagName = checkbox.getAttribute('data-tag-name');
             if (tagName) {
                 allExistingTags.push(tagName.toLowerCase());
+            }
+        });
+
+        // NEW: Store all existing groups
+        document.querySelectorAll('.group-checkbox').forEach(checkbox => {
+            const groupId = checkbox.getAttribute('data-group-id');
+            const groupName = checkbox.getAttribute('data-group-name');
+            if (groupId && groupName) {
+                allExistingGroups.push({ id: groupId, name: groupName });
             }
         });
 
@@ -1283,6 +1388,32 @@
             });
         });
 
+        // NEW: Attach click handlers to existing groups
+        document.querySelectorAll('.selection-item-flex[data-group-id]').forEach(item => {
+            item.addEventListener('click', function() {
+                const checkbox = this.querySelector('.group-checkbox');
+                const groupId = this.getAttribute('data-group-id');
+                const groupName = this.getAttribute('data-group-name');
+
+                if (checkbox.checked) {
+                    // Deselect group
+                    checkbox.checked = false;
+                    this.classList.remove('selected');
+                    selectedGroups = selectedGroups.filter(g => g.id !== groupId);
+                } else {
+                    // Select group
+                    checkbox.checked = true;
+                    this.classList.add('selected');
+                    const existingGroup = selectedGroups.find(g => g.id === groupId);
+                    if (!existingGroup) {
+                        selectedGroups.push({ id: groupId, name: groupName });
+                    }
+                }
+                renderSelectedGroups();
+                formChanged = true;
+            });
+        });
+
         // Mark selected tags in UI
         selectedTags.forEach(tag => {
             const item = document.querySelector(`.selection-item-flex[data-tag-name="${tag}"]`);
@@ -1303,8 +1434,19 @@
             }
         });
 
+        // NEW: Mark selected groups in UI
+        selectedGroups.forEach(group => {
+            const item = document.querySelector(`.selection-item-flex[data-group-id="${group.id}"]`);
+            if (item) {
+                item.classList.add('selected');
+                const checkbox = item.querySelector('.group-checkbox');
+                if (checkbox) checkbox.checked = true;
+            }
+        });
+
         renderSelectedTags();
         renderSelectedClassifications();
+        renderSelectedGroups(); // NEW
 
         // Store original form data
         captureOriginalFormData();
@@ -1320,7 +1462,8 @@
             noOfPages: document.getElementById('noOfPages').value,
             notes: document.getElementById('notes').value,
             tags: [...selectedTags],
-            classifications: [...selectedClassifications]
+            classifications: [...selectedClassifications],
+            groups: [...selectedGroups] // NEW
         };
         console.log('Captured original form data:', originalFormData);
     }
@@ -1334,7 +1477,8 @@
             publishYear: document.getElementById('publishYear').value,
             notes: document.getElementById('notes').value,
             tags: [...selectedTags],
-            classifications: [...selectedClassifications]
+            classifications: [...selectedClassifications],
+            groups: [...selectedGroups] // NEW
         };
 
         const changed = JSON.stringify(originalFormData) !== JSON.stringify(currentData);
@@ -1647,6 +1791,45 @@
         formChanged = true;
     }
 
+    // ============== GROUPS HANDLING (NEW) ==============
+    function renderSelectedGroups() {
+        const container = document.getElementById('selectedGroupsContainer');
+        container.innerHTML = '';
+
+        if (selectedGroups.length === 0) {
+            container.innerHTML = '<div class="empty-state">No groups selected</div>';
+        } else {
+            selectedGroups.forEach(group => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip group-chip';
+                chip.innerHTML = `
+                    ${group.name}
+                    <span class="chip-remove" onclick="removeSelectedGroup('${group.id}')">
+                        <i class="bi bi-x"></i>
+                    </span>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        // Update hidden form field with comma-separated group IDs
+        document.getElementById('groupIdsField').value = selectedGroups.map(g => g.id).join(',');
+    }
+
+    function removeSelectedGroup(groupId) {
+        selectedGroups = selectedGroups.filter(g => g.id !== groupId);
+
+        const checkbox = document.querySelector(`.group-checkbox[data-group-id="${groupId}"]`);
+        if (checkbox) {
+            checkbox.checked = false;
+            const item = checkbox.closest('.selection-item-flex');
+            if (item) item.classList.remove('selected');
+        }
+
+        renderSelectedGroups();
+        formChanged = true;
+    }
+
     // ============== BLINK ANIMATION ==============
     function blinkItem(element) {
         element.classList.add('blink');
@@ -1770,6 +1953,39 @@
                 }
                 chip.textContent = classification;
                 afterClassificationsContainer.appendChild(chip);
+            });
+        }
+
+        // NEW: BEFORE Groups
+        const beforeGroupsContainer = document.getElementById('beforeGroups');
+        beforeGroupsContainer.innerHTML = '';
+        if (originalFormData.groups.length === 0) {
+            beforeGroupsContainer.innerHTML = '<span style="color: #9ca3af; font-size: 14px;">No groups</span>';
+        } else {
+            originalFormData.groups.forEach(group => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip group-chip';
+                chip.textContent = group.name;
+                beforeGroupsContainer.appendChild(chip);
+            });
+        }
+
+        // NEW: AFTER Groups (with highlighting if changed)
+        const afterGroupsContainer = document.getElementById('afterGroups');
+        afterGroupsContainer.innerHTML = '';
+        const groupsChanged = JSON.stringify(selectedGroups.map(g => g.id).sort()) !==
+                             JSON.stringify(originalFormData.groups.map(g => g.id).sort());
+        if (selectedGroups.length === 0) {
+            afterGroupsContainer.innerHTML = '<span style="color: #9ca3af; font-size: 14px;">No groups selected</span>';
+        } else {
+            selectedGroups.forEach(group => {
+                const chip = document.createElement('span');
+                chip.className = 'selected-chip group-chip';
+                if (groupsChanged && !originalFormData.groups.find(g => g.id === group.id)) {
+                    chip.style.background = '#f59e0b'; // Highlight new groups
+                }
+                chip.textContent = group.name;
+                afterGroupsContainer.appendChild(chip);
             });
         }
 

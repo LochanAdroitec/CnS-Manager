@@ -78,6 +78,9 @@ public class User {
     @OneToMany(mappedBy = "updatedBy")
     private Set<Classification> updatedClassifications = new HashSet<>();
 
+    @Transient
+    private List<Long> groupIds;
+
     @PreRemove
     private void preRemove() {
         // Set all references to null before deletion

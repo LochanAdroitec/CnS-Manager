@@ -17,4 +17,14 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     @Query("SELECT d FROM Document d JOIN d.classifications c WHERE c.id = :classificationId")
     List<Document> findByClassificationId(@Param("classificationId") Long classificationId);
+
+    @Query("""
+    SELECT d
+    FROM Document d
+    JOIN AccessControlLogic acl ON d.id = acl.document.id
+    JOIN GroupUser gu ON acl.group.id = gu.group.id
+    WHERE gu.user.id = :userId
+    """)
+    List<Document> findDocumentsAccessibleByUser(@Param("userId") Long userId);
+
 }

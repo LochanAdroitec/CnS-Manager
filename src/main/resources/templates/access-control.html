@@ -59,11 +59,11 @@
             color: #374151;
         }
 
-        .search-section {
+        .search-box {
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
 
@@ -95,24 +95,44 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .btn-create-group {
-            background:#1e3a5f;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
+        .total-groups-badge {
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s;
+            background: white;
+            padding: 10px 20px;
+            padding-left:100px;
+            color: #374151;
+            font-weight: 500;
             white-space: nowrap;
         }
 
-        .btn-create-group:hover {
-            background: #1e3a5f;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        .total-groups-badge i {
+            color: #6b7280;
+        }
+        .groups-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .groups-header i {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .groups-header-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .groups-header-count {
+            color: #6b7280;
+            font-weight: 500;
         }
 
         .groups-container {
@@ -124,17 +144,24 @@
 
         .group-card {
             background: white;
-            border: 1px solid #e5e7eb;
+            border: 2px solid #e5e7eb;
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 20px;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             position: relative;
+            cursor: pointer;
         }
 
         .group-card:hover {
-            border-color: #d1d5db;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #1e3a5f;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .group-card:hover .group-actions {
+            opacity: 1;
+            visibility: visible;
         }
 
         .group-header {
@@ -146,7 +173,7 @@
         .group-icon-wrapper {
             width: 48px;
             height: 48px;
-            background: #eff6ff;
+            background-color: #fafbfc;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -157,7 +184,7 @@
 
         .group-icon-wrapper i {
             font-size: 1.5rem;
-            color: #3b82f6;
+            color:#1e3a5f;
         }
 
         .group-info {
@@ -172,6 +199,30 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .group-count-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .group-count-badge .count-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .group-count-badge .count-item i {
+            font-size: 0.9rem;
+            color: #9ca3af;
         }
 
         .group-description {
@@ -186,11 +237,14 @@
             right: 20px;
             display: flex;
             gap: 8px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
         }
 
         .btn-action-icon {
-            background: transparent;
-            border: 1px solid #d1d5db;
+            background: white;
+            border: 1.5px solid #d1d5db;
             color: #6b7280;
             width: 40px;
             height: 40px;
@@ -203,73 +257,24 @@
             font-size: 1rem;
         }
 
-        .btn-action-icon.btn-view:hover {
-            background: #3b82f6;
+        .btn-action-icon.btn-edit-group {
             border-color: #3b82f6;
-            color: white;
+            color: #3b82f6;
         }
 
         .btn-action-icon.btn-edit-group:hover {
-            background: #f3f4f6;
-            border-color: #9ca3af;
-            color: #374151;
+            background: #3b82f6;
+            color: white;
         }
 
-        .btn-action-icon.btn-delete-group:hover {
-            background: #fef2f2;
+        .btn-action-icon.btn-delete-group {
             border-color: #ef4444;
             color: #ef4444;
         }
 
-        .group-stats {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        .stat-item i {
-            color: #9ca3af;
-        }
-
-        .group-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn-manage {
-            flex: 1;
-            padding: 10px 16px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #374151;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-manage:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
-        }
-
-        .btn-manage i {
-            font-size: 1rem;
+        .btn-action-icon.btn-delete-group:hover {
+            background: #ef4444;
+            color: white;
         }
 
         .group-meta {
@@ -307,13 +312,13 @@
 
         /* Modal Styles */
         .modal-header {
-            background: white;
+            color:#ffffff;
             border-bottom: 1px solid #e5e7eb;
         }
 
         .modal-title {
             font-weight: 600;
-            color: #1f2937;
+            color: #ffffff;
         }
 
         .documents-list, .users-list {
@@ -433,19 +438,9 @@
             margin-top: 5px;
         }
 
-        /* View Details Styles */
+        /* View Details Styles with Tabs */
         .view-section {
             margin-bottom: 20px;
-        }
-
-        .view-section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .view-items-list {
@@ -521,23 +516,26 @@
                 justify-content: stretch;
             }
 
-            .btn-home, .btn-back, .btn-create-group {
+            .btn-home, .btn-back {
                 flex: 1;
             }
-
-            .search-section {
-                flex-direction: column;
+            .total-groups-badge {
+                width: 100%;
+                justify-content: center;
             }
 
             .group-actions {
+                opacity: 1;
+                visibility: visible;
                 position: relative;
                 top: auto;
                 right: auto;
                 margin-top: 12px;
             }
 
-            .group-buttons {
+            .group-name {
                 flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -572,11 +570,12 @@
                     </ol>
                 </nav>
             </div>
+
             <!-- Create group button  -->
-            <button class="btn-create-group" id="createGroupBtn"
+            <button class="btn" id="createGroupBtn"
                     data-bs-toggle="modal" data-bs-target="#createGroupModal"
-                    style="display: none;">
-                <i class="bi bi-plus-lg"></i>
+                    style="display: none; background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-plus-circle me-2"></i>
                 Create Group
             </button>
         </div>
@@ -584,43 +583,61 @@
         <!-- Alert Messages Container -->
         <div id="alertContainer"></div>
 
-        <!-- Search Section -->
-        <div class="search-section d-flex align-items-center gap-3">
-            <div class="search-wrapper">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text" class="search-input" id="searchInput"
-                       placeholder="Search access groups...">
+        <!-- Search Box -->
+        <div class="search-box">
+            <div class="row align-items-center">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0" id="searchInput"
+                               placeholder="Search access groups by name or description...">
+                    </div>
+                </div>
+
+                <div class="col-md-2 text-end">
+            <span class="text-muted">
+                <i class="bi bi-shield-lock me-2"></i>
+                Groups (<span id="totalGroupsCount">0</span>)
+            </span>
+                </div>
             </div>
         </div>
 
         <!-- Loading Spinner -->
         <div class="loading-spinner" id="loadingSpinner">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; color: #1e3a5f;">
                 <span class="visually-hidden">Loading...</span>
             </div>
             <p class="mt-3 text-muted">Loading groups...</p>
         </div>
 
-        <!-- Groups Container -->
+        <!-- Groups List Container -->
         <div class="groups-container" id="groupsContainer">
+            <h5 class="mb-3">
+                <i class="bi bi-shield-lock me-2"></i>
+                All Groups (<span id="allGroupsCount">0</span>)
+            </h5>
+
             <div id="groupsList">
                 <!-- Groups will be loaded here dynamically -->
             </div>
+        </div>
 
-            <!-- Empty State -->
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <i class="bi bi-shield-lock"></i>
-                <h5>No access groups found</h5>
-                <p>Create your first access group to manage document permissions</p>
-                <button class="btn-create-group" id="emptyCreateBtn"
-                        data-bs-toggle="modal" data-bs-target="#createGroupModal"
-                        style="display: none;">
-                    <i class="bi bi-plus-lg"></i>
-                    Create Group
-                </button>
-            </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <i class="bi bi-shield-lock"></i>
+            <h5>No access groups found</h5>
+            <p>Create your first access group to manage document permissions</p>
+            <button class="btn" id="emptyCreateBtn"
+                    data-bs-toggle="modal" data-bs-target="#createGroupModal"
+                    style="display: none; background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-plus-circle me-2"></i>
+                Create Group
+            </button>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Create Group Modal -->
@@ -629,11 +646,11 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form id="createGroupForm">
-                <div class="modal-header">
-                    <h5 class="modal-title">
+                <div class="modal-header" style="background-color: #1e3a5f;">
+                    <h5 class="modal-title" >
                         <i class="bi bi-plus-circle me-2"></i>Create New Access Group
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white"  data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Group Name -->
@@ -700,7 +717,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
                         <i class="bi bi-check-circle me-2"></i>Create Group
                     </button>
                 </div>
@@ -709,15 +726,15 @@
     </div>
 </div>
 
-<!-- View Group Details Modal -->
+<!-- View Group Details Modal with Tabs -->
 <div class="modal fade" id="viewGroupModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
                 <h5 class="modal-title">
                     <i class="bi bi-eye me-2"></i>Group Details
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Group Info -->
@@ -730,23 +747,27 @@
                     <p id="viewGroupDescription" class="mb-0"></p>
                 </div>
 
-                <!-- Documents Section -->
-                <div class="view-section">
-                    <div class="view-section-title">
-                        <i class="bi bi-file-earmark-text"></i>
-                        Documents (<span id="viewDocsCount">0</span>)
-                    </div>
+                <!-- Tabs for Documents and Users -->
+                <div class="tab-buttons">
+                    <button type="button" class="tab-button active" data-tab="documents">
+                        <i class="bi bi-file-earmark me-2"></i>Documents
+                        <span class="counter-badge" id="viewDocsCount">0</span>
+                    </button>
+                    <button type="button" class="tab-button" data-tab="users">
+                        <i class="bi bi-people me-2"></i>Users
+                        <span class="counter-badge" id="viewUsersCount">0</span>
+                    </button>
+                </div>
+
+                <!-- Documents Tab -->
+                <div class="tab-content-section active" id="viewDocumentsTab">
                     <div class="view-items-list" id="viewDocumentsList">
                         <!-- Documents will be loaded here -->
                     </div>
                 </div>
 
-                <!-- Users Section -->
-                <div class="view-section">
-                    <div class="view-section-title">
-                        <i class="bi bi-people"></i>
-                        Users (<span id="viewUsersCount">0</span>)
-                    </div>
+                <!-- Users Tab -->
+                <div class="tab-content-section" id="viewUsersTab">
                     <div class="view-items-list" id="viewUsersList">
                         <!-- Users will be loaded here -->
                     </div>
@@ -759,18 +780,18 @@
     </div>
 </div>
 
-<!-- Edit Group Name & Description Modal -->
+<!-- Edit Group Modal with Name, Description, Documents and Users Tabs -->
 <div class="modal fade" id="editGroupModal" tabindex="-1"
      data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form id="editGroupForm">
                 <input type="hidden" id="editGroupId">
-                <div class="modal-header">
+                <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
                     <h5 class="modal-title">
                         <i class="bi bi-pencil-square me-2"></i>Edit Access Group
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Group Name -->
@@ -782,95 +803,63 @@
                     </div>
 
                     <!-- Group Description -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label fw-bold">Description</label>
                         <textarea class="form-control" id="editGroupDescription" name="description"
                                   rows="2" maxlength="200"></textarea>
                         <small class="text-muted">Optional, up to 200 characters</small>
                     </div>
+
+                    <!-- Tabs for Documents and Users -->
+                    <div class="tab-buttons">
+                        <button type="button" class="tab-button active" data-tab="documents">
+                            <i class="bi bi-file-earmark me-2"></i>Documents
+                            <span class="counter-badge" id="editDocsCount">0</span>
+                        </button>
+                        <button type="button" class="tab-button" data-tab="users">
+                            <i class="bi bi-people me-2"></i>Users
+                            <span class="counter-badge" id="editUsersCount">0</span>
+                        </button>
+                    </div>
+
+                    <!-- Documents Tab -->
+                    <div class="tab-content-section active" id="editDocumentsTab">
+                        <div class="search-in-modal">
+                            <input type="text" class="form-control" id="editSearchDocuments"
+                                   placeholder="Search documents...">
+                        </div>
+
+                        <div class="select-all-container">
+                            <input type="checkbox" id="editSelectAllDocs">
+                            <label for="editSelectAllDocs">Select All Documents</label>
+                        </div>
+
+                        <div class="documents-list" id="editDocumentsList">
+                            <!-- Documents will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Users Tab -->
+                    <div class="tab-content-section" id="editUsersTab">
+                        <div class="search-in-modal">
+                            <input type="text" class="form-control" id="editSearchUsers"
+                                   placeholder="Search users...">
+                        </div>
+
+                        <div class="select-all-container">
+                            <input type="checkbox" id="editSelectAllUsers">
+                            <label for="editSelectAllUsers">Select All Users</label>
+                        </div>
+
+                        <div class="users-list" id="editUsersList">
+                            <!-- Users will be loaded here -->
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
                         <i class="bi bi-check-circle me-2"></i>Update Group
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Manage Documents Modal -->
-<div class="modal fade" id="manageDocumentsModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <form id="manageDocumentsForm">
-                <input type="hidden" id="manageDocsGroupId">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-file-earmark me-2"></i>Manage Documents
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="search-in-modal">
-                        <input type="text" class="form-control" id="manageSearchDocuments"
-                               placeholder="Search documents...">
-                    </div>
-
-                    <div class="select-all-container">
-                        <input type="checkbox" id="manageSelectAllDocs">
-                        <label for="manageSelectAllDocs">Select All Documents</label>
-                    </div>
-
-                    <div class="documents-list" id="manageDocumentsList">
-                        <!-- Documents will be loaded here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Manage Users Modal -->
-<div class="modal fade" id="manageUsersModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <form id="manageUsersForm">
-                <input type="hidden" id="manageUsersGroupId">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="bi bi-people me-2"></i>Manage Users
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="search-in-modal">
-                        <input type="text" class="form-control" id="manageSearchUsers"
-                               placeholder="Search users...">
-                    </div>
-
-                    <div class="select-all-container">
-                        <input type="checkbox" id="manageSelectAllUsers">
-                        <label for="manageSelectAllUsers">Select All Users</label>
-                    </div>
-
-                    <div class="users-list" id="manageUsersList">
-                        <!-- Users will be loaded here -->
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>Save Changes
                     </button>
                 </div>
             </form>
@@ -922,9 +911,8 @@
     let allGroups = [];
     let allDocuments = [];
     let allUsers = [];
-    let createModal, viewGroupModal, editGroupModal, manageDocsModal, manageUsersModal, deleteModal;
+    let createModal, viewGroupModal, editGroupModal, deleteModal;
     let deleteGroupId = null;
-    let currentManageGroupData = null; // Store full group data
     let currentEditGroupData = null; // Store full group data for editing
 
     // Get user role from hidden input
@@ -942,8 +930,6 @@
         createModal = new bootstrap.Modal(document.getElementById('createGroupModal'));
         viewGroupModal = new bootstrap.Modal(document.getElementById('viewGroupModal'));
         editGroupModal = new bootstrap.Modal(document.getElementById('editGroupModal'));
-        manageDocsModal = new bootstrap.Modal(document.getElementById('manageDocumentsModal'));
-        manageUsersModal = new bootstrap.Modal(document.getElementById('manageUsersModal'));
         deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 
         // Apply role-based restrictions
@@ -1005,12 +991,6 @@
         // Edit group form submit
         document.getElementById('editGroupForm').addEventListener('submit', handleEditGroup);
 
-        // Manage documents form submit
-        document.getElementById('manageDocumentsForm').addEventListener('submit', handleManageDocuments);
-
-        // Manage users form submit
-        document.getElementById('manageUsersForm').addEventListener('submit', handleManageUsers);
-
         // Delete confirmation
         document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteGroup);
 
@@ -1019,6 +999,12 @@
 
         // Tab switching for create modal
         setupTabSwitching('create');
+
+        // Tab switching for view modal
+        setupTabSwitching('view');
+
+        // Tab switching for edit modal
+        setupTabSwitching('edit');
 
         // Search in create modal
         document.getElementById('createSearchDocuments').addEventListener('input', function() {
@@ -1029,14 +1015,13 @@
             filterCheckboxList('createUsersList', this.value);
         });
 
-        // Search in manage documents modal
-        document.getElementById('manageSearchDocuments').addEventListener('input', function() {
-            filterCheckboxList('manageDocumentsList', this.value);
+        // Search in edit modal
+        document.getElementById('editSearchDocuments').addEventListener('input', function() {
+            filterCheckboxList('editDocumentsList', this.value);
         });
 
-        // Search in manage users modal
-        document.getElementById('manageSearchUsers').addEventListener('input', function() {
-            filterCheckboxList('manageUsersList', this.value);
+        document.getElementById('editSearchUsers').addEventListener('input', function() {
+            filterCheckboxList('editUsersList', this.value);
         });
 
         // Select all functionality - Create Modal
@@ -1050,13 +1035,15 @@
             updateSelectedCount('create', 'users');
         });
 
-        // Select all functionality - Manage Modals
-        document.getElementById('manageSelectAllDocs').addEventListener('change', function() {
-            toggleSelectAll('manageDocumentsList', this.checked);
+        // Select all functionality - Edit Modal
+        document.getElementById('editSelectAllDocs').addEventListener('change', function() {
+            toggleSelectAll('editDocumentsList', this.checked);
+            updateSelectedCount('edit', 'documents');
         });
 
-        document.getElementById('manageSelectAllUsers').addEventListener('change', function() {
-            toggleSelectAll('manageUsersList', this.checked);
+        document.getElementById('editSelectAllUsers').addEventListener('change', function() {
+            toggleSelectAll('editUsersList', this.checked);
+            updateSelectedCount('edit', 'users');
         });
 
         // Reset forms when modals are closed
@@ -1069,27 +1056,16 @@
         document.getElementById('editGroupModal').addEventListener('hidden.bs.modal', function() {
             document.getElementById('editGroupForm').reset();
             document.getElementById('editGroupId').value = '';
+            document.getElementById('editDocumentsList').innerHTML = '';
+            document.getElementById('editUsersList').innerHTML = '';
             currentEditGroupData = null;
-        });
-
-        document.getElementById('manageDocumentsModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('manageDocumentsForm').reset();
-            document.getElementById('manageDocsGroupId').value = '';
-            document.getElementById('manageDocumentsList').innerHTML = '';
-            currentManageGroupData = null;
-        });
-
-        document.getElementById('manageUsersModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('manageUsersForm').reset();
-            document.getElementById('manageUsersGroupId').value = '';
-            document.getElementById('manageUsersList').innerHTML = '';
-            currentManageGroupData = null;
         });
     }
 
     // Setup tab switching
     function setupTabSwitching(prefix) {
-        const modal = document.getElementById(`${prefix}GroupModal`);
+        const modalId = prefix === 'view' ? 'viewGroupModal' : `${prefix}GroupModal`;
+        const modal = document.getElementById(modalId);
         const tabButtons = modal.querySelectorAll('.tab-button');
         const tabContents = modal.querySelectorAll('.tab-content-section');
 
@@ -1132,6 +1108,10 @@
 
             allGroups = await response.json();
             console.log('Groups loaded:', allGroups.length);
+
+            // Update total groups count
+            updateTotalGroupsCount(allGroups.length);
+
             displayGroups(allGroups);
 
         } catch (error) {
@@ -1140,6 +1120,12 @@
         } finally {
             showLoading(false);
         }
+    }
+
+    // Update total groups count
+    function updateTotalGroupsCount(count) {
+        document.getElementById('totalGroupsCount').textContent = count;
+        document.getElementById('allGroupsCount').textContent = count;
     }
 
     // Load all documents
@@ -1184,14 +1170,17 @@
     function displayGroups(groups) {
         const groupsList = document.getElementById('groupsList');
         const emptyState = document.getElementById('emptyState');
+        const groupsHeader = document.querySelector('.groups-header');
 
         if (groups.length === 0) {
             groupsList.innerHTML = '';
             emptyState.style.display = 'block';
+            if (groupsHeader) groupsHeader.style.display = 'none';
             return;
         }
 
         emptyState.style.display = 'none';
+        if (groupsHeader) groupsHeader.style.display = 'flex';
         groupsList.innerHTML = '';
 
         groups.forEach(group => {
@@ -1215,12 +1204,8 @@
         const isAdmin = userRole === 'Admin';
 
         const actionsHTML = isAdmin ? `
-            <div class="group-actions">
-                <button class="btn-action-icon btn-view" title="View details"
-                    onclick="openViewGroupModal(${group.id})">
-                    <i class="bi bi-eye"></i>
-                </button>
-                <button class="btn-action-icon btn-edit-group" title="Edit group name & description"
+            <div class="group-actions" onclick="event.stopPropagation();">
+                <button class="btn-action-icon btn-edit-group" title="Edit group"
                     onclick="openEditGroupModal(${group.id})">
                     <i class="bi bi-pencil"></i>
                 </button>
@@ -1239,38 +1224,34 @@
                 <div class="group-info">
                     <div class="group-name">
                         ${escapeHtml(group.groupName)}
+                        <div class="group-count-badge">
+                            <span class="count-item">
+                                <i class="bi bi-file-earmark"></i>
+                                ${documentCount}
+                            </span>
+                            <span class="count-item">
+                                <i class="bi bi-people"></i>
+                                ${userCount}
+                            </span>
+                        </div>
                     </div>
                     <p class="group-description">${escapeHtml(description)}</p>
                 </div>
                 ${actionsHTML}
             </div>
 
-            <div class="group-stats">
-                <div class="stat-item">
-                    <i class="bi bi-file-earmark"></i>
-                    <span>${documentCount} document${documentCount !== 1 ? 's' : ''}</span>
-                </div>
-                <div class="stat-item">
-                    <i class="bi bi-people"></i>
-                    <span>${userCount} user${userCount !== 1 ? 's' : ''}</span>
-                </div>
-            </div>
-
-            <div class="group-buttons">
-                <button class="btn-manage" onclick="openManageDocumentsModal(${group.id})">
-                    <i class="bi bi-file-earmark"></i>
-                    Manage Documents
-                </button>
-                <button class="btn-manage" onclick="openManageUsersModal(${group.id})">
-                    <i class="bi bi-people"></i>
-                    Manage Users
-                </button>
-            </div>
-
             <div class="group-meta">
                 Created on ${createdDate} by ${escapeHtml(createdBy)}
             </div>
         `;
+
+        // Make the card clickable to open view modal
+        div.addEventListener('click', function(e) {
+            // Don't open if clicking on action buttons
+            if (!e.target.closest('.group-actions')) {
+                openViewGroupModal(group.id);
+            }
+        });
 
         return div;
     }
@@ -1312,9 +1293,7 @@
             container.appendChild(item);
         });
 
-        if (prefix === 'create') {
-            updateSelectedCount(prefix, 'documents');
-        }
+        updateSelectedCount(prefix, 'documents');
     }
 
     // Populate users list
@@ -1343,9 +1322,7 @@
             container.appendChild(item);
         });
 
-        if (prefix === 'create') {
-            updateSelectedCount(prefix, 'users');
-        }
+        updateSelectedCount(prefix, 'users');
     }
 
     // Update selected count
@@ -1505,6 +1482,24 @@
                 });
             }
 
+            // Reset to first tab
+            const tabButtons = document.querySelectorAll('#viewGroupModal .tab-button');
+            const tabContents = document.querySelectorAll('#viewGroupModal .tab-content-section');
+            tabButtons.forEach((btn, idx) => {
+                if (idx === 0) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            tabContents.forEach((content, idx) => {
+                if (idx === 0) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+
             viewGroupModal.show();
 
         } catch (error) {
@@ -1513,7 +1508,7 @@
         }
     }
 
-    // Open edit group modal (only name and description)
+    // Open edit group modal (with name, description, documents and users)
     async function openEditGroupModal(groupId) {
         try {
             // Fetch group details
@@ -1532,6 +1527,30 @@
             document.getElementById('editGroupName').value = group.groupName;
             document.getElementById('editGroupDescription').value = group.description || '';
 
+            // Populate documents with pre-selected items
+            populateDocumentsList('edit', group.documentIds || []);
+
+            // Populate users with pre-selected items
+            populateUsersList('edit', group.userIds || []);
+
+            // Reset to first tab
+            const tabButtons = document.querySelectorAll('#editGroupModal .tab-button');
+            const tabContents = document.querySelectorAll('#editGroupModal .tab-content-section');
+            tabButtons.forEach((btn, idx) => {
+                if (idx === 0) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            tabContents.forEach((content, idx) => {
+                if (idx === 0) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+
             editGroupModal.show();
 
         } catch (error) {
@@ -1540,7 +1559,7 @@
         }
     }
 
-    // Handle edit group (only name and description)
+    // Handle edit group (name, description, documents and users)
     async function handleEditGroup(e) {
         e.preventDefault();
 
@@ -1556,13 +1575,17 @@
             return;
         }
 
-        if (!currentEditGroupData) {
-            showAlert('Group data not loaded. Please try again.', 'danger');
-            return;
-        }
+        // Get selected documents
+        const selectedDocs = Array.from(
+            document.querySelectorAll('#editDocumentsList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        // Get selected users
+        const selectedUsers = Array.from(
+            document.querySelectorAll('#editUsersList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
 
         try {
-            // Use PUT with full group data, only updating name and description
             const response = await fetch(`${API_BASE_URL}/${groupId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -1570,8 +1593,8 @@
                 body: JSON.stringify({
                     groupName: groupName,
                     description: description,
-                    documentIds: currentEditGroupData.documentIds || [],
-                    userIds: currentEditGroupData.userIds || []
+                    documentIds: selectedDocs,
+                    userIds: selectedUsers
                 })
             });
 
@@ -1586,188 +1609,6 @@
 
         } catch (error) {
             errorEl.textContent = error.message || 'Failed to update group.';
-        }
-    }
-
-    // Open manage documents modal
-    async function openManageDocumentsModal(groupId) {
-        try {
-            // Fetch group details
-            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
-            });
-
-            if (!response.ok) throw new Error('Failed to load group details');
-
-            const group = await response.json();
-            currentManageGroupData = group; // Store full group data
-
-            document.getElementById('manageDocsGroupId').value = group.id;
-
-            // Populate documents with pre-selected items
-            const container = document.getElementById('manageDocumentsList');
-            container.innerHTML = '';
-
-            if (allDocuments.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center p-3">No documents available</p>';
-            } else {
-                allDocuments.forEach(doc => {
-                    const isChecked = (group.documentIds || []).includes(doc.id);
-                    const item = document.createElement('div');
-                    item.className = 'document-checkbox-item';
-                    item.innerHTML = `
-                        <input type="checkbox" id="manageDoc${doc.id}"
-                               value="${doc.id}" ${isChecked ? 'checked' : ''}>
-                        <label for="manageDoc${doc.id}">
-                            <i class="bi bi-file-earmark-text me-2"></i>
-                            ${escapeHtml(doc.title)}
-                        </label>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-
-            manageDocsModal.show();
-
-        } catch (error) {
-            console.error('Error loading group for manage documents:', error);
-            showAlert('Failed to load group details.', 'danger');
-        }
-    }
-
-    // Handle manage documents
-    async function handleManageDocuments(e) {
-        e.preventDefault();
-
-        const groupId = document.getElementById('manageDocsGroupId').value;
-
-        if (!currentManageGroupData) {
-            showAlert('Group data not loaded. Please try again.', 'danger');
-            return;
-        }
-
-        // Get selected documents
-        const selectedDocs = Array.from(
-            document.querySelectorAll('#manageDocumentsList input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
-
-        try {
-            // Use PUT with full group data, only updating documents
-            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    groupName: currentManageGroupData.groupName,
-                    description: currentManageGroupData.description || '',
-                    documentIds: selectedDocs,
-                    userIds: currentManageGroupData.userIds || []
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to update documents');
-            }
-
-            manageDocsModal.hide();
-            await loadGroups();
-            showAlert('Documents updated successfully!', 'success');
-
-        } catch (error) {
-            showAlert(error.message || 'Failed to update documents.', 'danger');
-        }
-    }
-
-    // Open manage users modal
-    async function openManageUsersModal(groupId) {
-        try {
-            // Fetch group details
-            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
-                credentials: 'same-origin',
-                headers: { 'Accept': 'application/json' }
-            });
-
-            if (!response.ok) throw new Error('Failed to load group details');
-
-            const group = await response.json();
-            currentManageGroupData = group; // Store full group data
-
-            document.getElementById('manageUsersGroupId').value = group.id;
-
-            // Populate users with pre-selected items
-            const container = document.getElementById('manageUsersList');
-            container.innerHTML = '';
-
-            if (allUsers.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center p-3">No users available</p>';
-            } else {
-                allUsers.forEach(user => {
-                    const isChecked = (group.userIds || []).includes(user.id);
-                    const item = document.createElement('div');
-                    item.className = 'user-checkbox-item';
-                    item.innerHTML = `
-                        <input type="checkbox" id="manageUser${user.id}"
-                               value="${user.id}" ${isChecked ? 'checked' : ''}>
-                        <label for="manageUser${user.id}">
-                            <i class="bi bi-person me-2"></i>
-                            ${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span>
-                        </label>
-                    `;
-                    container.appendChild(item);
-                });
-            }
-
-            manageUsersModal.show();
-
-        } catch (error) {
-            console.error('Error loading group for manage users:', error);
-            showAlert('Failed to load group details.', 'danger');
-        }
-    }
-
-    // Handle manage users
-    async function handleManageUsers(e) {
-        e.preventDefault();
-
-        const groupId = document.getElementById('manageUsersGroupId').value;
-
-        if (!currentManageGroupData) {
-            showAlert('Group data not loaded. Please try again.', 'danger');
-            return;
-        }
-
-        // Get selected users
-        const selectedUsers = Array.from(
-            document.querySelectorAll('#manageUsersList input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
-
-        try {
-            // Use PUT with full group data, only updating users
-            const response = await fetch(`${API_BASE_URL}/${groupId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    groupName: currentManageGroupData.groupName,
-                    description: currentManageGroupData.description || '',
-                    documentIds: currentManageGroupData.documentIds || [],
-                    userIds: selectedUsers
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to update users');
-            }
-
-            manageUsersModal.hide();
-            await loadGroups();
-            showAlert('Users updated successfully!', 'success');
-
-        } catch (error) {
-            showAlert(error.message || 'Failed to update users.', 'danger');
         }
     }
 
@@ -1813,10 +1654,16 @@
         const searchTerm = e.target.value.toLowerCase();
         const groupCards = document.querySelectorAll('.group-card');
 
+        let visibleCount = 0;
         groupCards.forEach(card => {
             const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(searchTerm) ? '' : 'none';
+            const isVisible = text.includes(searchTerm);
+            card.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
         });
+
+        // Update the All Groups count to show filtered results
+        document.getElementById('allGroupsCount').textContent = visibleCount;
     }
 
     // Helper function to show inline error message

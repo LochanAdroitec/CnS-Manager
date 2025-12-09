@@ -50,4 +50,43 @@ public class ActivityLog {
         this.details = details;
         this.timestamp = LocalDateTime.now();
     }
+    public Long getLogId() {
+        return logId;
+    }
+
+    public void setLogId(Long logId) {
+        this.logId = logId;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public void setDetails(String details) {
+        this.details = details;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
 }

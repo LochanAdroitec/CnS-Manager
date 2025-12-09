@@ -1,8 +1,10 @@
 package codesAndStandards.springboot.userApp.controller;
 
 import codesAndStandards.springboot.userApp.dto.*;
+import codesAndStandards.springboot.userApp.entity.AccessControlLogic;
 import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.entity.Role;
+import codesAndStandards.springboot.userApp.repository.AccessControlLogicRepository;
 import codesAndStandards.springboot.userApp.repository.RoleRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.*;
@@ -1207,6 +1209,9 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AccessControlLogicRepository accessControlLogicRepository;
+
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/DocViewer")
     public String showPdfViewer(@RequestParam Long id, Model model, Principal principal) {
@@ -1219,23 +1224,36 @@ public class AuthController {
             logger.info("Document found: " + document.getTitle());
 
             User user = userRepository.findByUsername(principal.getName());
-
-            String userRole = user.getRole().getRoleName(); // "Admin", "Manager", or "Viewer"
-
+            String userRole = user.getRole().getRoleName();
             logger.info("User role: " + userRole);
-            // ✅ CHANGE 4: Pass ALL required attributes to model
+
+            // ✅ ADD THIS: Fetch groups through AccessControlLogic
+            String groupNames = "";
+            try {
+                List<AccessControlLogic> accessControls =
+                        accessControlLogicRepository.findByDocumentId(id);
+
+                if (accessControls != null && !accessControls.isEmpty()) {
+                    groupNames = accessControls.stream()
+                            .map(ac -> ac.getGroup().getGroupName())
+                            .collect(Collectors.joining(", "));
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to fetch groups for document {}: {}", id, e.getMessage());
+            }
+            document.setGroupNames(groupNames);
+
+            // Pass attributes to model
             model.addAttribute("documentId", id);
-            model.addAttribute("document", document); // Pass document object
-            model.addAttribute("userRole", userRole); // Pass user role
+            model.addAttribute("document", document);
+            model.addAttribute("userRole", userRole);
+            model.addAttribute("username", user.getUsername());
 
             logger.info("Document title: " + document.getTitle());
             logger.info("Document product code: " + document.getProductCode());
             logger.info("Document tags: " + document.getTagNames());
-            model.addAttribute("documentId", id);
+            logger.info("Document groups: " + groupNames);
             logger.info("Returning viewer template");
-
-            // Add username safely
-            model.addAttribute("username", user.getUsername());
 
             return "DocViewer";
         } catch (Exception e) {
@@ -1243,6 +1261,7 @@ public class AuthController {
             return "redirect:/documents?error=notfound";
         }
     }
+
 
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/documents/info/{id}")
@@ -1254,6 +1273,9 @@ public class AuthController {
 //            if (!document.getUploadedByUsername().equals(principal.getName())) {
 //                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 //            }
+            // ✅ ADD THIS: Fetch groups-Lochan
+            String groupNames = documentService.getGroupNamesForDocument(id);
+            document.setGroupNames(groupNames);
 
             Map<String, Object> info = new HashMap<>();
             info.put("id", document.getId());
@@ -1265,6 +1287,8 @@ public class AuthController {
             info.put("noOfPages", document.getNoOfPages());
             info.put("notes", document.getNotes());
             info.put("tagNames", document.getTagNames());
+            info.put("classificationNames", document.getClassificationNames());
+            info.put("groupNames", groupNames);
             return ResponseEntity.ok(info);
         } catch (Exception e) {
             logger.error("Failed to get document info", e);

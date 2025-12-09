@@ -8,1046 +8,178 @@
     <link rel="stylesheet" href="/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
     <script src="/pdfjs/pdf.js"></script>
-    <!-- Include Sidebar Styles -->
     <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background-color: #f4f6f9;
-            padding-top: 70px;
-        }
-
-        /* ============== WIZARD STYLES ============== */
-        .wizard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .wizard-header {
-            background-color: #1e3a5f;
-            padding: 30px;
-            color: white;
-        }
-
-        .wizard-header h2 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .wizard-header p {
-            margin: 5px 0 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        /* Step Progress Bar - Updated for 4 steps */
-        .wizard-steps {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 30px 50px;
-            background: #f8f9fa;
-            position: relative;
-        }
-
-        .wizard-steps::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50px;
-            right: 50px;
-            height: 2px;
-            background: #e0e0e0;
-            z-index: 0;
-        }
-
-        .wizard-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-            flex: 1;
-        }
-
-        .wizard-step-circle {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: white;
-            border: 3px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 18px;
-            color: #9ca3af;
-            transition: all 0.3s;
-            margin-bottom: 10px;
-        }
-
-        .wizard-step.active .wizard-step-circle {
-            background: #667eea;
-            border-color: #667eea;
-            color: white;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-        }
-
-        .wizard-step.completed .wizard-step-circle {
-            background: #10b981;
-            border-color: #10b981;
-            color: white;
-        }
-
-        .wizard-step-label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #6b7280;
-            text-align: center;
-        }
-
-        .wizard-step.active .wizard-step-label {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .wizard-step.completed .wizard-step-label {
-            color: #10b981;
-        }
-
-        /* Wizard Content */
-        .wizard-content {
-            padding: 40px 50px;
-            min-height: 450px;
-        }
-
-        .wizard-step-content {
-            display: none;
-        }
-
-        .wizard-step-content.active {
-            display: block;
-            animation: fadeIn 0.4s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Wizard Navigation */
-        .wizard-navigation {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 50px 30px;
-            border-top: 1px solid #e5e7eb;
-        }
-
-        .wizard-btn {
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .wizard-btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .wizard-btn-secondary:hover {
-            background: #e5e7eb;
-        }
-
-        .wizard-btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .wizard-btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .wizard-btn-primary:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
-        }
-
-        .wizard-btn-success {
-            background: #10b981;
-            color: white;
-        }
-
-        .wizard-btn-success:hover {
-            background: #059669;
-        }
-
-        .wizard-btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .wizard-btn-warning:hover {
-            background: #d97706;
-        }
-
-        /* ============== STEP 1: FOLDER UPLOAD ============== */
-        .drop-zone {
-            border: 3px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 80px 40px;
-            text-align: center;
-            background: linear-gradient(135deg, #fafbfc 0%, #f0f7ff 100%);
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .drop-zone:hover {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-            transform: scale(1.02);
-        }
-
-        .drop-zone.dragover {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
-            border-style: solid;
-            transform: scale(1.05);
-        }
-
-        .drop-zone-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            color: #667eea;
-        }
-
-        .drop-zone-text {
-            font-size: 20px;
-            color: #1a2332;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .drop-zone-info {
-            font-size: 14px;
-            color: #6b7a99;
-            margin-bottom: 25px;
-        }
-
-        .browse-btn {
-            background: #667eea;
-            color: white;
-            padding: 14px 36px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .browse-btn:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        /* Folder Uploaded Success Message */
-        .folder-uploaded-message {
-            display: none;
-            background: #ecfdf5;
-            border: 2px solid #10b981;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            margin-top: 30px;
-        }
-
-        .folder-uploaded-message.show {
-            display: block;
-            animation: slideIn 0.4s;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .folder-uploaded-icon {
-            width: 80px;
-            height: 80px;
-            background: #10b981;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 40px;
-        }
-
-        .folder-uploaded-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #065f46;
-            margin-bottom: 10px;
-        }
-
-        .folder-uploaded-details {
-            font-size: 14px;
-            color: #047857;
-            margin-bottom: 20px;
-        }
-
-        .change-file-btn {
-            background: #10b981;
-            color: white;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .change-file-btn:hover {
-            background: #059669;
-        }
-
-        .file-list {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-top: 15px;
-            background: white;
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .file-list-item {
-            padding: 8px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            color: #374151;
-        }
-
-        .file-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .file-list-item i {
-            color: #ef4444;
-        }
-
-        /* ============== STEP 2: EXCEL UPLOAD ============== */
-        .info-box {
-            background: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-
-        .info-box-title {
-            font-weight: 600;
-            color: #1e40af;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .info-box-content {
-            color: #1e40af;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .info-box-highlight {
-            background: #dbeafe;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-
-        .download-template-btn {
-            background: #10b981;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-            margin-bottom: 30px;
-        }
-
-        .download-template-btn:hover {
-            background: #059669;
-            transform: translateY(-2px);
-            color: white;
-        }
-
-        /* ============== STEP 3: VALIDATION ============== */
-        .validation-results {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-
-        .validation-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .validation-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a2332;
-        }
-
-        .validation-status {
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .validation-status.success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .validation-status.warning {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .validation-status.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .validation-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            border: 2px solid #e5e7eb;
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .stat-card.total .stat-number { color: #3b82f6; }
-        .stat-card.valid .stat-number { color: #10b981; }
-        .stat-card.warnings .stat-number { color: #f59e0b; }
-        .stat-card.errors .stat-number { color: #ef4444; }
-
-        .validation-issues {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .issue-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: start;
-            gap: 12px;
-        }
-
-        .issue-item:last-child {
-            border-bottom: none;
-        }
-
-        .issue-icon {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .issue-icon.warning {
-            background: #fef3c7;
-            color: #f59e0b;
-        }
-
-        .issue-icon.error {
-            background: #fee2e2;
-            color: #ef4444;
-        }
-
-        .issue-content {
-            flex: 1;
-        }
-
-        .issue-title {
-            font-weight: 600;
-            color: #1a2332;
-            margin-bottom: 4px;
-        }
-
-        .issue-desc {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-        /* Error Action Buttons - Updated */
-        .validation-error-actions {
-            display: none;
-            margin-top: 20px;
-            padding: 20px;
-            background: #fef3c7;
-            border-radius: 8px;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .validation-error-actions.show {
-            display: block;
-        }
-
-        .validation-error-actions h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #92400e;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .validation-error-actions p {
-            font-size: 14px;
-            color: #92400e;
-            margin-bottom: 15px;
-        }
-
-        .error-action-buttons {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .error-action-btn {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .error-action-btn.reupload-folder {
-            background: #667eea;
-            color: white;
-        }
-
-        .error-action-btn.reupload-folder:hover {
-            background: #5568d3;
-        }
-
-        .error-action-btn.reupload-excel {
-            background: #10b981;
-            color: white;
-        }
-
-        .error-action-btn.reupload-excel:hover {
-            background: #059669;
-        }
-
-        /* Upload Valid Documents Button */
-        .error-action-btn.upload-valid {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .error-action-btn.upload-valid:hover {
-            background: #d97706;
-        }
-
-        /* ============== STEP 4: UPLOAD PROGRESS ============== */
-        .progress-container {
-            background: #f9fafb;
-            border-radius: 12px;
-            padding: 30px;
-        }
-
-        .progress-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .progress-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1a2332;
-            margin-bottom: 10px;
-        }
-
-        .progress-subtitle {
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .progress-bar-container {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .progress-bar-wrapper {
-            background: #e5e7eb;
-            height: 30px;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .progress-text {
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-
-        .upload-log {
-            background: white;
-            border-radius: 8px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .log-item {
-            padding: 12px 20px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-
-        .log-item:last-child {
-            border-bottom: none;
-        }
-
-        .log-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .log-icon.success {
-            background: #d1fae5;
-            color: #10b981;
-        }
-
-        .log-icon.error {
-            background: #fee2e2;
-            color: #ef4444;
-        }
-
-        .log-icon.processing {
-            background: #dbeafe;
-            color: #3b82f6;
-        }
-
-        /* ============== CUSTOM MODALS ============== */
-        .custom-modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            animation: fadeIn 0.3s;
-        }
-
-        .custom-modal-overlay.show {
-            display: flex;
-        }
-
-        .custom-modal {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            animation: slideUp 0.3s;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .modal-header-custom {
-            padding: 25px 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .modal-header-warning {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        }
-
-        .modal-header-danger {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-
-        .modal-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .modal-title-custom {
-            flex: 1;
-        }
-
-        .modal-title-custom h3 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .modal-title-custom p {
-            margin: 5px 0 0;
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .modal-close-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .modal-close-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: rotate(90deg);
-        }
-
-        .modal-body-custom {
-            padding: 30px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .modal-body-custom p {
-            margin: 0 0 15px 0;
-            font-size: 15px;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-
-        .modal-body-custom ul {
-            margin: 15px 0 0 0;
-            padding-left: 20px;
-            color: #4b5563;
-        }
-
-        .modal-body-custom li {
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .protected-files-list {
-            max-height: 200px;
-            overflow-y: auto;
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 10px;
-            margin-top: 15px;
-        }
-
-        .protected-file-item {
-            padding: 10px;
-            background: white;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            border-left: 3px solid #f59e0b;
-        }
-
-        .protected-file-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .protected-file-name {
-            font-weight: 600;
-            color: #1a2332;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .protected-file-issues {
-            font-size: 13px;
-            color: #6b7280;
-        }
-
-        .protected-file-issues span {
-            display: inline-block;
-            background: #fef3c7;
-            color: #92400e;
-            padding: 2px 8px;
-            border-radius: 4px;
-            margin-right: 5px;
-            margin-top: 3px;
-            font-size: 12px;
-        }
-
-        .modal-footer-custom {
-            padding: 20px 30px;
-            background: #f9fafb;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        .modal-btn {
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .modal-btn-secondary {
-            background: white;
-            color: #374151;
-            border: 2px solid #e5e7eb;
-        }
-
-        .modal-btn-secondary:hover {
-            background: #f3f4f6;
-        }
-
-        .modal-btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .modal-btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .modal-btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .modal-btn-warning:hover {
-            background: #d97706;
-        }
-
-        /* Alert Styles */
-        .alert {
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .alert i {
-            font-size: 20px;
-        }
-
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(100px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes slideOutRight {
-            from { opacity: 1; transform: translateX(0); }
-            to { opacity: 0; transform: translateX(100px); }
-        }
-
-        /* Responsive */
-        @media (max-width: 992px) {
-            .wizard-steps {
-                padding: 20px 30px;
-            }
-
-            .wizard-content {
-                padding: 30px 30px;
-            }
-
-            .wizard-navigation {
-                padding: 15px 30px 20px;
-            }
-
-            .validation-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .wizard-steps::before {
-                left: 30px;
-                right: 30px;
-            }
-
-            .wizard-step-label {
-                font-size: 12px;
-            }
-
-            .wizard-step-circle {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-
-            .error-action-buttons {
-                flex-direction: column;
-            }
-
-            .error-action-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background-color:#f4f6f9;padding-top:70px}
+        .wizard-container{max-width:1400px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);overflow:hidden}
+        .wizard-header{background-color:#1e3a5f;padding:30px;color:#fff}
+        .wizard-header h2{margin:0;font-size:24px;font-weight:600}
+        .wizard-header p{margin:5px 0 0;opacity:.9;font-size:14px}
+        .wizard-steps{display:flex;justify-content:space-between;align-items:center;padding:30px 50px;background:#f8f9fa;position:relative}
+        .wizard-steps::before{content:'';position:absolute;top:50%;left:50px;right:50px;height:2px;background:#e0e0e0;z-index:0}
+        .wizard-step{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1;flex:1}
+        .wizard-step-circle{width:50px;height:50px;border-radius:50%;background:#fff;border:3px solid #e0e0e0;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#9ca3af;transition:all .3s;margin-bottom:10px}
+        .wizard-step.active .wizard-step-circle{background:#667eea;border-color:#667eea;color:#fff;box-shadow:0 0 0 4px rgba(102,126,234,0.2)}
+        .wizard-step.completed .wizard-step-circle{background:#10b981;border-color:#10b981;color:#fff}
+        .wizard-step-label{font-size:14px;font-weight:500;color:#6b7280;text-align:center}
+        .wizard-step.active .wizard-step-label{color:#667eea;font-weight:600}
+        .wizard-step.completed .wizard-step-label{color:#10b981}
+        .wizard-content{padding:40px 50px;min-height:450px}
+        .wizard-step-content{display:none}
+        .wizard-step-content.active{display:block;animation:fadeIn .4s}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .wizard-navigation{display:flex;justify-content:space-between;padding:20px 50px 30px;border-top:1px solid #e5e7eb}
+        .wizard-btn{padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px}
+        .wizard-btn-secondary{background:#f3f4f6;color:#374151}
+        .wizard-btn-secondary:hover{background:#e5e7eb}
+        .wizard-btn-primary{background:#667eea;color:#fff}
+        .wizard-btn-primary:hover{background:#5568d3}
+        .wizard-btn-primary:disabled{background:#d1d5db;cursor:not-allowed}
+        .wizard-btn-success{background:#10b981;color:#fff}
+        .wizard-btn-success:hover{background:#059669}
+        .wizard-btn-warning{background:#f59e0b;color:#fff}
+        .wizard-btn-warning:hover{background:#d97706}
+        .drop-zone{border:3px dashed #d1d5db;border-radius:12px;padding:80px 40px;text-align:center;background:linear-gradient(135deg,#fafbfc 0,#f0f7ff 100%);cursor:pointer;transition:all .3s;position:relative}
+        .drop-zone:hover{border-color:#667eea;background:linear-gradient(135deg,#f0f7ff 0,#e0f2fe 100%);transform:scale(1.02)}
+        .drop-zone.dragover{border-color:#667eea;background:linear-gradient(135deg,#e0f2fe 0,#dbeafe 100%);border-style:solid;transform:scale(1.05)}
+        .drop-zone-icon{width:80px;height:80px;margin:0 auto 20px;color:#667eea}
+        .drop-zone-text{font-size:20px;color:#1a2332;margin-bottom:10px;font-weight:600}
+        .drop-zone-info{font-size:14px;color:#6b7a99;margin-bottom:25px}
+        .browse-btn{background:#667eea;color:#fff;padding:14px 36px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;border:none;display:inline-flex;align-items:center;gap:10px}
+        .browse-btn:hover{background:#5568d3;transform:translateY(-2px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+        .folder-uploaded-message{display:none;background:#ecfdf5;border:2px solid #10b981;border-radius:12px;padding:30px;margin-top:30px}
+        .folder-uploaded-message.show{display:block;animation:slideIn .4s}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+        .folder-uploaded-icon{width:80px;height:80px;background:#10b981;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:#fff;font-size:40px}
+        .folder-uploaded-title{text-align:center;font-size:20px;font-weight:600;color:#065f46;margin-bottom:10px}
+        .folder-uploaded-details{text-align:center;font-size:14px;color:#047857;margin-bottom:20px}
+        .change-file-btn{background:#10b981;color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px}
+        .change-file-btn:hover{background:#059669}
+        .file-list{max-height:250px;overflow-y:auto;margin-top:15px;background:#fff;border-radius:8px;padding:10px;border:1px solid #e5e7eb}
+        .file-list-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;font-weight:600}
+        .file-list-item{padding:8px 12px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:10px;font-size:13px;color:#374151}
+        .file-list-item:last-child{border-bottom:none}
+        .file-checkbox{flex-shrink:0}
+        .file-name-wrapper{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
+        .file-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .protected-badge{display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px}
+        .info-box{background:#eff6ff;border-left:4px solid #3b82f6;padding:20px;border-radius:8px;margin-bottom:30px}
+        .info-box-title{font-weight:600;color:#1e40af;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+        .info-box-content{color:#1e40af;font-size:14px;line-height:1.6}
+        .download-template-btn{background:#10b981;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px;text-decoration:none;margin-bottom:10px}
+        .download-template-btn:hover{background:#059669;transform:translateY(-2px);color:#fff}
+        .template-note{font-size:13px;color:#6b7280;margin-top:10px}
+        .validation-results{background:#f9fafb;border-radius:12px;padding:25px;margin-bottom:20px}
+        .validation-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+        .validation-title{font-size:18px;font-weight:600;color:#1a2332}
+        .validation-status{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600}
+        .validation-status.success{background:#d1fae5;color:#065f46}
+        .validation-status.warning{background:#fef3c7;color:#92400e}
+        .validation-status.error{background:#fee2e2;color:#991b1b}
+        .validation-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+        .stat-card{background:#fff;padding:20px;border-radius:8px;text-align:center;border:2px solid #e5e7eb}
+        .stat-number{font-size:32px;font-weight:700;margin-bottom:5px}
+        .stat-label{font-size:13px;color:#6b7280;font-weight:500}
+        .stat-card.total .stat-number{color:#3b82f6}
+        .stat-card.valid .stat-number{color:#10b981}
+        .stat-card.warnings .stat-number{color:#f59e0b}
+        .stat-card.errors .stat-number{color:#ef4444}
+        .validation-issues{background:#fff;border-radius:8px;overflow:hidden;max-height:300px;overflow-y:auto}
+        .issue-item{padding:15px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:flex-start;gap:12px}
+        .issue-item:last-child{border-bottom:none}
+        .issue-icon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .issue-icon.warning{background:#fef3c7;color:#f59e0b}
+        .issue-icon.error{background:#fee2e2;color:#ef4444}
+        .issue-content{flex:1}
+        .issue-title{font-weight:600;color:#1a2332;margin-bottom:4px}
+        .issue-desc{font-size:14px;color:#6b7280}
+        .validation-error-actions{display:none;margin-top:20px;padding:20px;background:#fef3c7;border-radius:8px;border-left:4px solid #f59e0b}
+        .validation-error-actions.show{display:block}
+        .validation-error-actions h4{font-size:16px;font-weight:600;color:#92400e;margin-bottom:15px;display:flex;align-items:center;gap:8px}
+        .validation-error-actions p{font-size:14px;color:#92400e;margin-bottom:15px}
+        .error-action-buttons{display:flex;gap:12px;flex-wrap:wrap}
+        .error-action-btn{padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:8px}
+        .error-action-btn.reupload-folder{background:#667eea;color:#fff}
+        .error-action-btn.reupload-folder:hover{background:#5568d3}
+        .error-action-btn.reupload-excel{background:#10b981;color:#fff}
+        .error-action-btn.reupload-excel:hover{background:#059669}
+        .error-action-btn.upload-valid{background:#f59e0b;color:#fff}
+        .error-action-btn.upload-valid:hover{background:#d97706}
+        .progress-container{background:#f9fafb;border-radius:12px;padding:30px}
+        .progress-header{text-align:center;margin-bottom:30px}
+        .progress-title{font-size:20px;font-weight:600;color:#1a2332;margin-bottom:10px}
+        .progress-subtitle{color:#6b7280;font-size:14px}
+        .progress-bar-container{background:#fff;border-radius:8px;padding:20px;margin-bottom:20px}
+        .progress-bar-wrapper{background:#e5e7eb;height:30px;border-radius:15px;overflow:hidden;margin-bottom:10px}
+        .progress-bar-fill{height:100%;background:linear-gradient(90deg,#667eea 0,#764ba2 100%);border-radius:15px;transition:width .3s;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:14px}
+        .progress-text{text-align:center;color:#6b7280;font-size:14px}
+        .upload-log{background:#fff;border-radius:8px;max-height:300px;overflow-y:auto}
+        .log-item{padding:12px 20px;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;font-size:14px}
+        .log-item:last-child{border-bottom:none}
+        .log-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .log-icon.success{background:#d1fae5;color:#10b981}
+        .log-icon.error{background:#fee2e2;color:#ef4444}
+        .log-icon.processing{background:#dbeafe;color:#3b82f6}
+        .custom-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;animation:fadeIn .3s}
+        .custom-modal-overlay.show{display:flex}
+        .custom-modal{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:600px;width:90%;max-height:80vh;animation:slideUp .3s;overflow:hidden;display:flex;flex-direction:column}
+        @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+        .modal-header-custom{padding:25px 30px;background-color:#1e3a5f;color:#fff;display:flex;align-items:center;gap:15px}
+        .modal-header-warning{background-color:#1e3a5f;}
+        .modal-header-danger{background-color:#1e3a5f;}
+        .modal-icon{width:50px;height:50px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px}
+        .modal-title-custom{flex:1}
+        .modal-title-custom h3{margin:0;font-size:20px;font-weight:600}
+        .modal-title-custom p{margin:5px 0 0;font-size:13px;opacity:.9}
+        .modal-close-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
+        .modal-close-btn:hover{background:rgba(255,255,255,0.3);transform:rotate(90deg)}
+        .modal-body-custom{padding:30px;overflow-y:auto;flex:1}
+        .protected-files-list{max-height:200px;overflow-y:auto;background:#f9fafb;border-radius:8px;padding:10px;margin-top:15px}
+        .protected-file-item{padding:10px;background:#fff;border-radius:6px;margin-bottom:8px;border-left:3px solid #f59e0b}
+        .protected-file-item:last-child{margin-bottom:0}
+        .protected-file-name{font-weight:600;color:#1a2332;margin-bottom:5px;font-size:14px}
+        .protected-file-issues{font-size:13px;color:#6b7280}
+        .protected-file-issues span{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;margin-right:5px;margin-top:3px;font-size:12px}
+        .modal-footer-custom{padding:20px 30px;background:#f9fafb;display:flex;justify-content:flex-end;gap:12px}
+        .modal-btn{padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s}
+        .modal-btn-secondary{background:#fff;color:#374151;border:2px solid #e5e7eb}
+        .modal-btn-secondary:hover{background:#1e3a5f}
+        .modal-btn-danger{background:#ef4444;color:#fff}
+        .modal-btn-danger:hover{background:#dc2626}
+        .modal-btn-warning{background:#1e3a5f;color:#fff}
+        .modal-btn-warning:hover{background:#1e3a5f}
+        .alert{border-radius:8px;padding:15px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+        .alert i{font-size:20px}
+        @keyframes slideInRight{from{opacity:0;transform:translateX(100px)}to{opacity:1;transform:translateX(0)}}
+        @keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(100px)}}
+        @media (max-width:992px){.wizard-steps{padding:20px 30px}.wizard-content{padding:30px 30px}.wizard-navigation{padding:15px 30px 20px}.validation-stats{grid-template-columns:repeat(2,1fr)}}
+        @media (max-width:768px){.wizard-steps::before{left:30px;right:30px}.wizard-step-label{font-size:12px}.wizard-step-circle{width:40px;height:40px;font-size:16px}.error-action-buttons{flex-direction:column}.error-action-btn{width:100%;justify-content:center}}
     </style>
 </head>
 <body>
-<!-- Include Top Navbar -->
 <div th:replace="~{common/navbar :: navbar}"></div>
-
-<!-- Sidebar + Content -->
 <div class="d-flex">
-    <!-- Include Sidebar -->
     <div th:replace="~{common/sidebar :: sidebar}"></div>
-
-    <!-- Main Content -->
     <div class="main-content flex-grow-1 p-4">
-        <!-- Alert Messages -->
         <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle-fill"></i>
             <span th:text="${success}">Documents uploaded successfully!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-
         <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-circle-fill"></i>
             <span th:text="${error}">Error uploading documents!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <!-- Wizard Container -->
         <div class="wizard-container">
-            <!-- Wizard Header -->
             <div class="wizard-header">
                 <h2><i class="bi bi-folder-symlink me-2"></i>Bulk Upload Documents</h2>
                 <p>Upload multiple documents at once using folder selection and Excel metadata</p>
             </div>
 
-            <!-- Step Progress Bar - Updated to 4 Steps -->
+            <!-- 5 steps now -->
             <div class="wizard-steps">
                 <div class="wizard-step active" data-step="1">
                     <div class="wizard-step-circle">
@@ -1057,17 +189,23 @@
                 </div>
                 <div class="wizard-step" data-step="2">
                     <div class="wizard-step-circle">
+                        <i class="bi bi-file-earmark-arrow-down"></i>
+                    </div>
+                    <div class="wizard-step-label">Download Template</div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="wizard-step-circle">
                         <i class="bi bi-file-earmark-excel"></i>
                     </div>
                     <div class="wizard-step-label">Upload Metadata</div>
                 </div>
-                <div class="wizard-step" data-step="3">
+                <div class="wizard-step" data-step="4">
                     <div class="wizard-step-circle">
                         <i class="bi bi-check-square"></i>
                     </div>
                     <div class="wizard-step-label">Validation</div>
                 </div>
-                <div class="wizard-step" data-step="4">
+                <div class="wizard-step" data-step="5">
                     <div class="wizard-step-circle">
                         <i class="bi bi-cloud-upload"></i>
                     </div>
@@ -1075,28 +213,25 @@
                 </div>
             </div>
 
-            <!-- Wizard Content Area -->
             <div class="wizard-content">
-                <!-- Step 1: Select Folder -->
+                <!-- Step 1: folder -->
                 <div class="wizard-step-content active" data-step="1">
                     <div class="drop-zone" id="dropZone">
                         <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                         </svg>
                         <div class="drop-zone-text">Select Folder with PDF Files</div>
-                        <div class="drop-zone-info">
-                            Choose a folder containing all your PDF documents
-                        </div>
-                        <div class="drop-zone-info" style="margin-bottom: 20px;">
-                            <i class="bi bi-info-circle"></i> All PDF files in the folder will be processed
+                        <div class="drop-zone-info">Choose a folder containing all your PDF documents</div>
+                        <div class="drop-zone-info" style="margin-bottom:20px;">
+                            <i class="bi bi-info-circle"></i> All checked PDF files will be processed
                         </div>
                         <button type="button" class="browse-btn" onclick="triggerFolderSelection()">
                             <i class="bi bi-folder2-open"></i> Browse Folder
                         </button>
-                        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;" />
+                        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none;">
                     </div>
 
-                    <!-- Folder Uploaded Success Message -->
                     <div class="folder-uploaded-message" id="folderUploadedMessage">
                         <div class="folder-uploaded-icon">
                             <i class="bi bi-check-circle-fill"></i>
@@ -1109,52 +244,68 @@
                         <button type="button" class="change-file-btn" onclick="changeFolder()">
                             <i class="bi bi-arrow-repeat"></i> Change Folder
                         </button>
-                        <div class="file-list" id="fileList">
-                            <!-- PDF file list will appear here -->
-                        </div>
+
+                        <div class="file-list" id="fileList"></div>
                     </div>
                 </div>
 
-                <!-- Step 2: Upload Excel -->
+                <!-- Step 2: download template -->
                 <div class="wizard-step-content" data-step="2">
                     <div class="info-box">
                         <div class="info-box-title">
                             <i class="bi bi-info-circle-fill"></i>
-                            Next Steps
+                            Download Metadata Template
                         </div>
                         <div class="info-box-content">
-                            Download the Excel template, fill in the metadata for each document, then upload it back.
-                            <ul style="margin-top: 10px;">
-                                <li>Download the template using the button below</li>
-                                <li>Fill in all required metadata for each document</li>
-                                <li>For multiple classifications, separate them with comma (e.g., "Safety, Quality")</li>
-                                <li>Upload the completed Excel file</li>
+                            Use this step to download the Excel template for metadata entry if needed.
+                            <ul style="margin-top:10px;">
+                                <li>You can skip downloading if you already have metadata Excel.</li>
+                                <li>Template helps you map document metadata and classifications.</li>
+                                <li>Protected PDFs can have page numbers entered manually in Excel.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="download-template-btn" id="downloadTemplateBtn">
+                        <i class="bi bi-download"></i> Download Template
+                    </button>
+                    <div class="template-note">
+                        You may go next without downloading if your metadata file already exists.
+                    </div>
+                </div>
+
+                <!-- Step 3: upload Excel -->
+                <div class="wizard-step-content" data-step="3">
+                    <div class="info-box">
+                        <div class="info-box-title">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Upload Metadata Excel
+                        </div>
+                        <div class="info-box-content">
+                            Upload the Excel file that contains metadata for the selected documents.
+                            <ul style="margin-top:10px;">
+                                <li>Supported formats: .xlsx, .xls</li>
+                                <li>Protected PDFs will use page numbers from Excel if provided.</li>
+                                <li>Other PDFs will use page count from the document (server logic).</li>
                             </ul>
                         </div>
                     </div>
 
-                    <button type="button" class="download-template-btn" id="downloadTemplateBtn">
-                        <i class="bi bi-download"></i> Download Template
-                    </button>
-
                     <div class="drop-zone" id="excelDropZone">
                         <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        <div class="drop-zone-text">Upload Filled Metadata Excel</div>
-                        <div class="drop-zone-info">
-                            or drag and drop Excel file here
-                        </div>
-                        <div class="drop-zone-info" style="margin-bottom: 20px;">
+                        <div class="drop-zone-text">Upload Metadata Excel</div>
+                        <div class="drop-zone-info">Drag and drop the Excel file here or use Browse</div>
+                        <div class="drop-zone-info" style="margin-bottom:20px;">
                             <i class="bi bi-info-circle"></i> Supported formats: .xlsx, .xls
                         </div>
                         <button type="button" class="browse-btn" onclick="document.getElementById('excelFileInput').click()">
                             <i class="bi bi-file-earmark-excel"></i> Browse File
                         </button>
-                        <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none;" />
+                        <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none;">
                     </div>
 
-                    <!-- Excel Uploaded Success Message -->
                     <div class="folder-uploaded-message" id="excelUploadedMessage">
                         <div class="folder-uploaded-icon">
                             <i class="bi bi-check-circle-fill"></i>
@@ -1170,14 +321,13 @@
                     </div>
                 </div>
 
-                <!-- Step 3: Validation -->
-                <div class="wizard-step-content" data-step="3">
+                <!-- Step 4: validation -->
+                <div class="wizard-step-content" data-step="4">
                     <div class="validation-results">
                         <div class="validation-header">
                             <div class="validation-title">Validation Results</div>
                             <div class="validation-status" id="validationStatus">Validating...</div>
                         </div>
-
                         <div class="validation-stats">
                             <div class="stat-card total">
                                 <div class="stat-number" id="totalDocuments">0</div>
@@ -1196,12 +346,7 @@
                                 <div class="stat-label">Errors</div>
                             </div>
                         </div>
-
-                        <div class="validation-issues" id="validationIssues">
-                            <!-- Issues will be populated here -->
-                        </div>
-
-                        <!-- Error Action Buttons - Updated with Upload Valid Documents option -->
+                        <div class="validation-issues" id="validationIssues"></div>
                         <div class="validation-error-actions" id="validationErrorActions">
                             <h4>
                                 <i class="bi bi-exclamation-triangle-fill"></i>
@@ -1223,36 +368,31 @@
                     </div>
                 </div>
 
-                <!-- Step 4: Upload Progress -->
-                <div class="wizard-step-content" data-step="4">
+                <!-- Step 5: upload progress -->
+                <div class="wizard-step-content" data-step="5">
                     <div class="progress-container">
                         <div class="progress-header">
                             <div class="progress-title">Uploading Documents...</div>
                             <div class="progress-subtitle">Please wait while we process your documents</div>
                         </div>
-
                         <div class="progress-bar-container">
                             <div class="progress-bar-wrapper">
-                                <div class="progress-bar-fill" id="progressBar" style="width: 0%">0%</div>
+                                <div class="progress-bar-fill" id="progressBar" style="width:0%">0%</div>
                             </div>
                             <div class="progress-text" id="progressText">Processing 0 of 0 documents...</div>
                         </div>
-
-                        <div class="upload-log" id="uploadLog">
-                            <!-- Log items will be populated here -->
-                        </div>
+                        <div class="upload-log" id="uploadLog"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Wizard Navigation -->
             <div class="wizard-navigation" id="wizardNavigation">
                 <div>
-                    <button type="button" class="wizard-btn wizard-btn-secondary" id="prevBtn" style="display: none;">
+                    <button type="button" class="wizard-btn wizard-btn-secondary" id="prevBtn" style="display:none;">
                         <i class="bi bi-arrow-left"></i> Previous
                     </button>
                 </div>
-                <div style="display: flex; gap: 12px;">
+                <div style="display:flex;gap:12px;">
                     <button type="button" class="wizard-btn wizard-btn-secondary" id="cancelBtn">
                         <i class="bi bi-x-circle"></i> Cancel
                     </button>
@@ -1263,7 +403,7 @@
             </div>
         </div>
 
-        <!-- Custom Confirmation Modal -->
+        <!-- Unsaved changes modal -->
         <div class="custom-modal-overlay" id="confirmationModal">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-danger">
@@ -1292,7 +432,7 @@
             </div>
         </div>
 
-        <!-- Upload Valid Documents Confirmation Modal -->
+        <!-- Upload valid-only confirmation -->
         <div class="custom-modal-overlay" id="uploadValidConfirmModal">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-warning">
@@ -1310,11 +450,11 @@
                 <div class="modal-body-custom">
                     <p><strong>You are about to upload only the valid documents.</strong></p>
                     <p>
-                        <span id="validDocsCount" style="color: #10b981; font-weight: 600;">0</span> documents will be uploaded successfully.<br>
-                        <span id="errorDocsCount" style="color: #ef4444; font-weight: 600;">0</span> documents with errors will be skipped.
+                        <span id="validDocsCount" style="color:#10b981;font-weight:600;">0</span> documents will be uploaded successfully.<br>
+                        <span id="errorDocsCount" style="color:#ef4444;font-weight:600;">0</span> documents with errors will be skipped.
                     </p>
-                    <p style="margin-top: 15px;">Do you want to proceed with uploading only the valid documents?</p>
-                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
+                    <p style="margin-top:15px;">Do you want to proceed with uploading only the valid documents?</p>
+                    <p style="font-size:13px;color:#6b7280;margin-top:10px;">
                         <i class="bi bi-info-circle"></i> You can fix the errors and upload the remaining documents later.
                     </p>
                 </div>
@@ -1329,7 +469,7 @@
             </div>
         </div>
 
-        <!-- PDF Protection Warning Modal -->
+        <!-- PDF protection modal with remove-option -->
         <div class="custom-modal-overlay" id="pdfProtectionModal">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-warning">
@@ -1346,17 +486,20 @@
                 </div>
                 <div class="modal-body-custom">
                     <p><strong><span id="protectedFileCount">0</span> PDF file(s) have the following restrictions:</strong></p>
-                    <div class="protected-files-list" id="protectedFilesList">
-                        <!-- Protected files will be listed here -->
-                    </div>
-                    <p style="margin-top: 15px;"><strong>Do you want to continue with these documents?</strong></p>
-                    <p style="font-size: 13px; color: #6b7280; margin-top: 10px;">
-                        <i class="bi bi-info-circle"></i> You will be able to manually enter metadata for protected PDFs in the Excel template.
-                    </p>
+                    <div class="protected-files-list" id="protectedFilesList"></div>
+                    <p style="margin-top:15px;"><strong>How do you want to proceed?</strong></p>
+                    <ul>
+                        <li><strong>Remove protected files and continue</strong>: Protected PDFs will be excluded from this upload.</li>
+                        <li><strong>Continue anyway</strong>: Protected PDFs will be kept, and page numbers must come from metadata.</li>
+                        <li><strong>Cancel &amp; Select Again</strong>: Go back and choose another folder.</li>
+                    </ul>
                 </div>
                 <div class="modal-footer-custom">
                     <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelProtectedPdfs()">
-                        Cancel & Select Again
+                        Cancel &amp; Select Again
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-warning" id="removeProtectedAndContinueBtn">
+                        <i class="bi bi-slash-circle"></i> Remove Protected &amp; Continue
                     </button>
                     <button type="button" class="modal-btn modal-btn-warning" id="forceUploadProtectedBtn">
                         <i class="bi bi-shield-exclamation"></i> Continue Anyway
@@ -1364,15 +507,14 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
 <script src="/js/bootstrap.bundle.min.js"></script>
-<!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
 <script>
-    // ============== WIZARD STATE MANAGEMENT ==============
     let currentStep = 1;
     let formChanged = false;
     let pdfFiles = [];
@@ -1384,196 +526,143 @@
     let navigationConfirmed = false;
     let pendingNavigationUrl = null;
     let isDownloadingTemplate = false;
-    let uploadOnlyValid = false; // New flag to track if uploading only valid documents
+    let selectedPdfIndices = new Set();
+    let lastVisitedUrl = document.referrer || '';
 
-    // ============== INITIALIZE ==============
-    document.addEventListener('DOMContentLoaded', function() {
-        // PDF.js worker configuration
+    document.addEventListener('DOMContentLoaded', function () {
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.js';
-        } else {
-            console.warn('PDF.js library not loaded. PDF protection checks will be skipped.');
         }
-
-        // Check browser support for folder selection
         const folderInput = document.getElementById('folderInput');
         if (!('webkitdirectory' in folderInput)) {
-            console.warn('Browser does not support folder selection');
-            showCustomAlert('Your browser may not fully support folder selection. Please try Chrome, Edge, or a modern browser.', 'warning');
+            showCustomAlert('Your browser may not fully support folder selection. Please try Chrome, Edge, or another modern browser.', 'warning');
         }
     });
 
-    // ============== WIZARD NAVIGATION ==============
     function updateWizardStep(step) {
-        document.querySelectorAll('.wizard-step-content').forEach(content => {
-            content.classList.remove('active');
-        });
-
+        document.querySelectorAll('.wizard-step-content').forEach(c => c.classList.remove('active'));
         const currentContent = document.querySelector(`.wizard-step-content[data-step="${step}"]`);
-        if (currentContent) {
-            currentContent.classList.add('active');
-        }
+        if (currentContent) currentContent.classList.add('active');
 
-        document.querySelectorAll('.wizard-step').forEach(stepEl => {
-            const stepNum = parseInt(stepEl.getAttribute('data-step'));
-            stepEl.classList.remove('active', 'completed');
-
-            if (stepNum < step) {
-                stepEl.classList.add('completed');
-            } else if (stepNum === step) {
-                stepEl.classList.add('active');
-            }
+        document.querySelectorAll('.wizard-step').forEach(el => {
+            const sn = parseInt(el.getAttribute('data-step'));
+            el.classList.remove('active','completed');
+            if (sn < step) el.classList.add('completed');
+            else if (sn === step) el.classList.add('active');
         });
 
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-        const wizardNav = document.getElementById('wizardNavigation');
+        const nav = document.getElementById('wizardNavigation');
 
-        // Update navigation buttons based on step
         if (step === 1) {
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'inline-flex';
             nextBtn.className = 'wizard-btn wizard-btn-primary';
             nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
-            wizardNav.style.display = 'flex';
+            nav.style.display = 'flex';
         } else if (step === 2) {
             prevBtn.style.display = 'inline-flex';
             nextBtn.style.display = 'inline-flex';
             nextBtn.className = 'wizard-btn wizard-btn-primary';
-            nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
-            wizardNav.style.display = 'flex';
+            nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
+            nav.style.display = 'flex';
         } else if (step === 3) {
-            // Navigation will be updated after validation
-            prevBtn.style.display = 'inline-flex';
-            nextBtn.style.display = 'none';
-            wizardNav.style.display = 'flex';
-        } else if (step === 4) {
-            // Hide navigation during upload
-            wizardNav.style.display = 'none';
-        }
-
-        currentStep = step;
-    }
-
-    // Update navigation for Step 3 based on validation result
-    function updateStep3Navigation(hasErrors) {
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-
-        if (hasErrors) {
-            // Show "Upload Valid Documents" button in the navigation even when errors exist
             prevBtn.style.display = 'inline-flex';
             nextBtn.style.display = 'inline-flex';
-            nextBtn.className = 'wizard-btn wizard-btn-warning';
-            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Valid Documents';
-        } else {
-            // Show standard "Upload" button when no errors
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
+            nav.style.display = 'flex';
+        } else if (step === 4) {
             prevBtn.style.display = 'inline-flex';
             nextBtn.style.display = 'inline-flex';
             nextBtn.className = 'wizard-btn wizard-btn-success';
-            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload';
+            nextBtn.innerHTML = '<i class="bi bi-arrow-right"></i> Go to Upload';
+            nav.style.display = 'flex';
+        } else if (step === 5) {
+            // during upload hide nav
+            nav.style.display = 'none';
+        }
+        currentStep = step;
+    }
+
+    function updateStep4Navigation(hasErrors) {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        prevBtn.style.display = 'inline-flex';
+        nextBtn.style.display = 'inline-flex';
+        if (hasErrors) {
+            nextBtn.className = 'wizard-btn wizard-btn-warning';
+            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Valid Documents';
+        } else {
+            nextBtn.className = 'wizard-btn wizard-btn-success';
+            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload All';
         }
     }
 
-    document.getElementById('nextBtn').addEventListener('click', async function() {
+    document.getElementById('nextBtn').addEventListener('click', async function () {
         if (currentStep === 1) {
             if (pdfFiles.length === 0) {
                 showCustomAlert('Please select a folder with PDF files before proceeding.');
                 return;
             }
-            const originalFormChanged = formChanged;
-            formChanged = false;
-            updateWizardStep(2);
-            formChanged = originalFormChanged;
-        } else if (currentStep === 2) {
-            if (!excelFile) {
-                showCustomAlert('Please upload the filled metadata Excel file before proceeding.');
+            if (selectedPdfIndices.size === 0) {
+                showCustomAlert('Please keep at least one document checked before proceeding.');
                 return;
             }
-            const originalFormChanged = formChanged;
-            formChanged = false;
-            await validateFiles();
-            formChanged = originalFormChanged;
+            const o = formChanged; formChanged = false;
+            updateWizardStep(2);
+            formChanged = o;
+        } else if (currentStep === 2) {
+            const o = formChanged; formChanged = false;
+            updateWizardStep(3);
+            formChanged = o;
         } else if (currentStep === 3) {
-            // Check if there are errors
+            if (!excelFile) {
+                showCustomAlert('Please upload the metadata Excel file before validating.');
+                return;
+            }
+            const o = formChanged; formChanged = false;
+            await validateFiles();
+            formChanged = o;
+        } else if (currentStep === 4) {
             if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
-                // Show confirmation modal for uploading only valid documents
                 showUploadValidConfirmation();
             } else {
-                // No errors, proceed with normal upload
+                const o = formChanged; formChanged = false;
                 await startUpload(false);
+                formChanged = o;
             }
         }
     });
 
-    document.getElementById('prevBtn').addEventListener('click', function() {
-        if (currentStep > 1 && currentStep <= 3) {
-            const originalFormChanged = formChanged;
-            formChanged = false;
+    document.getElementById('prevBtn').addEventListener('click', function () {
+        if (currentStep > 1 && currentStep <= 4) {
+            const o = formChanged; formChanged = false;
             updateWizardStep(currentStep - 1);
-            formChanged = originalFormChanged;
+            formChanged = o;
         }
     });
 
-    // ============== ERROR ACTION BUTTONS ==============
-    document.getElementById('reuploadFolderBtn').addEventListener('click', function() {
-        // Clear both folder and Excel (since Excel must match folder)
-        changeFolder();
-        excelFile = null;
-        excelFileInput.value = '';
-        excelUploadedMessage.classList.remove('show');
-        excelDropZone.style.display = 'block';
-
-        // Go back to Step 1
-        const originalFormChanged = formChanged;
-        formChanged = false;
-        updateWizardStep(1);
-        formChanged = originalFormChanged;
-
-        showCustomAlert('Please select a new folder with PDF files.', 'info');
-    });
-
-    document.getElementById('reuploadExcelBtn').addEventListener('click', function() {
-        // Keep folder selection, only clear Excel
-        changeExcelFile();
-
-        // Go back to Step 2
-        const originalFormChanged = formChanged;
-        formChanged = false;
-        updateWizardStep(2);
-        formChanged = originalFormChanged;
-
-        showCustomAlert('Please upload the corrected metadata Excel file.', 'info');
-    });
-
-    // New: Upload Valid Documents button in error actions
-    document.getElementById('uploadValidBtn').addEventListener('click', function() {
-        showUploadValidConfirmation();
-    });
-
-    // ============== UPLOAD VALID DOCUMENTS CONFIRMATION ==============
+    document.getElementById('uploadValidBtn').addEventListener('click', showUploadValidConfirmation);
     function showUploadValidConfirmation() {
         if (!validationResult) return;
-
-        const validCount = validationResult.validDocuments || 0;
-        const errorCount = validationResult.errors ? validationResult.errors.length : 0;
-
-        document.getElementById('validDocsCount').textContent = validCount;
-        document.getElementById('errorDocsCount').textContent = errorCount;
-
+        const v = validationResult.validDocuments || 0;
+        const e = validationResult.errors ? validationResult.errors.length : 0;
+        document.getElementById('validDocsCount').textContent = v;
+        document.getElementById('errorDocsCount').textContent = e;
         document.getElementById('uploadValidConfirmModal').classList.add('show');
     }
-
     function closeUploadValidConfirmModal() {
         document.getElementById('uploadValidConfirmModal').classList.remove('show');
     }
-
-    document.getElementById('confirmUploadValidBtn').addEventListener('click', async function() {
+    document.getElementById('confirmUploadValidBtn').addEventListener('click', async function () {
         closeUploadValidConfirmModal();
-        await startUpload(true); // Pass true to indicate uploading only valid documents
+        const o = formChanged; formChanged = false;
+        await startUpload(true);
+        formChanged = o;
     });
 
-    // ============== FOLDER SELECTION ==============
     function triggerFolderSelection() {
         document.getElementById('folderInput').click();
     }
@@ -1582,98 +671,63 @@
     const folderUploadedMessage = document.getElementById('folderUploadedMessage');
     const dropZone = document.getElementById('dropZone');
 
-    folderInput.addEventListener('change', async function(e) {
-        console.log('Folder input changed');
-        console.log('Files selected:', e.target.files.length);
-
+    folderInput.addEventListener('change', async function (e) {
         const files = Array.from(e.target.files);
-        console.log('Files array:', files);
-
-        if (files.length > 0) {
-            await handleFolderSelection(files);
-        } else {
-            console.log('No files in selection');
-        }
-    }, { once: false });
+        if (files.length > 0) await handleFolderSelection(files);
+    });
 
     async function handleFolderSelection(files) {
         if (!files || files.length === 0) {
             showCustomAlert('No files selected. Please select a folder.');
             return;
         }
-
-        const pdfFilesTemp = files.filter(file =>
-            file.name.toLowerCase().endsWith('.pdf')
-        );
-
+        const pdfFilesTemp = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
         if (pdfFilesTemp.length === 0) {
             showCustomAlert('No PDF files found in the selected folder. Please select a folder containing PDF files.');
             return;
         }
-
         await checkPdfProtection(pdfFilesTemp);
     }
 
     async function checkPdfProtection(files) {
         protectedPdfFiles = [];
         const protectedFilesData = [];
-
         const loadingAlert = showCustomAlert('Checking PDF files for restrictions... This may take a moment.', 'info', false);
-
         let checkedCount = 0;
+
         for (let file of files) {
             try {
                 checkedCount++;
                 if (loadingAlert && loadingAlert.querySelector('span')) {
-                    loadingAlert.querySelector('span').textContent = `Checking PDF files (${checkedCount}/${files.length})...`;
+                    loadingAlert.querySelector('span').textContent =
+                        `Checking PDF files (${checkedCount}/${files.length})...`;
                 }
-
                 const arrayBuffer = await file.arrayBuffer();
-                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-
+                const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
                 try {
                     const pdf = await loadingTask.promise;
                     const restrictions = [];
-
-                    if (pdf.isEncrypted) {
-                        restrictions.push('Password Protected');
-                    }
-
+                    if (pdf.isEncrypted) restrictions.push('Password Protected');
                     try {
                         const permissions = await pdf.getPermissions();
                         if (permissions) {
-                            if (permissions.includes(4) === false) {
-                                restrictions.push('Print Restricted');
-                            }
-                            if (permissions.includes(16) === false) {
-                                restrictions.push('Copy Restricted');
-                            }
-                            if (permissions.includes(8) === false) {
-                                restrictions.push('Modification Restricted');
-                            }
+                            if (permissions.includes(4) === false) restrictions.push('Print Restricted');
+                            if (permissions.includes(16) === false) restrictions.push('Copy Restricted');
+                            if (permissions.includes(8) === false) restrictions.push('Modification Restricted');
                         }
-                    } catch (permError) {
-                        console.log('Could not check permissions for:', file.name);
-                    }
-
+                    } catch (permError) {}
                     if (restrictions.length > 0) {
                         protectedPdfFiles.push(file);
-                        protectedFilesData.push({
-                            name: file.name,
-                            restrictions: restrictions
-                        });
+                        protectedFilesData.push({name:file.name,restrictions});
                     }
                 } catch (pdfError) {
                     if (pdfError.name === 'PasswordException') {
                         protectedPdfFiles.push(file);
-                        protectedFilesData.push({
-                            name: file.name,
-                            restrictions: ['Password Protected']
-                        });
+                        protectedFilesData.push({name:file.name,restrictions:['Password Protected']});
                     }
                 }
-            } catch (error) {
-                console.error('Error checking PDF:', file.name, error);
+            } catch (err) {
+                console.error('Error checking PDF:', file.name, err);
             }
         }
 
@@ -1690,350 +744,302 @@
     }
 
     function showProtectionWarning(allFiles, protectedFilesData) {
-        const protectedFilesList = document.getElementById('protectedFilesList');
-        protectedFilesList.innerHTML = '';
-
+        const list = document.getElementById('protectedFilesList');
+        list.innerHTML = '';
         document.getElementById('protectedFileCount').textContent = protectedFilesData.length;
-
-        protectedFilesData.forEach(fileData => {
+        protectedFilesData.forEach(f => {
             const item = document.createElement('div');
             item.className = 'protected-file-item';
-
-            const restrictionsHtml = fileData.restrictions.map(r =>
-                `<span><i class="bi bi-exclamation-triangle"></i> ${r}</span>`
-            ).join('');
-
+            const rhtml = f.restrictions.map(r => `<span><i class="bi bi-exclamation-triangle"></i> ${r}</span>`).join('');
             item.innerHTML = `
-                <div class="protected-file-name"><i class="bi bi-file-earmark-pdf"></i> ${fileData.name}</div>
-                <div class="protected-file-issues">${restrictionsHtml}</div>
+                <div class="protected-file-name"><i class="bi bi-file-earmark-pdf"></i> ${f.name}</div>
+                <div class="protected-file-issues">${rhtml}</div>
             `;
-            protectedFilesList.appendChild(item);
+            list.appendChild(item);
         });
-
         document.getElementById('pdfProtectionModal').classList.add('show');
         window.tempAllFiles = allFiles;
     }
-
     function closePdfProtectionModal() {
         document.getElementById('pdfProtectionModal').classList.remove('show');
     }
-
     function cancelProtectedPdfs() {
         folderInput.value = '';
         pdfFiles = [];
         protectedPdfFiles = [];
+        selectedPdfIndices.clear();
+        folderUploadedMessage.classList.remove('show');
+        dropZone.style.display = 'block';
         closePdfProtectionModal();
+        formChanged = false;
     }
-
-    document.getElementById('forceUploadProtectedBtn').addEventListener('click', async function() {
+    document.getElementById('removeProtectedAndContinueBtn').addEventListener('click', async function(){
         closePdfProtectionModal();
-        await proceedWithFolderSelection(window.tempAllFiles);
+        const allFiles = window.tempAllFiles || [];
+        const filtered = allFiles.filter(f => !protectedPdfFiles.includes(f));
+        await proceedWithFolderSelection(filtered);
+    });
+    document.getElementById('forceUploadProtectedBtn').addEventListener('click', async function(){
+        closePdfProtectionModal();
+        await proceedWithFolderSelection(window.tempAllFiles || []);
     });
 
     async function proceedWithFolderSelection(files) {
-        console.log('Proceeding with folder selection:', files.length, 'files');
-
         pdfFiles = files;
-
+        selectedPdfIndices = new Set(pdfFiles.map((_,i)=>i));
         let totalSize = 0;
-        pdfFiles.forEach(file => {
-            totalSize += file.size;
-        });
-
-        console.log('Total size:', totalSize);
-        console.log('PDF files array:', pdfFiles);
-
+        pdfFiles.forEach(f => totalSize += f.size);
         document.getElementById('uploadedFileCount').textContent = pdfFiles.length + ' PDF files';
         document.getElementById('uploadedFileSize').textContent = formatFileSize(totalSize);
-
-        document.getElementById('folderUploadedMessage').classList.add('show');
+        folderUploadedMessage.classList.add('show');
         dropZone.style.display = 'none';
-
         displayFileList();
-
         formChanged = true;
-
-        console.log('formChanged set to:', formChanged);
-
         showCustomAlert(`Successfully loaded ${pdfFiles.length} PDF file(s)`, 'success');
     }
 
     function displayFileList() {
         const fileList = document.getElementById('fileList');
         fileList.innerHTML = '';
+        if (pdfFiles.length === 0) {
+            fileList.innerHTML = '<div class="file-list-item" style="justify-content:center;color:#6b7280;">No files.</div>';
+            return;
+        }
+        const header = document.createElement('div');
+        header.className = 'file-list-header';
+        header.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;">
+                <input type="checkbox" id="selectAllFiles" class="form-check-input">
+                <span>Select All (${pdfFiles.length})</span>
+            </div>
+            <span>Only checked documents will be validated and uploaded.</span>
+        `;
+        fileList.appendChild(header);
+        const selectAllCheckbox = header.querySelector('#selectAllFiles');
+        selectAllCheckbox.checked = selectedPdfIndices.size === pdfFiles.length;
+        selectAllCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                selectedPdfIndices = new Set(pdfFiles.map((_,i)=>i));
+            } else {
+                selectedPdfIndices.clear();
+            }
+            refreshFileCheckboxes();
+        });
 
-        pdfFiles.forEach((file, index) => {
+        pdfFiles.forEach((file,index) => {
             const item = document.createElement('div');
             item.className = 'file-list-item';
-
             const isProtected = protectedPdfFiles.includes(file);
-            const protectedIcon = isProtected ? '<i class="bi bi-shield-lock" style="color: #f59e0b; margin-left: 5px;"></i>' : '';
-
+            const protectedHtml = isProtected ? `<span class="protected-badge"><i class="bi bi-shield-lock"></i> Protected</span>` : '';
             item.innerHTML = `
-                <i class="bi bi-file-earmark-pdf" style="color: #ef4444;"></i>
-                <span>${file.name} ${protectedIcon}</span>
+                <input type="checkbox" class="form-check-input file-checkbox" data-index="${index}">
+                <i class="bi bi-file-earmark-pdf" style="color:#ef4444;"></i>
+                <div class="file-name-wrapper">
+                    <span class="file-name-text" title="${file.name}">${file.name}</span>
+                    ${protectedHtml}
+                </div>
             `;
             fileList.appendChild(item);
         });
-    }
 
+        refreshFileCheckboxes();
+        fileList.addEventListener('change', function (e) {
+            const cb = e.target.closest('.file-checkbox');
+            if (!cb) return;
+            const idx = parseInt(cb.getAttribute('data-index'));
+            if (cb.checked) selectedPdfIndices.add(idx);
+            else selectedPdfIndices.delete(idx);
+            selectAllCheckbox.checked = selectedPdfIndices.size === pdfFiles.length;
+        });
+    }
+    function refreshFileCheckboxes() {
+        document.querySelectorAll('.file-checkbox').forEach(cb => {
+            const idx = parseInt(cb.getAttribute('data-index'));
+            cb.checked = selectedPdfIndices.has(idx);
+        });
+    }
     function changeFolder() {
         folderInput.value = '';
         pdfFiles = [];
         protectedPdfFiles = [];
+        selectedPdfIndices.clear();
         folderUploadedMessage.classList.remove('show');
         dropZone.style.display = 'block';
         formChanged = false;
     }
 
-    // ============== DOWNLOAD TEMPLATE ==============
-    document.getElementById('downloadTemplateBtn').addEventListener('click', async function() {
+    document.getElementById('downloadTemplateBtn').addEventListener('click', async function(){
         if (!pdfFiles || pdfFiles.length === 0) {
             showCustomAlert('No PDF files available. Please go back and select a folder.', 'error');
             return;
         }
-
-        isDownloadingTemplate = true;
-
-        const formData = new FormData();
-        for (let i = 0; i < pdfFiles.length; i++) {
-            formData.append('pdfFiles', pdfFiles[i]);
+        if (selectedPdfIndices.size === 0) {
+            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
+            return;
         }
-
-        try {
+        isDownloadingTemplate = true;
+        const formData = new FormData();
+        Array.from(selectedPdfIndices).forEach(idx => formData.append('pdfFiles', pdfFiles[idx]));
+        try{
             const loadingAlert = showCustomAlert('Downloading template...', 'info', false);
-
-            const response = await fetch('/api/bulk-upload/generate-template', {
-                method: 'POST',
-                body: formData
-            });
-
-            console.log('Download template response:', response.status);
-
-            if (loadingAlert) {
-                loadingAlert.remove();
-            }
-
-            if (!response.ok) {
-                if (response.status === 403) {
+            const response = await fetch('/api/bulk-upload/generate-template',{method:'POST',body:formData});
+            if (loadingAlert) loadingAlert.remove();
+            if (!response.ok){
+                if (response.status === 403){
                     showCustomAlert('Access Denied: Admin access required.', 'error');
-                    isDownloadingTemplate = false;
-                    return;
+                    isDownloadingTemplate = false; return;
                 }
-
-                const errorText = await response.text();
-                console.error('Download failed:', errorText);
+                const t = await response.text();
+                console.error('Download failed:', t);
                 throw new Error(`Download failed: ${response.status}`);
             }
-
             const blob = await response.blob();
-            console.log('Template blob size:', blob.size);
-
-            if (blob.size === 0) {
-                throw new Error('Received empty file');
-            }
-
-            const contentDisposition = response.headers.get('Content-Disposition');
+            if (blob.size === 0) throw new Error('Received empty file');
+            const cd = response.headers.get('Content-Disposition');
             let filename = 'bulk_upload_template.xlsx';
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (filenameMatch && filenameMatch[1]) {
-                    filename = filenameMatch[1].replace(/['"]/g, '');
-                }
+            if (cd){
+                const m = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                if (m && m[1]) filename = m[1].replace(/['"]/g,'');
             }
-
             downloadBlob(blob, filename);
-
             showCustomAlert('Template downloaded successfully! Use the Classification dropdown in Excel.', 'success');
-
-        } catch (error) {
-            console.error('Template download error:', error);
-
-            if (error.message.includes('Failed to fetch')) {
+        }catch(err){
+            console.error('Template download error:', err);
+            if (err.message.includes('Failed to fetch')) {
                 showCustomAlert('Cannot connect to server. Please check if backend is running.', 'error');
             } else {
-                showCustomAlert(`Failed to download template: ${error.message}`, 'error');
+                showCustomAlert(`Failed to download template: ${err.message}`, 'error');
             }
-        } finally {
+        }finally{
             isDownloadingTemplate = false;
         }
     });
-
-    function downloadBlob(blob, filename) {
+    function downloadBlob(blob, filename){
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-
-        console.log('Triggering download:', filename);
-        a.click();
-
-        setTimeout(() => {
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }, 100);
+        a.href = url; a.download = filename; a.style.display='none';
+        document.body.appendChild(a); a.click();
+        setTimeout(()=>{window.URL.revokeObjectURL(url);document.body.removeChild(a);},100);
     }
 
-    // ============== EXCEL UPLOAD ==============
     const excelDropZone = document.getElementById('excelDropZone');
     const excelFileInput = document.getElementById('excelFileInput');
     const excelUploadedMessage = document.getElementById('excelUploadedMessage');
-
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        excelDropZone.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    ['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+        excelDropZone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();});
     });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        excelDropZone.addEventListener(eventName, () => excelDropZone.classList.add('dragover'), false);
+    ['dragenter','dragover'].forEach(ev=>{
+        excelDropZone.addEventListener(ev,()=>excelDropZone.classList.add('dragover'));
     });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        excelDropZone.addEventListener(eventName, () => excelDropZone.classList.remove('dragover'), false);
+    ['dragleave','drop'].forEach(ev=>{
+        excelDropZone.addEventListener(ev,()=>excelDropZone.classList.remove('dragover'));
     });
-
-    excelDropZone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        if (files.length > 0) {
-            handleExcelFile(files[0]);
-        }
+    excelDropZone.addEventListener('drop',e=>{
+        const dt=e.dataTransfer; const files=dt.files;
+        if (files.length>0) handleExcelFile(files[0]);
     });
-
-    excelFileInput.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            handleExcelFile(e.target.files[0]);
-        }
+    excelFileInput.addEventListener('change',e=>{
+        if (e.target.files.length>0) handleExcelFile(e.target.files[0]);
     });
-
-    function handleExcelFile(file) {
+    function handleExcelFile(file){
         if (!file) return;
-
-        const validExtensions = ['.xlsx', '.xls'];
-        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-
-        if (!validExtensions.includes(fileExtension)) {
+        const exts=['.xlsx','.xls'];
+        const ext='.'+file.name.split('.').pop().toLowerCase();
+        if (!exts.includes(ext)){
             showCustomAlert('Please upload a valid Excel file (.xlsx or .xls)');
             return;
         }
-
-        excelFile = file;
-
-        document.getElementById('uploadedExcelName').textContent = file.name;
-        document.getElementById('uploadedExcelSize').textContent = formatFileSize(file.size);
-        document.getElementById('excelUploadedMessage').classList.add('show');
-        excelDropZone.style.display = 'none';
+        excelFile=file;
+        document.getElementById('uploadedExcelName').textContent=file.name;
+        document.getElementById('uploadedExcelSize').textContent=formatFileSize(file.size);
+        excelUploadedMessage.classList.add('show');
+        excelDropZone.style.display='none';
+        formChanged = true;
     }
-
-    function changeExcelFile() {
-        excelFileInput.value = '';
-        excelFile = null;
+    function changeExcelFile(){
+        excelFileInput.value='';
+        excelFile=null;
         excelUploadedMessage.classList.remove('show');
-        excelDropZone.style.display = 'block';
+        excelDropZone.style.display='block';
+        formChanged = true;
     }
 
-    // ============== VALIDATE FILES ==============
-    async function validateFiles() {
-        updateWizardStep(3);
-
-        document.getElementById('validationStatus').textContent = 'Validating...';
-        document.getElementById('validationStatus').className = 'validation-status';
-        document.getElementById('validationErrorActions').classList.remove('show');
-
-        const formData = new FormData();
-        for (let i = 0; i < pdfFiles.length; i++) {
-            formData.append('pdfFiles', pdfFiles[i]);
+    async function validateFiles(){
+        if (selectedPdfIndices.size === 0){
+            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
+            return;
         }
+        updateWizardStep(4);
+        document.getElementById('validationStatus').textContent='Validating...';
+        document.getElementById('validationStatus').className='validation-status';
+        document.getElementById('validationErrorActions').classList.remove('show');
+        const formData = new FormData();
+        Array.from(selectedPdfIndices).forEach(idx=>formData.append('pdfFiles', pdfFiles[idx]));
         formData.append('excelFile', excelFile);
-
-        try {
-            const response = await fetch('/api/bulk-upload/validate', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                if (response.status === 403) {
+        try{
+            const response = await fetch('/api/bulk-upload/validate',{method:'POST',body:formData});
+            if (!response.ok){
+                if (response.status===403){
                     showCustomAlert('Access Denied: Admin access required.', 'error');
                     return;
                 }
                 throw new Error('Validation failed');
             }
-
             validationResult = await response.json();
-            console.log('Validation result:', validationResult);
             displayValidationResults(validationResult);
-
-        } catch (error) {
-            console.error('Validation error:', error);
+        }catch(err){
+            console.error('Validation error:', err);
             showCustomAlert('Validation failed. Please check your files and try again.', 'error');
         }
     }
 
-    function displayValidationResults(result) {
+    function displayValidationResults(result){
         document.getElementById('totalDocuments').textContent = result.totalDocuments || 0;
         document.getElementById('validDocuments').textContent = result.validDocuments || 0;
         document.getElementById('warningCount').textContent = result.warnings?.length || 0;
         document.getElementById('errorCount').textContent = result.errors?.length || 0;
-
-        const issuesContainer = document.getElementById('validationIssues');
-        issuesContainer.innerHTML = '';
-
-        const hasErrors = result.errors && result.errors.length > 0;
-
-        // Show errors
-        if (hasErrors) {
-            result.errors.forEach(error => {
-                const errorObj = typeof error === 'string' ? JSON.parse(error) : error;
-                const issueItem = createIssueItem(errorObj, 'error');
-                issuesContainer.appendChild(issueItem);
+        const issues = document.getElementById('validationIssues');
+        issues.innerHTML='';
+        const hasErrors = result.errors && result.errors.length>0;
+        if (hasErrors){
+            result.errors.forEach(e=>{
+                const o = typeof e === 'string' ? JSON.parse(e) : e;
+                issues.appendChild(createIssueItem(o,'error'));
             });
         }
-
-        // Show warnings
-        if (result.warnings && result.warnings.length > 0) {
-            result.warnings.forEach(warning => {
-                const warningObj = typeof warning === 'string' ? JSON.parse(warning) : warning;
-                const issueItem = createIssueItem(warningObj, 'warning');
-                issuesContainer.appendChild(issueItem);
+        if (result.warnings && result.warnings.length>0){
+            result.warnings.forEach(w=>{
+                const o = typeof w === 'string' ? JSON.parse(w) : w;
+                issues.appendChild(createIssueItem(o,'warning'));
             });
         }
-
-        // Update status
-        if (hasErrors) {
-            document.getElementById('validationStatus').textContent = 'Has Errors';
+        if (issues.innerHTML===''){
+            issues.innerHTML='<div style="padding:20px;text-align:center;color:#10b981;"><i class="bi bi-check-circle" style="font-size:24px;"></i><br><br>No issues found! All documents are ready to upload.</div>';
+        }
+        if (hasErrors){
+            document.getElementById('validationStatus').textContent='Has Errors';
             document.getElementById('validationStatus').classList.add('error');
             document.getElementById('validationErrorActions').classList.add('show');
-        } else if (result.warnings && result.warnings.length > 0) {
-            document.getElementById('validationStatus').textContent = 'Ready with Warnings';
+        }else if (result.warnings && result.warnings.length>0){
+            document.getElementById('validationStatus').textContent='Ready with Warnings';
             document.getElementById('validationStatus').classList.add('warning');
-        } else {
-            document.getElementById('validationStatus').textContent = 'All Valid';
+        }else{
+            document.getElementById('validationStatus').textContent='All Valid';
             document.getElementById('validationStatus').classList.add('success');
         }
-
-        if (issuesContainer.innerHTML === '') {
-            issuesContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #10b981;"><i class="bi bi-check-circle" style="font-size: 24px;"></i><br><br>No issues found! All documents are ready to upload.</div>';
-        }
-
-        // Update navigation based on validation result - ALWAYS show upload option
-        updateStep3Navigation(hasErrors);
-
-        // Show appropriate message
-        if (hasErrors) {
+        updateStep4Navigation(hasErrors);
+        if (hasErrors){
             showCustomAlert(`Validation complete. ${result.validDocuments} documents are ready to upload.`, 'warning');
-        } else {
+        }else{
             showCustomAlert('Validation successful! Click "Upload" to proceed.', 'success');
         }
     }
-
-    function createIssueItem(issue, type) {
-        const item = document.createElement('div');
-        item.className = 'issue-item';
-        item.innerHTML = `
+    function createIssueItem(issue,type){
+        const item=document.createElement('div');
+        item.className='issue-item';
+        item.innerHTML=`
             <div class="issue-icon ${type}">
-                <i class="bi bi-${type === 'error' ? 'x-circle' : 'exclamation-triangle'}"></i>
+                <i class="bi bi-${type==='error'?'x-circle':'exclamation-triangle'}"></i>
             </div>
             <div class="issue-content">
                 <div class="issue-title">${issue.title || issue.message}</div>
@@ -2043,310 +1049,258 @@
         return item;
     }
 
-    // ============== UPLOAD PROCESS ==============
-    async function startUpload(onlyValid = false) {
-        // Move to Step 4
-        updateWizardStep(4);
-
-        // Disable navigation warnings during upload
+    async function startUpload(onlyValid=false){
+        if (selectedPdfIndices.size === 0){
+            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
+            return;
+        }
+        updateWizardStep(5);
         isSubmitting = true;
         uploadStartTime = Date.now();
 
         const formData = new FormData();
-        for (let i = 0; i < pdfFiles.length; i++) {
-            formData.append('pdfFiles', pdfFiles[i]);
-        }
+        Array.from(selectedPdfIndices).forEach(idx=>formData.append('pdfFiles', pdfFiles[idx]));
         formData.append('excelFile', excelFile);
+        if (onlyValid) formData.append('uploadOnlyValid','true');
 
-        // Add flag to indicate if uploading only valid documents
-        if (onlyValid) {
-            formData.append('uploadOnlyValid', 'true');
-        }
-
-        try {
-            const response = await fetch('/api/bulk-upload/process', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (!response.ok) {
-                if (response.status === 403) {
+        try{
+            const response = await fetch('/api/bulk-upload/process',{method:'POST',body:formData});
+            if (!response.ok){
+                if (response.status===403){
                     showCustomAlert('Access Denied: Admin access required.', 'error');
-                    isSubmitting = false;
+                    isSubmitting=false;
                     return;
                 }
                 throw new Error('Upload failed');
             }
-
-            // Determine document count for progress simulation
-            const docsToUpload = onlyValid ? (validationResult?.validDocuments || 0) : (validationResult?.totalDocuments || pdfFiles.length);
-
-            // Simulate progress
+            const docsToUpload = onlyValid
+                ? (validationResult?.validDocuments || 0)
+                : (validationResult?.totalDocuments || selectedPdfIndices.size);
             await simulateProgress(docsToUpload);
-
             const result = await response.json();
-            console.log('Upload result:', result);
             showCompletion(result);
-
-        } catch (error) {
-            console.error('Upload error:', error);
+        }catch(err){
+            console.error('Upload error:', err);
             showCustomAlert('Upload failed. Please try again.', 'error');
-            isSubmitting = false;
+            isSubmitting=false;
         }
     }
 
-    async function simulateProgress(totalDocs) {
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        const uploadLog = document.getElementById('uploadLog');
-
-        uploadLog.innerHTML = '';
-
-        for (let i = 1; i <= totalDocs; i++) {
-            const percentage = Math.round((i / totalDocs) * 100);
-            progressBar.style.width = percentage + '%';
-            progressBar.textContent = percentage + '%';
-            progressText.textContent = `Processing ${i} of ${totalDocs} documents...`;
-
-            const logItem = document.createElement('div');
-            logItem.className = 'log-item';
-            logItem.innerHTML = `
-                <div class="log-icon processing">
-                    <i class="bi bi-arrow-repeat"></i>
-                </div>
-                <div class="log-text">Uploading ${pdfFiles[i-1]?.name || 'document ' + i}...</div>
+    async function simulateProgress(totalDocs){
+        const bar=document.getElementById('progressBar');
+        const text=document.getElementById('progressText');
+        const log=document.getElementById('uploadLog');
+        log.innerHTML='';
+        const selectedFilesArray = Array.from(selectedPdfIndices).map(idx=>pdfFiles[idx]);
+        for(let i=1;i<=totalDocs;i++){
+            const pct=Math.round((i/totalDocs)*100);
+            bar.style.width=pct+'%';
+            bar.textContent=pct+'%';
+            text.textContent=`Processing ${i} of ${totalDocs} documents...`;
+            const file = selectedFilesArray[i-1];
+            const li=document.createElement('div');
+            li.className='log-item';
+            li.innerHTML=`
+                <div class="log-icon processing"><i class="bi bi-arrow-repeat"></i></div>
+                <div class="log-text">Uploading ${file?.name || 'document '+i}...</div>
             `;
-            uploadLog.appendChild(logItem);
-            uploadLog.scrollTop = uploadLog.scrollHeight;
-
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            logItem.innerHTML = `
-                <div class="log-icon success">
-                    <i class="bi bi-check"></i>
-                </div>
-                <div class="log-text">${pdfFiles[i-1]?.name || 'Document ' + i} uploaded successfully</div>
+            log.appendChild(li);
+            log.scrollTop=log.scrollHeight;
+            await new Promise(r=>setTimeout(r,300));
+            li.innerHTML=`
+                <div class="log-icon success"><i class="bi bi-check"></i></div>
+                <div class="log-text">${file?.name || 'Document '+i} uploaded successfully</div>
             `;
         }
     }
 
-    function showCompletion(result) {
-        const endTime = Date.now();
-        const totalTime = Math.round((endTime - uploadStartTime) / 1000);
-
-        const successCount = result.successCount || 0;
-        const failedCount = result.failedCount || 0;
-
-        let message = `Bulk upload complete! ${successCount} documents uploaded successfully.`;
-        if (failedCount > 0) {
-            message += ` ${failedCount} documents were skipped due to errors.`;
-        }
-
-        showCustomAlert(message, 'success');
-
-        // Redirect to documents page after 2 seconds
-        setTimeout(() => {
-            window.location.href = '/documents';
-        }, 2000);
+    function showCompletion(result){
+        const endTime=Date.now();
+        const totalTime=Math.round((endTime-uploadStartTime)/1000);
+        const successCount=result.successCount || 0;
+        const failedCount=result.failedCount || 0;
+        let msg=`Bulk upload complete! ${successCount} documents uploaded successfully.`;
+        if (failedCount>0) msg += ` ${failedCount} documents were skipped due to errors.`;
+        msg += ` Time taken: ${totalTime}s.`;
+        showCustomAlert(msg,'success');
+        setTimeout(()=>{window.location.href='/documents';},2000);
     }
 
-    // ============== MODAL FUNCTIONS ==============
-    document.getElementById('cancelBtn').addEventListener('click', function() {
-        if (formChanged && !isSubmitting) {
+    document.getElementById('reuploadFolderBtn').addEventListener('click',function(){
+        changeFolder();
+        changeExcelFile();
+        const o=formChanged; formChanged=false;
+        updateWizardStep(1);
+        formChanged=o;
+        showCustomAlert('Please select a new folder with PDF files.', 'info');
+    });
+    document.getElementById('reuploadExcelBtn').addEventListener('click',function(){
+        changeExcelFile();
+        const o=formChanged; formChanged=false;
+        updateWizardStep(3);
+        formChanged=o;
+        showCustomAlert('Please upload the corrected metadata Excel file.', 'info');
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', function(){
+        if (formChanged && !isSubmitting){
             document.getElementById('confirmationModal').classList.add('show');
         } else {
             navigateAway();
         }
     });
-
-    function closeConfirmationModal() {
+    function closeConfirmationModal(){
         document.getElementById('confirmationModal').classList.remove('show');
     }
-
-    document.getElementById('confirmCancelBtn').addEventListener('click', function() {
+    document.getElementById('confirmCancelBtn').addEventListener('click',function(){
         closeConfirmationModal();
         navigateAway();
     });
 
-    function navigateAway() {
-        formChanged = false;
-        isSubmitting = true;
-
-        if (window.history.length > 1 && document.referrer) {
-            window.history.back();
+    function navigateAway(){
+        formChanged=false;
+        isSubmitting=true;
+        if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
+            window.location.href = lastVisitedUrl;
         } else {
             window.location.href = '/documents';
         }
     }
 
-    // ============== NAVIGATION PREVENTION ==============
-    window.history.pushState(null, '', window.location.href);
-
-    window.addEventListener('popstate', function(e) {
-        if (formChanged && !isSubmitting && !navigationConfirmed) {
-            window.history.pushState(null, '', window.location.href);
+    window.history.pushState(null,'',window.location.href);
+    window.addEventListener('popstate',function(e){
+        if (formChanged && !isSubmitting && !navigationConfirmed){
+            window.history.pushState(null,'',window.location.href);
             showNavigationConfirmation('back');
         }
     });
-
-    window.addEventListener('beforeunload', function(e) {
-        if (formChanged && !isSubmitting) {
+    window.addEventListener('beforeunload',function(e){
+        if (formChanged && !isSubmitting){
             e.preventDefault();
-            e.returnValue = '';
+            e.returnValue='';
             return '';
         }
     });
 
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click',function(e){
         const link = e.target.closest('a');
         const button = e.target.closest('button');
-
-        if (isDownloadingTemplate) {
-            return;
+        if (isDownloadingTemplate) return;
+        if (button){
+            const wizardBtns=['nextBtn','prevBtn','cancelBtn','downloadTemplateBtn','reuploadFolderBtn','reuploadExcelBtn','uploadValidBtn','confirmUploadValidBtn'];
+            if (wizardBtns.includes(button.id)) return;
         }
-
-        if (button) {
-            const wizardButtons = ['nextBtn', 'prevBtn', 'cancelBtn', 'downloadTemplateBtn', 'reuploadFolderBtn', 'reuploadExcelBtn', 'uploadValidBtn'];
-            if (wizardButtons.includes(button.id)) {
-                return;
-            }
-        }
-
-        if (link && link.href && !link.hasAttribute('data-bs-toggle')) {
+        if (link && link.href && !link.hasAttribute('data-bs-toggle')){
             const isWizardButton = link.closest('.wizard-navigation') ||
                                    link.closest('.wizard-content') ||
-                                   link.id === 'confirmCancelBtn' ||
+                                   link.id==='confirmCancelBtn' ||
                                    link.classList.contains('modal-btn') ||
                                    link.classList.contains('change-file-btn') ||
                                    link.classList.contains('download-template-btn');
-
             const isNavLink = link.closest('.navbar') ||
-                             link.closest('.sidebar') ||
-                             link.closest('nav') ||
-                             link.hasAttribute('href');
-
-            if (isNavLink && !isWizardButton && formChanged && !isSubmitting && !navigationConfirmed) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-
+                              link.closest('.sidebar') ||
+                              link.closest('nav') ||
+                              link.hasAttribute('href');
+            if (isNavLink && !isWizardButton && formChanged && !isSubmitting && !navigationConfirmed){
+                e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
                 const targetUrl = link.href;
                 showNavigationConfirmation(targetUrl);
                 return false;
             }
         }
-    }, true);
+    },true);
 
-    function showNavigationConfirmation(targetUrl) {
+    function showNavigationConfirmation(targetUrl){
         pendingNavigationUrl = targetUrl;
         const modal = document.getElementById('confirmationModal');
         modal.classList.add('show');
-
         const confirmBtn = document.getElementById('confirmCancelBtn');
         const newConfirmBtn = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-        newConfirmBtn.onclick = function() {
+        newConfirmBtn.onclick = function(){
             navigationConfirmed = true;
             formChanged = false;
             isSubmitting = true;
             closeConfirmationModal();
-
-            if (pendingNavigationUrl === 'back') {
-                window.history.back();
+            if (pendingNavigationUrl === 'back'){
+                if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
+                    window.location.href = lastVisitedUrl;
+                } else {
+                    window.location.href = '/documents';
+                }
             } else {
                 window.location.href = pendingNavigationUrl;
             }
         };
     }
 
-    document.addEventListener('submit', function(e) {
-        if (formChanged && !isSubmitting && !navigationConfirmed) {
+    document.addEventListener('submit',function(e){
+        if (formChanged && !isSubmitting && !navigationConfirmed){
             e.preventDefault();
             showNavigationConfirmation(e.target.action);
         }
-    }, true);
+    },true);
 
-    // ============== UTILITY FUNCTIONS ==============
-    function formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    function formatFileSize(bytes){
+        if (bytes===0) return '0 Bytes';
+        const k=1024; const sizes=['Bytes','KB','MB','GB'];
+        const i=Math.floor(Math.log(bytes)/Math.log(k));
+        return Math.round(bytes/Math.pow(k,i)*100)/100+' '+sizes[i];
     }
 
-    function showCustomAlert(message, type = 'error', autoClose = true) {
-        const alertDiv = document.createElement('div');
-        const bgColor = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#3b82f6';
-        alertDiv.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${bgColor};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            animation: slideInRight 0.3s ease;
-            max-width: 400px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+    function showCustomAlert(message,type='error',autoClose=true){
+        const alertDiv=document.createElement('div');
+        const bgColor=type==='error'?'#ef4444':type==='success'?'#10b981':'#3b82f6';
+        alertDiv.style.cssText=`
+            position:fixed;top:20px;right:20px;background:${bgColor};color:#fff;
+            padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);
+            z-index:10000;animation:slideInRight .3s ease;max-width:400px;display:flex;align-items:center;gap:10px;
         `;
-        alertDiv.innerHTML = `
-            <i class="bi bi-${type === 'error' ? 'exclamation-circle-fill' : type === 'success' ? 'check-circle-fill' : 'info-circle-fill'}" style="font-size: 20px;"></i>
+        alertDiv.innerHTML=`
+            <i class="bi bi-${type==='error'?'exclamation-circle-fill':type==='success'?'check-circle-fill':'info-circle-fill'}" style="font-size:20px;"></i>
             <span>${message}</span>
         `;
         document.body.appendChild(alertDiv);
-
-        if (autoClose) {
-            setTimeout(() => {
-                alertDiv.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => alertDiv.remove(), 300);
-            }, 3000);
+        if (autoClose){
+            setTimeout(()=>{
+                alertDiv.style.animation='slideOutRight .3s ease';
+                setTimeout(()=>alertDiv.remove(),300);
+            },3000);
         }
-
         return alertDiv;
     }
 
-    function goBack() {
-        if (formChanged && !isSubmitting) {
+    function goBack(){
+        if (formChanged && !isSubmitting){
             document.getElementById('confirmationModal').classList.add('show');
-
             const confirmBtn = document.getElementById('confirmCancelBtn');
-            confirmBtn.onclick = function() {
-                navigationConfirmed = true;
-                formChanged = false;
-                isSubmitting = true;
+            confirmBtn.onclick=function(){
+                navigationConfirmed=true;
+                formChanged=false;
+                isSubmitting=true;
                 closeConfirmationModal();
-
-                if (document.referrer && document.referrer !== window.location.href) {
-                    window.history.back();
+                if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
+                    window.location.href = lastVisitedUrl;
                 } else {
                     window.location.href = '/documents';
                 }
             };
-        } else if (document.referrer && document.referrer !== window.location.href) {
-            window.history.back();
+        } else if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
+            window.location.href = lastVisitedUrl;
         } else {
             window.location.href = '/documents';
         }
     }
 
-    // Initialize wizard
     updateWizardStep(1);
-
-    // Auto-dismiss alerts
-    window.addEventListener('load', function() {
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+    window.addEventListener('load',function(){
+        setTimeout(()=>{
+            const alerts=document.querySelectorAll('.alert');
+            alerts.forEach(a=>{
+                const bsAlert=bootstrap.Alert.getOrCreateInstance(a);
                 if (bsAlert) bsAlert.close();
             });
-        }, 5000);
+        },5000);
     });
 </script>
 </body>

@@ -369,6 +369,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(username);
     }
 
+    @Transactional
     @Override
     public UserDto findUserById(Long userId) {
         User user = userRepository.findById(userId).orElse(null);
@@ -384,21 +385,37 @@ public class UserServiceImpl implements UserService {
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
 
-        // ✅ Role mapping
+        // Role
         if (user.getRole() != null) {
             dto.setRoleId(user.getRole().getId());
             dto.setRoleName(user.getRole().getRoleName());
         }
 
-        // ✅ createdAt formatting
         dto.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null);
 
-        // ✅ createdBy → another User (not string)
+        // Created By
         if (user.getCreatedBy() != null) {
             dto.setCreatedByUsername(user.getCreatedBy().getUsername());
         } else {
             dto.setCreatedByUsername("System");
         }
+
+        // ✅ Correct: Load groups through groupUsers → group
+        if (user.getGroupUsers() != null && !user.getGroupUsers().isEmpty()) {
+
+            List<GroupListDTO> groupDtos = user.getGroupUsers().stream()
+                    .map(GroupUser::getGroup)
+                    .filter(g -> g != null)
+                    .map(g -> GroupListDTO.builder()
+                            .id(g.getId())
+                            .groupName(g.getGroupName())
+                            .build()
+                    )
+                    .toList();
+
+            dto.setGroups(groupDtos);
+        }
+
 
         return dto;
     }

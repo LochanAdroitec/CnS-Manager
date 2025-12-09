@@ -21,4 +21,6 @@ public interface DocumentService {
     String getFilePath(Long id);
 
     List<DocumentDto> findDocumentsAccessibleByUser(Long userId);
+
+    String getGroupNamesForDocument(Long documentId);
 }

@@ -32,7 +32,8 @@
             totalPages: /*[[${document != null ? document.noOfPages : 0}]]*/ 0,
             notes: /*[[${document != null ? document.notes : 'No notes available'}]]*/ 'No notes available',
             tagNames: /*[[${document != null ? document.tagNames : ''}]]*/ 'N/A',
-            classificationNames: /*[[${document != null ? document.classificationNames : ''}]]*/ ''
+            classificationNames: /*[[${document != null ? document.classificationNames : ''}]]*/ '',
+            groupNames: /*[[${document != null ? document.groupNames : ''}]]*/ ''
         };
     </script>
 
@@ -547,6 +548,17 @@
             font-weight: 500;
             background: #dbeafe;
             color: #1e40af;
+        }
+
+        /* Group badge styling - NEW */
+        .group-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background: #d1fae5;
+            color: #065f46;
         }
 
         /* Notes text styling */
@@ -1090,6 +1102,12 @@
             color: #90cdf4;
         }
 
+        /* Dark mode group badges - NEW */
+        body.dark-mode .group-badge {
+            background: #064e3b;
+            color: #6ee7b7;
+        }
+
         /* Dark mode notes text */
         body.dark-mode .info-notes {
             color: #a0aec0;
@@ -1384,6 +1402,14 @@
             <div class="info-label">Classifications</div>
             <div class="info-tags" id="sidebarClassifications">
                 <span class="classification-badge">Technical</span>
+            </div>
+        </div>
+
+        <!-- Groups - NEW SECTION -->
+        <div class="info-item">
+            <div class="info-label">Groups</div>
+            <div class="info-tags" id="sidebarGroups">
+                <span>No groups assigned</span>
             </div>
         </div>
 
@@ -2760,6 +2786,23 @@
                 ).join('');
             } else {
                 clsContainer.innerHTML = '<span>No classifications</span>';
+            }
+        }
+
+        // Update groups - NEW
+        const groupsContainer = document.getElementById('sidebarGroups');
+        if (groupsContainer) {
+            if (info.groupNames && info.groupNames.trim() !== '') {
+                const groupsArray = info.groupNames.split(',').map(g => g.trim());
+                groupsContainer.innerHTML = groupsArray.map(g =>
+                    `<span class="group-badge">${g}</span>`
+                ).join('');
+            } else if (info.groups && info.groups.length > 0) {
+                groupsContainer.innerHTML = info.groups.map(group =>
+                    `<span class="group-badge">${group.groupName || group}</span>`
+                ).join('');
+            } else {
+                groupsContainer.innerHTML = '<span>No groups assigned</span>';
             }
         }
     }

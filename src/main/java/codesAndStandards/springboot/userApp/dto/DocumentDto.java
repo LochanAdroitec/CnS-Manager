@@ -47,5 +47,5 @@ public class DocumentDto {
     private String publishYear;   // Example "2024"
 
     private String groupIds;
-
+    private String groupNames;
 }

@@ -1,10 +1,7 @@
 package codesAndStandards.springboot.userApp.service.Impl;
 
 import codesAndStandards.springboot.userApp.dto.DocumentDto;
-import codesAndStandards.springboot.userApp.entity.Classification;
-import codesAndStandards.springboot.userApp.entity.Document;
-import codesAndStandards.springboot.userApp.entity.Tag;
-import codesAndStandards.springboot.userApp.entity.User;
+import codesAndStandards.springboot.userApp.entity.*;
 import codesAndStandards.springboot.userApp.repository.DocumentRepository;
 import codesAndStandards.springboot.userApp.repository.StoredProcedureRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
@@ -253,6 +250,25 @@ public class DocumentServiceImpl implements DocumentService {
             }
         } else {
             logger.info("ℹ️ No groups selected for document {} (all associations removed)", id);
+        }
+    }
+    //groupname sdor docuemnts- Lochan
+    public String getGroupNamesForDocument(Long documentId) {
+        try {
+            List<AccessControlLogic> accessControls =
+                    accessControlLogicRepository.findByDocumentId(documentId);
+
+            if (accessControls == null || accessControls.isEmpty()) {
+                return "";
+            }
+
+            return accessControls.stream()
+                    .map(ac -> ac.getGroup().getGroupName())
+                    .collect(Collectors.joining(", "));
+
+        } catch (Exception e) {
+            logger.warn("Failed to fetch groups for document {}: {}", documentId, e.getMessage());
+            return "";
         }
     }
 

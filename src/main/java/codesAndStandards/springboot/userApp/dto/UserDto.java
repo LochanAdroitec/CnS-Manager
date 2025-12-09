@@ -45,4 +45,5 @@ public class UserDto {
     private String confirmPassword;
     private List<Long> groupIds;
 
+    private List<GroupListDTO> groups;
 }

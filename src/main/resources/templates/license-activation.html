@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Activation - Codes & Standards Manager</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .activation-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .activation-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .form-content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Consolas', monospace;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-with-button .form-input {
+            flex: 1;
+        }
+
+        .copy-btn {
+            padding: 12px 20px;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #2d3748;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .file-input-display {
+            padding: 12px 15px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            background: #f7fafc;
+            margin-bottom: 10px;
+            color: #718096;
+            font-size: 14px;
+            min-height: 46px;
+            display: flex;
+            align-items: center;
+        }
+
+        .browse-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .browse-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .help-text {
+            display: block;
+            margin-top: 6px;
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .status-message {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+            display: block;
+        }
+
+        .status-message.info {
+            background: #bee3f8;
+            color: #2c5282;
+            border: 1px solid #90cdf4;
+            display: block;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-primary-custom,
+        .btn-secondary-custom {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary-custom {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-primary-custom:hover:not(:disabled) {
+            background: #38a169;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary-custom:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .btn-secondary-custom {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary-custom:hover {
+            background: #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+<div class="activation-container">
+    <div class="activation-card">
+        <div class="header">
+            <h1>🔐 License Activation</h1>
+            <p>Codes and Standards Manager</p>
+        </div>
+
+        <div class="form-content">
+            <!-- System Name -->
+            <div class="form-group">
+                <label for="systemName">System Name</label>
+                <input type="text" id="systemName" class="form-input" readonly>
+            </div>
+
+            <!-- Request Code -->
+            <div class="form-group">
+                <label for="requestCode">Request Code</label>
+                <div class="input-with-button">
+                    <input type="text" id="requestCode" class="form-input" readonly>
+                    <button onclick="copyRequestCode()" class="copy-btn">
+                        📋 Copy
+                    </button>
+                </div>
+                <small class="help-text">Share this request code with your administrator to obtain a license file</small>
+            </div>
+
+            <!-- License File Upload -->
+            <div class="form-group">
+                <label for="licenseFile">License File</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="licenseFile" accept=".lic" onchange="handleFileSelect(event)" style="display: none;">
+                    <div class="file-input-display" id="fileDisplay">
+                        <span id="fileName">No file selected</span>
+                    </div>
+                    <button onclick="document.getElementById('licenseFile').click()" class="browse-btn">
+                        Browse License File
+                    </button>
+                </div>
+                <small class="help-text">Select the license file (.lic) provided by your administrator</small>
+            </div>
+
+            <!-- Status Message -->
+            <div id="statusMessage" class="status-message"></div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button onclick="activateLicense()" id="activateBtn" class="btn-primary-custom" disabled>
+                    Activate License
+                </button>
+                <button onclick="cancelActivation()" class="btn-secondary-custom">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/license-activation.js}"></script>
+</body>
+</html>

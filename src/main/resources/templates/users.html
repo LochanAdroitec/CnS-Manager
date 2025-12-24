@@ -584,7 +584,7 @@
 
 <!-- ==================== ADD USER MODAL ==================== -->
 <div class="modal fade" id="addUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form method="post" th:action="@{/add/save}" id="addUserForm">
                 <div class="modal-header bg-primary text-white">
@@ -675,7 +675,7 @@
 
 <!-- ==================== EDIT USER MODAL ==================== -->
 <div class="modal fade" id="editUserModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form method="post" id="editForm">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />

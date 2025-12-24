@@ -7,6 +7,12 @@
 <!-- Sidebar Fragment -->
 <div th:fragment="sidebar" id="sidebar" class="sidebar-container text-white">
     <div class="sidebar-content">
+
+        <!-- License Edition Badge -->
+        <div class="mb-3" id="license-edition-badge" style="padding: 10px; border-radius: 8px; text-align: center; background: #667eea; display: none;">
+            <span id="edition-text" style="font-weight: 600; font-size: 12px;">Loading...</span>
+        </div>
+
         <!-- Browse Section -->
         <div class="mb-4">
             <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Library</h6>
@@ -27,7 +33,6 @@
             </ul>
         </div>
 
-
         <!-- Management Section (Admin & Manager) -->
         <div class="mb-4" sec:authorize="hasAnyAuthority('Admin', 'Manager')">
             <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Management</h6>
@@ -45,25 +50,28 @@
                         <span class="sidebar-text">Tags</span>
                     </a>
                 </li>
-                <li class="nav-item mb-2">
-                    <a th:href="@{/classifications-management}" class="nav-link text-white" title="Classifications Management">
+                <!-- ✅ CLASSIFICATIONS WITH ED2 LOCK -->
+                <li class="nav-item mb-2" id="classification-mgmt-container">
+                    <a th:href="@{/classifications-management}" id="classificationMgmtLink" class="nav-link text-white" title="Classifications Management">
                         <i class="bi bi-diagram-3 sidebar-icon"></i>
-                        <span class="sidebar-text">Classifications </span>
+                        <span class="sidebar-text">Classifications</span>
+                        <span id="classification-edition-badge" class="edition-badge" style="display: none;"></span>
                     </a>
                 </li>
             </ul>
         </div>
-
 
         <!-- Administration Section (Admin only) -->
         <div class="mb-4" sec:authorize="hasAuthority('Admin')">
             <h6 class="sidebar-section-title text-uppercase text-white-50 mb-3">Administration</h6>
             <hr>
             <ul class="nav flex-column">
-                <li class="nav-item mb-2">
-                    <a th:href="@{/bulk-upload}" class="nav-link text-white" title="Bulk Upload Documents">
+                <!-- BULK UPLOAD WITH EDITION CONTROL -->
+                <li class="nav-item mb-2" id="bulk-upload-container">
+                    <a th:href="@{/bulk-upload}" id="bulkUploadLink" class="nav-link text-white" title="Bulk Upload Documents">
                         <i class="bi bi-folder-symlink sidebar-icon"></i>
                         <span class="sidebar-text">Bulk Upload</span>
+                        <span id="edition-badge" class="edition-badge" style="display: none;"></span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
@@ -94,7 +102,7 @@
     /* Sidebar Container - Fixed Position */
     .sidebar-container {
         position: fixed;
-        top: 70px; /* Adjust based on your navbar height */
+        top: 70px;
         left: 0;
         width: 250px;
         height: calc(100vh - 70px);
@@ -130,6 +138,25 @@
         background: rgba(255, 255, 255, 0.5);
     }
 
+    /* Edition Badge */
+    .edition-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: 8px;
+        font-weight: 600;
+    }
+
+    .edition-badge.ed2 {
+        background: #48bb78;
+        color: white;
+    }
+
+    .edition-badge.ed1-locked {
+        background: #fc8181;
+        color: white;
+    }
+
     /* Collapsed Sidebar */
     .sidebar-container.collapsed {
         width: 70px;
@@ -159,6 +186,10 @@
         font-size: 20px;
     }
 
+    .sidebar-container.collapsed .edition-badge {
+        display: none !important;
+    }
+
     /* Navigation Links */
     .sidebar-container .nav-link {
         display: flex;
@@ -168,6 +199,7 @@
         transition: all 0.3s ease;
         text-decoration: none;
         color: white;
+        position: relative;
     }
 
     .sidebar-container .nav-link:hover {
@@ -177,6 +209,16 @@
 
     .sidebar-container .nav-link.active {
         background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-container .nav-link.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .sidebar-container .nav-link.disabled:hover {
+        transform: none;
+        background-color: transparent;
     }
 
     /* Sidebar Icon */
@@ -209,7 +251,7 @@
     .main-content {
         margin-left: 250px;
         transition: margin-left 0.3s ease;
-        padding-top: 70px; /* Match navbar height */
+        padding-top: 70px;
     }
 
     .main-content.expanded {
@@ -236,5 +278,203 @@
         }
     }
 </style>
+
+<!-- Sidebar JavaScript for Edition Control -->
+<script th:fragment="sidebar-script">
+    // Check license edition and setup sidebar features
+    document.addEventListener('DOMContentLoaded', function() {
+        checkLicenseEditionForSidebar();
+    });
+
+    async function checkLicenseEditionForSidebar() {
+        try {
+            const response = await fetch('/api/license/status');
+            const data = await response.json();
+
+            // Setup bulk upload
+            setupBulkUpload(data);
+
+            // ✅ NEW: Setup classifications management
+            setupClassificationManagement(data);
+
+            // Show edition banner
+            showEditionBanner(data);
+
+        } catch (error) {
+            console.error('Failed to check license edition:', error);
+        }
+    }
+
+    function setupBulkUpload(data) {
+        const bulkUploadLink = document.getElementById('bulkUploadLink');
+        const editionBadge = document.getElementById('edition-badge');
+
+        if (!bulkUploadLink) return;
+
+        sessionStorage.setItem('edition', data.edition);
+        sessionStorage.setItem('bulkUploadAllowed', data.bulkUploadAllowed);
+
+        if (data.bulkUploadAllowed && data.edition === 'ED2') {
+            bulkUploadLink.href = '/bulk-upload';
+            bulkUploadLink.classList.remove('disabled');
+
+            if (editionBadge) {
+                editionBadge.textContent = '✨';
+                editionBadge.className = 'edition-badge ed2';
+                editionBadge.style.display = 'inline';
+            }
+        } else {
+            bulkUploadLink.href = '#';
+            bulkUploadLink.classList.add('disabled');
+
+            if (editionBadge) {
+                editionBadge.textContent = '🔒 ED2';
+                editionBadge.className = 'edition-badge ed1-locked';
+                editionBadge.style.display = 'inline';
+            }
+
+            bulkUploadLink.onclick = function(e) {
+                e.preventDefault();
+                showUpgradeModal('Bulk Upload', data.edition, data.daysRemaining);
+                return false;
+            };
+        }
+    }
+
+    // ✅ NEW: Setup Classification Management
+    function setupClassificationManagement(data) {
+        const classificationLink = document.getElementById('classificationMgmtLink');
+        const classificationBadge = document.getElementById('classification-edition-badge');
+
+        if (!classificationLink) return;
+
+        // Classification management is ED2 only
+        const classificationAllowed = data.edition === 'ED2' && data.isValid && data.isActive;
+
+        if (classificationAllowed) {
+            // ED2 - Allow classification management
+            classificationLink.href = '/classifications-management';
+            classificationLink.classList.remove('disabled');
+
+            if (classificationBadge) {
+                classificationBadge.textContent = '✨';
+                classificationBadge.className = 'edition-badge ed2';
+                classificationBadge.style.display = 'inline';
+            }
+        } else {
+            // ED1 - Block classification management
+            classificationLink.href = '#';
+            classificationLink.classList.add('disabled');
+
+            if (classificationBadge) {
+                classificationBadge.textContent = '🔒 ED2';
+                classificationBadge.className = 'edition-badge ed1-locked';
+                classificationBadge.style.display = 'inline';
+            }
+
+            classificationLink.onclick = function(e) {
+                e.preventDefault();
+                showUpgradeModal('Classification Management', data.edition, data.daysRemaining);
+                return false;
+            };
+        }
+    }
+
+    function showEditionBanner(data) {
+        const editionBanner = document.getElementById('license-edition-badge');
+        const editionText = document.getElementById('edition-text');
+
+        if (editionBanner && editionText) {
+            editionBanner.style.display = 'block';
+            if (data.edition === 'ED2') {
+                editionBanner.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+                editionText.textContent = '✨ ED2 Professional';
+            } else {
+                editionBanner.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                editionText.textContent = 'ED1 Standard';
+            }
+        }
+    }
+
+    function showUpgradeModal(featureName, currentEdition, daysRemaining) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8); display: flex;
+            align-items: center; justify-content: center; z-index: 99999;
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white; padding: 40px; border-radius: 16px;
+            max-width: 550px; text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        `;
+
+        const features = featureName === 'Bulk Upload'
+            ? `
+                <li>✨ <strong>Bulk Upload</strong> - Upload multiple documents at once</li>
+                <li>📊 <strong>Advanced Analytics</strong> - Detailed insights and reports</li>
+                <li>🔖 <strong>Classification Management</strong> - Create and manage classifications</li>
+                <li>🚀 <strong>Priority Support</strong> - Fast response time</li>
+            `
+            : `
+                <li>🔖 <strong>Classification Management</strong> - Create, edit, delete classifications</li>
+                <li>✨ <strong>Bulk Upload</strong> - Upload multiple documents at once</li>
+                <li>📊 <strong>Advanced Analytics</strong> - Detailed insights and reports</li>
+                <li>🚀 <strong>Priority Support</strong> - Fast response time</li>
+            `;
+
+        content.innerHTML = `
+            <div style="font-size: 64px; margin-bottom: 20px;">🔒</div>
+            <h2 style="color: #2d3748; margin-bottom: 15px; font-size: 26px;">${featureName}</h2>
+            <p style="color: #4a5568; line-height: 1.8; margin-bottom: 25px; font-size: 15px;">
+                <strong>${featureName}</strong> is only available in the <strong>ED2 Professional Edition</strong>.
+            </p>
+            <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                        padding: 20px; border-radius: 12px; margin-bottom: 25px;
+                        border-left: 4px solid #f39c12;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: #856404; font-weight: 600;">Your Edition:</span>
+                    <span style="color: #856404; font-weight: 700;">${currentEdition || 'ED1'}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="color: #856404; font-weight: 600;">Required:</span>
+                    <span style="color: #856404; font-weight: 700;">ED2 Professional</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #856404; font-weight: 600;">License Valid:</span>
+                    <span style="color: #856404; font-weight: 700;">${daysRemaining || '0'} days</span>
+                </div>
+            </div>
+            <h3 style="color: #667eea; margin-bottom: 15px; font-size: 18px;">ED2 Professional Features:</h3>
+            <ul style="text-align: left; color: #4a5568; line-height: 2;
+                       list-style: none; padding: 0; margin-bottom: 25px;">
+                ${features}
+                <li>✅ <strong>All ED1 Features</strong> - Plus everything else</li>
+            </ul>
+            <button onclick="this.parentElement.parentElement.remove()"
+                    style="padding: 14px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                           color: white; border: none; border-radius: 8px; cursor: pointer;
+                           font-size: 15px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                           transition: all 0.3s;">
+                Close
+            </button>
+            <p style="margin-top: 20px; color: #718096; font-size: 13px; font-style: italic;">
+                💡 Contact your administrator to upgrade to ED2 Professional Edition
+            </p>
+        `;
+
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        };
+    }
+</script>
+
 </body>
 </html>

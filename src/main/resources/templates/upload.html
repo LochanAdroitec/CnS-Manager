@@ -1125,35 +1125,65 @@
 
                         <!-- Classifications Section -->
                         <div class="form-section">
+
+                            <!-- Title -->
                             <div class="form-section-title">
                                 <i class="bi bi-folder"></i>
                                 Classifications (Optional)
                             </div>
 
-                            <div class="form-group">
-                                <label class="form-label">Select Existing Classifications</label>
-                                <p class="info-text">
-                                    <i class="bi bi-info-circle"></i>
-                                    Click on classifications to select/deselect them
-                                </p>
-                                <div class="selection-area-flex" id="classificationsSelectionArea">
-                                    <div th:if="${allClassifications == null or allClassifications.isEmpty()}" class="empty-state">
-                                        No existing classifications available
-                                    </div>
-                                    <div th:each="classification : ${allClassifications}" class="selection-item-flex" th:attr="data-classification-name=${classification.classificationName}">
-                                        <input type="checkbox" class="selection-checkbox classification-checkbox" th:attr="data-classification-name=${classification.classificationName}" style="display: none;">
-                                        <span class="selection-label" th:text="${classification.classificationName}">Classification Name</span>
-                                    </div>
+                            <!-- 🔒 Classification restriction message (hidden by default) -->
+                            <div id="classificationRestrictionMsg"
+                                 class="info-text"
+                                 style="display:none;
+                color:#b45309;
+                background:#fff7ed;
+                padding:10px 12px;
+                border-left:4px solid #f59e0b;
+                border-radius:6px;
+                margin-bottom:10px;">
+                                <i class="bi bi-lock-fill"></i>
+                                Upgrade to <strong>Professional Edition</strong> to add classifications to documents.
+                            </div>
+
+                            <!-- Selection label -->
+                            <label class="form-label" id="selectexectingclassifications">Select Existing Classifications</label>
+                            <p class="info-text" id="selectexectingclassificationsmessage">
+                                <i class="bi bi-info-circle"></i>
+                                Click on classifications to select/deselect them
+                            </p>
+
+                            <!-- Classification list -->
+                            <div class="selection-area-flex" id="classificationsSelectionArea">
+                                <div th:if="${allClassifications == null or allClassifications.isEmpty()}"
+                                     class="empty-state">
+                                    No existing classifications available
+                                </div>
+
+                                <div th:each="classification : ${allClassifications}"
+                                     class="selection-item-flex"
+                                     th:attr="data-classification-name=${classification.classificationName}">
+                                    <input type="checkbox"
+                                           class="selection-checkbox classification-checkbox"
+                                           th:attr="data-classification-name=${classification.classificationName}"
+                                           style="display: none;">
+                                    <span class="selection-label"
+                                          th:text="${classification.classificationName}">
+                Classification Name
+            </span>
                                 </div>
                             </div>
 
-                            <div class="form-group">
+                            <!-- Selected classifications -->
+                            <div class="form-group" id="selectedclassifications">
                                 <label class="form-label">Selected Classifications</label>
                                 <div class="selected-items-container" id="selectedClassificationsContainer">
                                     <div class="empty-state">No classifications selected</div>
                                 </div>
                             </div>
+
                         </div>
+
 
                         <!-- ==================== GROUPS SECTION (NEW) ==================== -->
                         <!-- Groups Section - Access Control -->
@@ -1381,15 +1411,72 @@
     let allExistingTags = []; // All available tags
     let allExistingClassifications = []; // All available classifications
     let allExistingGroups = []; // All available groups
+    let classificationSelectionLocked = false; // ED1 lock
+
+
+
+    async function checkClassificationEditionAccess() {
+    try {
+        const response = await fetch('/api/classifications/check-management-access');
+        const data = await response.json();
+
+        console.log('Classification license check:', data);
+
+        // 🔒 LOCK ONLY WHEN EXPLICITLY ED1
+        if (data && data.managementAllowed === false) {
+            classificationSelectionLocked = true;
+            applyEssentialClassificationLock();
+        }
+    } catch (err) {
+        console.error('Classification edit license check failed', err);
+        // ❌ DO NOT LOCK on error
+    }
+}
+
+
+
+function applyEssentialClassificationLock() {
+
+    // Show upgrade message
+    document.getElementById('classificationRestrictionMsg').style.display = 'block';
+
+    // ❌ Hide available classifications
+    const selectionArea = document.getElementById('classificationsSelectionArea');
+    const selectexectingclassificationshedditn = document.getElementById('selectexectingclassifications');
+    const selectexectingclassificationsmessage = document.getElementById('selectexectingclassificationsmessage');
+    const selectedclassifications = document.getElementById('selectedclassifications');
+    if (selectionArea) selectionArea.style.display = 'none';
+    if (selectexectingclassificationshedditn) {
+        selectexectingclassificationshedditn.style.display = "none";
+    }
+    if (selectexectingclassificationsmessage) {
+        selectexectingclassificationsmessage.style.display = "none";
+    }
+    if (selectedclassifications) {
+        selectedclassifications.style.display = "none";
+    }
+
+
+    // ❌ Hide selected classifications
+    const selectedArea = document.getElementById('selectedClassificationsContainer');
+    if (selectedArea) {
+        selectedArea.innerHTML =
+            '<div class="empty-state">Available in Professional Edition</div>';
+        selectedArea.style.pointerEvents = 'none';
+        selectedArea.style.opacity = '0.6';
+    }
+}
+
 
     // ==================== INITIALIZATION ====================
     /**
      * Initialize the wizard when DOM is loaded
      */
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
         populateYearDropdown();
+        await checkClassificationEditionAccess(); // ✅ now valid
         initializeTagsAndClassifications();
-        initializeGroups(); // Initialize groups functionality
+        initializeGroups();
     });
 
     // ==================== INITIALIZE TAGS AND CLASSIFICATIONS ====================
@@ -1418,7 +1505,6 @@
             item.addEventListener('click', function() {
                 const checkbox = this.querySelector('.tag-checkbox');
                 const tagName = this.getAttribute('data-tag-name');
-
                 if (checkbox.checked) {
                     checkbox.checked = false;
                     this.classList.remove('selected');
@@ -1438,9 +1524,15 @@
         // Attach click handlers to existing classifications
         document.querySelectorAll('.selection-item-flex[data-classification-name]').forEach(item => {
             item.addEventListener('click', function() {
+                // 🔐 BLOCK FOR ESSENTIAL EDITION
+            if (classificationSelectionLocked) {
+                this.classList.add('blink');
+                setTimeout(() => this.classList.remove('blink'), 800);
+                return;
+            }
+
                 const checkbox = this.querySelector('.classification-checkbox');
                 const classificationName = this.getAttribute('data-classification-name');
-
                 if (checkbox.checked) {
                     checkbox.checked = false;
                     this.classList.remove('selected');
@@ -2109,6 +2201,10 @@
      * @param {string} classificationName - Classification name to remove
      */
     function removeSelectedClassification(classificationName) {
+         if (classificationSelectionLocked) {
+            showCustomAlert('Upgrade to Professional Edition to modify classifications.');
+            return;
+        }
         selectedClassifications = selectedClassifications.filter(c => c !== classificationName);
 
         const checkbox = document.querySelector(`.classification-checkbox[data-classification-name="${classificationName}"]`);

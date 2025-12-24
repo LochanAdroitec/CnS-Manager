@@ -66,6 +66,71 @@ public class BulkUploadService {
     @Value("${file.upload-dir}")
     private String uploadDir;
 
+
+    /* =====================================================
+       =============== VALIDATION HELPERS ==================
+       ===================================================== */
+
+    private String normalizeFilename(String name) {
+        if (name == null) return null;
+        return new File(name).getName().trim().toLowerCase();
+    }
+
+    private boolean isEmpty(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    /**
+     * Validate ONE document and decide validity
+     */
+    private boolean validateSingleDocument(
+            DocumentMetadata metadata,
+            Set<String> pdfFilenames,
+            BulkUploadValidationResult result,
+            Set<String> invalidDocuments
+    ) {
+        String filename = normalizeFilename(metadata.getFilename());
+        boolean hasError = false;
+
+        // PDF existence
+        if (!pdfFilenames.contains(filename)) {
+            result.addError("Missing PDF File",
+                    "Document '" + filename + "' PDF not found in upload");
+            hasError = true;
+        }
+
+        // Mandatory fields → ERRORS
+        if (isEmpty(metadata.getTitle())) {
+            result.addError("Missing Title",
+                    "Document '" + filename + "' is missing title");
+            hasError = true;
+        }
+
+        if (isEmpty(metadata.getProductCode())) {
+            result.addError("Missing Product Code",
+                    "Document '" + filename + "' is missing product code");
+            hasError = true;
+        }
+
+        if (isEmpty(metadata.getPublishYear())) {
+            result.addError("Missing Publish Year",
+                    "Document '" + filename + "' is missing publish year");
+            hasError = true;
+        }
+
+        // Optional → WARNINGS ONLY
+        if (metadata.getNoOfPages() == null || metadata.getNoOfPages() <= 0) {
+            result.addWarning("Invalid Page Count",
+                    "Document '" + filename + "' has invalid or missing page count");
+        }
+
+        if (hasError) {
+            invalidDocuments.add(filename);
+        }
+
+        return !hasError;
+    }
+
     /**
      * Generate Excel template from uploaded PDF files
      * FEATURES 3, 4, 5: Add month dropdown, page numbers, and second sheet
@@ -254,10 +319,15 @@ public class BulkUploadService {
         return outputStream;
     }
 
+
     /**
      * Validate bulk upload files
      * UPDATED: Now accepts selfValidationJson parameter for edited metadata
      */
+    /* =====================================================
+       =============== BULK VALIDATION =====================
+       ===================================================== */
+
     public BulkUploadValidationResult validateBulkUpload(
             MultipartFile[] pdfFiles,
             MultipartFile excelFile,
@@ -265,58 +335,54 @@ public class BulkUploadService {
 
         BulkUploadValidationResult result = new BulkUploadValidationResult();
 
-        // CRITICAL: Determine metadata source
-        List<DocumentMetadata> metadataList;
+        // 1️⃣ Load metadata
+        List<DocumentMetadata> metadataList =
+                (selfValidationJson != null && !selfValidationJson.isEmpty())
+                        ? parseJsonToMetadataList(selfValidationJson)
+                        : parseExcelFile(excelFile);
 
-        if (selfValidationJson != null && !selfValidationJson.isEmpty()) {
-            logger.info("=== USING EDITED METADATA FOR VALIDATION ===");
-            metadataList = parseJsonToMetadataList(selfValidationJson);
-            logger.info("Parsed {} documents from edited metadata", metadataList.size());
-        } else {
-            logger.info("=== PARSING METADATA FROM EXCEL FILE ===");
-            metadataList = parseExcelFile(excelFile);
-            logger.info("Parsed {} documents from Excel file", metadataList.size());
-        }
-
-        // Extract PDF filenames
-        Set<String> pdfFilenames = extractPdfFilenames(pdfFiles);
-        logger.info("Extracted {} PDF filenames from uploaded files", pdfFilenames.size());
-
-        // Validation checks
-        result.setTotalDocuments(metadataList.size());
-
-        // Check if all PDFs in metadata exist in uploaded files
-        for (DocumentMetadata metadata : metadataList) {
-            String filename = metadata.getFilename();
-
-            if (!pdfFilenames.contains(filename)) {
-                result.addError("Missing PDF File", "PDF file '" + filename + "' mentioned in metadata not found in uploaded files");
-            } else {
-                // Validate metadata fields
-                validateMetadata(metadata, result);
-            }
-        }
-
-        // Check for extra PDFs not in metadata
-        Set<String> metadataFilenames = metadataList.stream()
-                .map(DocumentMetadata::getFilename)
+        // 2️⃣ Normalize PDF filenames
+        Set<String> pdfFilenames = extractPdfFilenames(pdfFiles)
+                .stream()
+                .map(this::normalizeFilename)
                 .collect(Collectors.toSet());
 
-        for (String pdfFilename : pdfFilenames) {
-            if (!metadataFilenames.contains(pdfFilename)) {
-                result.addWarning("Extra PDF File", "PDF file '" + pdfFilename + "' uploaded but not found in metadata");
+        // 3️⃣ Track invalid documents (LOCAL, SAFE)
+        Set<String> invalidDocuments = new HashSet<>();
+
+        // 4️⃣ Validate documents
+        for (DocumentMetadata metadata : metadataList) {
+            validateSingleDocument(metadata, pdfFilenames, result, invalidDocuments);
+        }
+
+        // 5️⃣ Extra PDFs → WARNINGS
+        Set<String> metadataFilenames = metadataList.stream()
+                .map(m -> normalizeFilename(m.getFilename()))
+                .collect(Collectors.toSet());
+
+        for (String pdf : pdfFilenames) {
+            if (!metadataFilenames.contains(pdf)) {
+                result.addWarning("Extra PDF File",
+                        "PDF '" + pdf + "' uploaded but not found in metadata");
             }
         }
 
-        // Calculate valid documents
-        int errorCount = result.getErrors() != null ? result.getErrors().size() : 0;
-        result.setValidDocuments(result.getTotalDocuments() - errorCount);
+        // 6️⃣ Final counts
+        int total = metadataList.size();
+        int invalid = invalidDocuments.size();
+        int valid = total - invalid;
 
-        logger.info("Validation complete: Total={}, Valid={}, Errors={}, Warnings={}",
-                result.getTotalDocuments(),
-                result.getValidDocuments(),
-                errorCount,
-                result.getWarnings() != null ? result.getWarnings().size() : 0);
+        result.setTotalDocuments(total);
+        result.setValidDocuments(valid);
+
+        logger.info(
+                "Validation summary → Total={}, Valid={}, Invalid={}, Errors={}, Warnings={}",
+                total,
+                valid,
+                invalid,
+                result.getErrors() != null ? result.getErrors().size() : 0,
+                result.getWarnings() != null ? result.getWarnings().size() : 0
+        );
 
         return result;
     }
@@ -334,86 +400,39 @@ public class BulkUploadService {
 
         BulkUploadResult result = new BulkUploadResult();
 
-        try {
-            // CRITICAL: Determine metadata source
-            List<DocumentMetadata> metadataList;
+        List<DocumentMetadata> metadataList =
+                (selfValidationJson != null && !selfValidationJson.isEmpty())
+                        ? parseJsonToMetadataList(selfValidationJson)
+                        : parseExcelFile(excelFile);
 
-            if (selfValidationJson != null && !selfValidationJson.isEmpty()) {
-                logger.info("=== USING EDITED METADATA FOR UPLOAD ===");
-                metadataList = parseJsonToMetadataList(selfValidationJson);
-                logger.info("Parsed {} documents from edited metadata", metadataList.size());
+        if (uploadOnlyValid) {
+            BulkUploadValidationResult validation =
+                    validateBulkUpload(pdfFiles, excelFile, selfValidationJson);
+
+            Set<String> invalidFiles = validation.getErrors().stream()
+                    .map(e -> e.toString())
+                    .filter(s -> s.contains("'"))
+                    .map(s -> s.substring(s.indexOf("'") + 1, s.lastIndexOf("'")))
+                    .map(this::normalizeFilename)
+                    .collect(Collectors.toSet());
+
+            metadataList = metadataList.stream()
+                    .filter(m -> !invalidFiles.contains(normalizeFilename(m.getFilename())))
+                    .collect(Collectors.toList());
+        }
+
+        Map<String, MultipartFile> fileMap = createFileMap(pdfFiles);
+
+        for (DocumentMetadata metadata : metadataList) {
+            String filename = normalizeFilename(metadata.getFilename());
+            MultipartFile pdfFile = fileMap.get(filename);
+
+            if (pdfFile != null) {
+                uploadDocument(pdfFile, metadata);
+                result.addSuccess(filename, metadata.getTitle());
             } else {
-                logger.info("=== PARSING METADATA FROM EXCEL FILE ===");
-                metadataList = parseExcelFile(excelFile);
-                logger.info("Parsed {} documents from Excel file", metadataList.size());
+                result.addFailure(filename, "PDF file not found");
             }
-
-            // If uploadOnlyValid is true, filter out invalid documents
-            if (uploadOnlyValid) {
-                logger.info("Upload only valid mode enabled - validating before upload");
-                BulkUploadValidationResult validation = validateBulkUpload(pdfFiles, excelFile, selfValidationJson);
-
-                // Filter metadata to only include valid documents
-                Set<String> invalidFilenames = new HashSet<>();
-                if (validation.getErrors() != null) {
-                    for (Object errorObj : validation.getErrors()) {
-                        String errorStr = errorObj.toString();
-                        // Extract filename from error message
-                        // Assuming error format: "Document 'filename.pdf' is missing title"
-                        if (errorStr.contains("'") && errorStr.contains(".pdf")) {
-                            int start = errorStr.indexOf("'") + 1;
-                            int end = errorStr.indexOf("'", start);
-                            if (end > start) {
-                                String filename = errorStr.substring(start, end);
-                                invalidFilenames.add(filename);
-                            }
-                        }
-                    }
-                }
-
-                if (!invalidFilenames.isEmpty()) {
-                    logger.info("Filtering out {} invalid documents", invalidFilenames.size());
-                    metadataList = metadataList.stream()
-                            .filter(m -> !invalidFilenames.contains(m.getFilename()))
-                            .collect(Collectors.toList());
-                    logger.info("Remaining valid documents to upload: {}", metadataList.size());
-                }
-            }
-
-            // Create map of filename to file
-            Map<String, MultipartFile> fileMap = createFileMap(pdfFiles);
-            logger.info("Created file map with {} entries", fileMap.size());
-
-            // Process each document
-            int processedCount = 0;
-            for (DocumentMetadata metadata : metadataList) {
-                try {
-                    processedCount++;
-                    logger.info("Processing document {}/{}: {}",
-                            processedCount, metadataList.size(), metadata.getFilename());
-
-                    MultipartFile pdfFile = fileMap.get(metadata.getFilename());
-
-                    if (pdfFile != null) {
-                        uploadDocument(pdfFile, metadata);
-                        result.addSuccess(metadata.getFilename());
-                        logger.info("Successfully uploaded: {}", metadata.getFilename());
-                    } else {
-                        result.addFailure(metadata.getFilename(), "PDF file not found");
-                        logger.warn("PDF file not found in file map: {}", metadata.getFilename());
-                    }
-                } catch (Exception e) {
-                    logger.error("Failed to upload document: " + metadata.getFilename(), e);
-                    result.addFailure(metadata.getFilename(), e.getMessage());
-                }
-            }
-
-            logger.info("Bulk upload processing complete. Success: {}, Failed: {}",
-                    result.getSuccessCount(), result.getFailedCount());
-
-        } catch (Exception e) {
-            logger.error("Bulk upload processing failed", e);
-            result.addError("Bulk upload processing failed: " + e.getMessage());
         }
 
         return result;
@@ -649,7 +668,7 @@ public class BulkUploadService {
                     while ((entry = zis.getNextEntry()) != null) {
                         if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".pdf")) {
                             // Get just the filename without path
-                            String filename = new File(entry.getName()).getName();
+                            String filename = normalizeFilename(entry.getName());
                             filenames.add(filename);
                             logger.debug("Extracted from ZIP: {}", filename);
                         }
@@ -659,8 +678,8 @@ public class BulkUploadService {
             } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")) {
                 // CRITICAL FIX: Extract just the filename from path (handles folder uploads)
                 // Example: "normal/dilligent.pdf" -> "dilligent.pdf"
-                String justFilename = new File(originalFilename).getName();
-                filenames.add(justFilename);
+                String justFilename = normalizeFilename(originalFilename);
+                filenames.add(justFilename.trim().toLowerCase());
                 logger.debug("Extracted filename: {} (from: {})", justFilename, originalFilename);
             }
         }
@@ -685,7 +704,7 @@ public class BulkUploadService {
             } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")) {
                 // CRITICAL FIX: Use just the filename as key (without folder path)
                 // Example: "normal/dilligent.pdf" -> key is "dilligent.pdf"
-                String justFilename = new File(originalFilename).getName();
+                String justFilename = normalizeFilename(originalFilename);
                 fileMap.put(justFilename, file);
                 logger.debug("Added to fileMap: {} -> {}", justFilename, originalFilename);
             }
@@ -705,7 +724,7 @@ public class BulkUploadService {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".pdf")) {
-                    String filename = new File(entry.getName()).getName();
+                    String filename = normalizeFilename(entry.getName());
                     Path tempFile = tempDir.resolve(filename);
                     Files.copy(zis, tempFile, StandardCopyOption.REPLACE_EXISTING);
 
@@ -762,12 +781,15 @@ public class BulkUploadService {
         // 2. SAVE FILE WITH TIMESTAMP
         String savedName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
 
-        String networkPath = "\\\\172.16.20.241\\DEV-FileServer\\USERDATA\\Lochan\\" + savedName;
-
-        Path savedPath = Paths.get(networkPath);
+//        String networkPath = "C:/Users/Imp user 006/Documents/CNS_documents/" + savedName;
+        // Use application.properties path
+        Path savedPath = Paths.get(uploadDir, savedName);
+//        Path savedPath = Paths.get(networkPath);
         Files.createDirectories(savedPath.getParent());
 
         Files.copy(file.getInputStream(), savedPath, StandardCopyOption.REPLACE_EXISTING);
+        // DEFINE networkPath HERE ✅
+        String networkPath = savedPath.toString();
 
         // 3. AUTO-DETECT PAGE COUNT IF NOT PROVIDED
         Integer pageCount = metadata.getNoOfPages();

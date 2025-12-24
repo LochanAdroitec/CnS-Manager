@@ -34,59 +34,76 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**") // Disable CSRF for API endpoints
-                ) // Disable CSRF for development; enable in production
+                )
                 .authorizeHttpRequests(authorize -> authorize
 
-                                //Granting Permissions based on roles
-                                .requestMatchers("/upload").hasAnyAuthority("Admin", "Manager")
-                                // Document API
-                                .requestMatchers(HttpMethod.GET, "/api/documents/**")
-                                .hasAnyAuthority("Admin", "Manager", "User")
+                        // ========================================
+                        // ✅ LICENSE ENDPOINTS (ADD THIS SECTION)
+                        // ========================================
+                        .requestMatchers("/license-activation", "/license-activation/**").permitAll()
+                        .requestMatchers("/api/license/**").permitAll()
 
-                                // User API
-                                .requestMatchers(HttpMethod.GET, "/api/users/**")
-                                .hasAnyAuthority("Admin", "Manager")
+                        // ========================================
+                        // PUBLIC ENDPOINTS (MOVED UP FOR PRIORITY)
+                        // ========================================
+                        .requestMatchers("/register/**").permitAll()
+                        .requestMatchers("/login/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()
 
-                                // Access Groups API (already added)
-                                .requestMatchers(HttpMethod.GET, "/api/access-groups/**")
-                                .hasAnyAuthority("Admin", "Manager", "User")
-                                .requestMatchers("/api/access-groups/**")
-                                .hasAuthority("Admin")
-//                        .requestMatchers("/tags").hasAnyAuthority("Admin","Manager")
-//                        .requestMatchers("/classifications").hasAnyAuthority("Admin","Manager")
-                                .requestMatchers("/documents").hasAnyAuthority("Admin","Manager","Viewer")
-                                .requestMatchers("/documents/**").hasAnyAuthority("Admin","Manager","Viewer")
-                                .requestMatchers("/my-bookmarks").hasAnyAuthority("Admin","Manager","Viewer")
-                                .requestMatchers("/DocViewer").hasAnyAuthority("Admin","Manager","Viewer")
-//                        .requestMatchers("/viewer").hasAnyAuthority("Viewer")
-                                .requestMatchers("/activity-logs").hasAuthority("Admin")
-                                .requestMatchers("/tags-management","/classifications-management").hasAnyAuthority("Admin","Manager")
-                                .requestMatchers("/api/tags/**","/api/classifications/**").hasAnyAuthority("Admin","Manager")
-//                                .anyRequest().authenticated()
+                        // ========================================
+                        // ROLE-BASED PERMISSIONS
+                        // ========================================
 
-                                // Public endpoints
-                                .requestMatchers("/register/**").permitAll()
-                                .requestMatchers("/login/**").permitAll()
-                                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                        // Bulk upload - Admin only
+                        .requestMatchers("/bulk-upload").hasAuthority("Admin")  // ← ADD THIS LINE
+                        // Upload endpoint
+                        .requestMatchers("/upload").hasAnyAuthority("Admin", "Manager")
 
-                                // Admin only endpoints (use hasAuthority with UPPERCASE)
-                                .requestMatchers("/users", "/users/**").hasAuthority("Admin")
-                                .requestMatchers("/add", "/add/**").hasAuthority("Admin")
-                                .requestMatchers("/edit/**").hasAuthority("Admin")
-                                .requestMatchers("/delete/**").hasAuthority("Admin")
+                        // Document API
+                        .requestMatchers(HttpMethod.GET, "/api/documents/**")
+                        .hasAnyAuthority("Admin", "Manager", "User")
 
-                                // Manager endpoint
-                                .requestMatchers("/manager", "/manager/**").hasAuthority("Manager")
-                                .requestMatchers("/manager/documents/**").hasAuthority("Manager")
+                        // User API
+                        .requestMatchers(HttpMethod.GET, "/api/users/**")
+                        .hasAnyAuthority("Admin", "Manager")
 
-                                // Viewer endpoint
-                                .requestMatchers("/viewer", "/viewer/**").hasAuthority("Viewer")
+                        // Access Groups API
+                        .requestMatchers(HttpMethod.GET, "/api/access-groups/**")
+                        .hasAnyAuthority("Admin", "Manager", "User")
+                        .requestMatchers("/api/access-groups/**")
+                        .hasAuthority("Admin")
 
-                                // Profile accessible by all authenticated users
-                                .requestMatchers("/profile", "/profile/**").authenticated()
+                        // Documents pages
+                        .requestMatchers("/documents").hasAnyAuthority("Admin","Manager","Viewer")
+                        .requestMatchers("/documents/**").hasAnyAuthority("Admin","Manager","Viewer")
+                        .requestMatchers("/my-bookmarks").hasAnyAuthority("Admin","Manager","Viewer")
+                        .requestMatchers("/DocViewer").hasAnyAuthority("Admin","Manager","Viewer")
 
-                                // All other requests require authentication
-                                .anyRequest().authenticated()
+                        // Activity logs - Admin only
+                        .requestMatchers("/activity-logs").hasAuthority("Admin")
+
+                        // Tags and Classifications management
+                        .requestMatchers("/tags-management","/classifications-management").hasAnyAuthority("Admin","Manager")
+                        .requestMatchers("/api/tags/**","/api/classifications/**").hasAnyAuthority("Admin","Manager")
+
+                        // Admin only endpoints
+                        .requestMatchers("/users", "/users/**").hasAuthority("Admin")
+                        .requestMatchers("/add", "/add/**").hasAuthority("Admin")
+                        .requestMatchers("/edit/**").hasAuthority("Admin")
+                        .requestMatchers("/delete/**").hasAuthority("Admin")
+
+                        // Manager endpoints
+                        .requestMatchers("/manager", "/manager/**").hasAuthority("Manager")
+                        .requestMatchers("/manager/documents/**").hasAuthority("Manager")
+
+                        // Viewer endpoints
+                        .requestMatchers("/viewer", "/viewer/**").hasAuthority("Viewer")
+
+                        // Profile accessible by all authenticated users
+                        .requestMatchers("/profile", "/profile/**").authenticated()
+
+                        // All other requests require authentication
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
@@ -101,14 +118,15 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
-        //Only one time user login
-//        http.sessionManagement(session -> session
-//                .sessionConcurrency(concurrency -> concurrency
-//                        .maximumSessions(1)                // ✅ allow only one session per user
-//                        .maxSessionsPreventsLogin(true)    // ✅ block new login if already logged in
-//                        .expiredUrl("/login?expired")      // ✅ redirect when session expires
-//                )
-//        );
+
+        // Optional: Session management (currently commented out)
+        // http.sessionManagement(session -> session
+        //         .sessionConcurrency(concurrency -> concurrency
+        //                 .maximumSessions(1)
+        //                 .maxSessionsPreventsLogin(true)
+        //                 .expiredUrl("/login?expired")
+        //         )
+        // );
 
         return http.build();
     }

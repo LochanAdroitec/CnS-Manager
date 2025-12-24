@@ -5,10 +5,12 @@ import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.ActivityLogService;
 import codesAndStandards.springboot.userApp.service.ClassificationService;
+import codesAndStandards.springboot.userApp.service.LicenseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +34,30 @@ public class ClassificationController {
     private final ActivityLogService activityLogService;
     private static final Logger logger = LoggerFactory.getLogger(ClassificationController.class);
 
+    @Autowired
+    private LicenseService licenseService;
+
+    /**
+     * ✅ CREATE CLASSIFICATION - ED2 ONLY
+     */
     @PostMapping
-    public ResponseEntity<ClassificationDto> createClassification(@Valid @RequestBody ClassificationDto classificationDto) {
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    public ResponseEntity<?> createClassification(@Valid @RequestBody ClassificationDto classificationDto) {
         String username = getCurrentUsername();
+
+        // ✅ ED2 LICENSE CHECK
+        if (!licenseService.isLicenseValid()) {
+            logger.warn("License validation failed for createClassification");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
+        if (!isClassificationManagementAllowed()) {
+            logger.warn("Classification management denied - Edition: {}", licenseService.getCurrentEdition());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createEditionUpgradeResponse("create classifications"));
+        }
+
         try {
             Long userId = getCurrentUserId();
             ClassificationDto created = classificationService.createClassification(classificationDto, userId);
@@ -50,10 +73,28 @@ public class ClassificationController {
         }
     }
 
+    /**
+     * ✅ UPDATE CLASSIFICATION - ED2 ONLY
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<ClassificationDto> updateClassification(@PathVariable Long id,
-                                                                  @Valid @RequestBody ClassificationDto classificationDto) {
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    public ResponseEntity<?> updateClassification(@PathVariable Long id,
+                                                  @Valid @RequestBody ClassificationDto classificationDto) {
         String username = getCurrentUsername();
+
+        // ✅ ED2 LICENSE CHECK
+        if (!licenseService.isLicenseValid()) {
+            logger.warn("License validation failed for updateClassification");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
+        if (!isClassificationManagementAllowed()) {
+            logger.warn("Classification management denied - Edition: {}", licenseService.getCurrentEdition());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createEditionUpgradeResponse("edit classifications"));
+        }
+
         try {
             Long userId = getCurrentUserId();
 
@@ -82,11 +123,27 @@ public class ClassificationController {
         }
     }
 
-
-
+    /**
+     * ✅ DELETE CLASSIFICATION - ED2 ONLY
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteClassification(@PathVariable Long id) {
+    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
+    public ResponseEntity<?> deleteClassification(@PathVariable Long id) {
         String username = getCurrentUsername();
+
+        // ✅ ED2 LICENSE CHECK
+        if (!licenseService.isLicenseValid()) {
+            logger.warn("License validation failed for deleteClassification");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
+        if (!isClassificationManagementAllowed()) {
+            logger.warn("Classification management denied - Edition: {}", licenseService.getCurrentEdition());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(createEditionUpgradeResponse("delete classifications"));
+        }
+
         try {
             Long userId = getCurrentUserId();
 
@@ -118,36 +175,74 @@ public class ClassificationController {
         }
     }
 
-
+    /**
+     * ✅ GET CLASSIFICATION BY ID - READ-ONLY (ALL USERS)
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<ClassificationDto> getClassificationById(@PathVariable Long id) {
+    public ResponseEntity<?> getClassificationById(@PathVariable Long id) {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         return ResponseEntity.ok(classificationService.getClassificationById(id));
     }
 
+    /**
+     * ✅ GET ALL CLASSIFICATIONS - READ-ONLY (ALL USERS)
+     */
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
     @GetMapping
-    public ResponseEntity<List<ClassificationDto>> getAllClassifications() {
+    public ResponseEntity<?> getAllClassifications() {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         return ResponseEntity.ok(classificationService.getAllClassifications());
     }
 
+    /**
+     * ✅ GET MY CLASSIFICATIONS - READ-ONLY (ALL USERS)
+     */
     @GetMapping("/my-classifications")
-    public ResponseEntity<List<ClassificationDto>> getMyClassifications() {
+    public ResponseEntity<?> getMyClassifications() {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         return ResponseEntity.ok(classificationService.getClassificationsByUser(getCurrentUserId()));
     }
 
+    /**
+     * ✅ GET MY EDITED CLASSIFICATIONS - READ-ONLY (ALL USERS)
+     */
     @GetMapping("/my-edited-classifications")
-    public ResponseEntity<List<ClassificationDto>> getMyEditedClassifications() {
+    public ResponseEntity<?> getMyEditedClassifications() {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         return ResponseEntity.ok(classificationService.getClassificationsEditedByUser(getCurrentUserId()));
     }
 
-    // 🔹 NEW ENDPOINT - Get documents by classification ID -----------------------------------------------------
-
     /**
-     * Get all documents that are using a specific classification
-     * Returns list of documents with id and title
+     * ✅ GET DOCUMENTS BY CLASSIFICATION - READ-ONLY (ALL USERS)
      */
     @GetMapping("/{id}/documents")
-    public ResponseEntity<List<Map<String, Object>>> getDocumentsByClassification(@PathVariable Long id) {
+    public ResponseEntity<?> getDocumentsByClassification(@PathVariable Long id) {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         try {
             List<Map<String, Object>> documents = classificationService.getDocumentsByClassificationId(id);
             return ResponseEntity.ok(documents);
@@ -157,21 +252,20 @@ public class ClassificationController {
         }
     }
 
-    // ============================================================================
-    // 🆕 NEW ENDPOINT FOR BULK UPLOAD - Get all classification names as simple string list
-    // ============================================================================
-
     /**
-     * Get all classifications as a simple list of classification names (strings only)
-     * Used by bulk upload feature to populate dropdowns
-     * Returns: Sorted list of unique classification names
-     *
-     * Example response: ["Standard", "Specification", "Manual", "Procedure"]
+     * ✅ GET ALL CLASSIFICATION NAMES - READ-ONLY (ALL EDITIONS)
+     * Used for document upload dropdown (ED1 users can SELECT but not CREATE)
      */
     @GetMapping("/all")
-    public ResponseEntity<List<String>> getAllClassificationNames() {
+    public ResponseEntity<?> getAllClassificationNames() {
+        // ✅ LICENSE CHECK (READ-ONLY - ALL EDITIONS)
+        if (!licenseService.isLicenseValid()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "License expired or not found"));
+        }
+
         try {
-            logger.debug("Fetching all classification names for bulk upload");
+            logger.debug("Fetching all classification names");
 
             // Get all classifications and extract just the names
             List<ClassificationDto> allClassifications = classificationService.getAllClassifications();
@@ -187,13 +281,72 @@ public class ClassificationController {
 
             return ResponseEntity.ok(classificationNames);
         } catch (Exception e) {
-            logger.error("Failed to fetch classification names for bulk upload", e);
+            logger.error("Failed to fetch classification names", e);
             // Return empty list instead of error to prevent frontend issues
             return ResponseEntity.ok(List.of());
         }
     }
 
-    // ✅ Utility: Get User ID
+    /**
+     * ✅ NEW ENDPOINT: Check if classification management is allowed
+     * Used by frontend to show/hide management features
+     */
+    @GetMapping("/check-management-access")
+    public ResponseEntity<Map<String, Object>> checkManagementAccess() {
+        Map<String, Object> response = new HashMap<>();
+
+        boolean licenseValid = licenseService.isLicenseValid();
+        boolean managementAllowed = isClassificationManagementAllowed();
+        String currentEdition = licenseService.getCurrentEdition();
+        long daysRemaining = licenseService.getDaysRemaining();
+
+        response.put("licenseValid", licenseValid);
+        response.put("managementAllowed", managementAllowed);
+        response.put("edition", currentEdition != null ? currentEdition : "NONE");
+        response.put("daysRemaining", daysRemaining);
+        response.put("message", managementAllowed
+                ? "Classification management is available"
+                : "Upgrade to ED2 Professional to manage classifications");
+
+        return ResponseEntity.ok(response);
+    }
+
+    // ============================================================================
+    // HELPER METHODS
+    // ============================================================================
+
+    /**
+     * Check if classification management is allowed (ED2 only)
+     */
+    private boolean isClassificationManagementAllowed() {
+        if (!licenseService.isLicenseValid()) {
+            return false;
+        }
+        String edition = licenseService.getCurrentEdition();
+        return "ED2".equalsIgnoreCase(edition);
+    }
+
+    /**
+     * Create edition upgrade response
+     */
+    private Map<String, Object> createEditionUpgradeResponse(String feature) {
+        Map<String, Object> error = new HashMap<>();
+        String currentEdition = licenseService.getCurrentEdition();
+        long daysRemaining = licenseService.getDaysRemaining();
+
+        error.put("error", "Classification management is not available in your edition");
+        error.put("feature", feature);
+        error.put("currentEdition", currentEdition != null ? currentEdition : "ED1");
+        error.put("requiredEdition", "ED2");
+        error.put("daysRemaining", daysRemaining);
+        error.put("message", "Please upgrade to ED2 Professional Edition to " + feature + ". Contact your administrator.");
+
+        return error;
+    }
+
+    /**
+     * Get current user ID
+     */
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -206,7 +359,9 @@ public class ClassificationController {
         return user.getId();
     }
 
-    // ✅ Utility: Get Username
+    /**
+     * Get current username
+     */
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return (auth != null) ? auth.getName() : "Unknown";

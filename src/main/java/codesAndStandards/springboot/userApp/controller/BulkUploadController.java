@@ -4,6 +4,7 @@ import codesAndStandards.springboot.userApp.dto.BulkUploadResult;
 import codesAndStandards.springboot.userApp.dto.BulkUploadValidationResult;
 import codesAndStandards.springboot.userApp.service.ActivityLogService;
 import codesAndStandards.springboot.userApp.service.BulkUploadService;
+import codesAndStandards.springboot.userApp.service.LicenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -22,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/api/bulk-upload")
@@ -35,21 +38,66 @@ public class BulkUploadController {
     @Autowired
     private ActivityLogService activityLogService;
 
+    @Autowired
+    private LicenseService licenseService;
+
     private String getCurrentUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
+    /**
+     * Helper method to check license edition and return error response if needed
+     */
+    private ResponseEntity<?> checkLicenseEdition() {
+        // Check if license is valid
+        if (!licenseService.isLicenseValid()) {
+            logger.warn("License validation failed - license invalid or expired");
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "License expired or not found");
+            error.put("code", "LICENSE_INVALID");
+            error.put("message", "Please activate or renew your license");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
+        // Check if bulk upload is allowed (ED2 edition only)
+        if (!licenseService.isBulkUploadAllowed()) {
+            logger.warn("Bulk upload denied - Current edition: {}", licenseService.getCurrentEdition());
+
+            String currentEdition = licenseService.getCurrentEdition();
+            long daysRemaining = licenseService.getDaysRemaining();
+
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Bulk upload feature not available in your edition");
+            error.put("code", "EDITION_UPGRADE_REQUIRED");
+            error.put("currentEdition", currentEdition != null ? currentEdition : "ED1");
+            error.put("requiredEdition", "ED2");
+            error.put("daysRemaining", daysRemaining);
+            error.put("message", "Please upgrade to ED2 Professional edition to use bulk upload feature. Contact your administrator.");
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+        }
+
+        return null; // License is valid and edition allows bulk upload
+    }
 
     /**
      * Generate Excel template from uploaded PDF files
+     * ✅ WITH LICENSE AND EDITION VALIDATION
      */
     @PostMapping("/generate-template")
     @PreAuthorize("hasAuthority('Admin')")
-    public ResponseEntity<Resource> generateTemplate(
+    public ResponseEntity<?> generateTemplate(
             @RequestParam("pdfFiles") MultipartFile[] pdfFiles) {
 
+        // ✅ CHECK LICENSE EDITION FIRST
+        ResponseEntity<?> licenseCheck = checkLicenseEdition();
+        if (licenseCheck != null) {
+            return licenseCheck; // Return error response
+        }
+
         try {
-            logger.info("Generating Excel template for {} PDF files", pdfFiles != null ? pdfFiles.length : 0);
+            logger.info("✅ ED2 License validated - Generating Excel template for {} PDF files",
+                    pdfFiles != null ? pdfFiles.length : 0);
 
             if (pdfFiles == null || pdfFiles.length == 0) {
                 logger.warn("No PDF files provided for template generation");
@@ -62,7 +110,7 @@ public class BulkUploadController {
                     logger.warn("Empty file detected: {}", file.getOriginalFilename());
                     continue;
                 }
-                logger.debug("Processing file: {} ({}  bytes)", file.getOriginalFilename(), file.getSize());
+                logger.debug("Processing file: {} ({} bytes)", file.getOriginalFilename(), file.getSize());
             }
 
             ByteArrayOutputStream outputStream = bulkUploadService.generateExcelTemplate(pdfFiles);
@@ -94,12 +142,20 @@ public class BulkUploadController {
 
     /**
      * Download blank Excel template (without any filenames)
+     * ✅ WITH LICENSE AND EDITION VALIDATION
      */
     @GetMapping("/download-template")
     @PreAuthorize("hasAuthority('Admin')")
-    public ResponseEntity<Resource> downloadBlankTemplate() {
+    public ResponseEntity<?> downloadBlankTemplate() {
+
+        // ✅ CHECK LICENSE EDITION FIRST
+        ResponseEntity<?> licenseCheck = checkLicenseEdition();
+        if (licenseCheck != null) {
+            return licenseCheck; // Return error response
+        }
+
         try {
-            logger.info("Downloading blank Excel template");
+            logger.info("✅ ED2 License validated - Downloading blank Excel template");
 
             // Create empty template
             ByteArrayOutputStream outputStream = bulkUploadService.generateExcelTemplate(new MultipartFile[0]);
@@ -122,18 +178,25 @@ public class BulkUploadController {
 
     /**
      * Validate bulk upload files
+     * ✅ WITH LICENSE AND EDITION VALIDATION
      * UPDATED: Now accepts selfValidationJson parameter for edited metadata from Step 4
      */
     @PostMapping("/validate")
     @PreAuthorize("hasAuthority('Admin')")
     @ResponseBody
-    public ResponseEntity<BulkUploadValidationResult> validateBulkUpload(
+    public ResponseEntity<?> validateBulkUpload(
             @RequestParam("pdfFiles") MultipartFile[] pdfFiles,
             @RequestParam("excelFile") MultipartFile excelFile,
             @RequestParam(value = "selfValidationJson", required = false) String selfValidationJson) {
 
+        // ✅ CHECK LICENSE EDITION FIRST
+        ResponseEntity<?> licenseCheck = checkLicenseEdition();
+        if (licenseCheck != null) {
+            return licenseCheck; // Return error response
+        }
+
         try {
-            logger.info("Validating bulk upload: {} PDF files, Excel file: {}, Has edited metadata: {}",
+            logger.info("✅ ED2 License validated - Validating bulk upload: {} PDF files, Excel file: {}, Has edited metadata: {}",
                     pdfFiles != null ? pdfFiles.length : 0,
                     excelFile != null ? excelFile.getOriginalFilename() : "null",
                     selfValidationJson != null && !selfValidationJson.isEmpty() ? "YES" : "NO");
@@ -185,23 +248,31 @@ public class BulkUploadController {
 
     /**
      * Process bulk upload
+     * ✅ WITH LICENSE AND EDITION VALIDATION
      * UPDATED: Now accepts selfValidationJson parameter for edited metadata from Step 4
      * Also accepts uploadOnlyValid parameter to skip documents with errors
      */
     @PostMapping("/process")
     @PreAuthorize("hasAuthority('Admin')")
     @ResponseBody
-    public ResponseEntity<BulkUploadResult> processBulkUpload(
+    public ResponseEntity<?> processBulkUpload(
             @RequestParam("pdfFiles") MultipartFile[] pdfFiles,
             @RequestParam("excelFile") MultipartFile excelFile,
             @RequestParam(value = "selfValidationJson", required = false) String selfValidationJson,
             @RequestParam(value = "uploadOnlyValid", required = false) String uploadOnlyValid) {
+
+        // ✅ CHECK LICENSE EDITION FIRST
+        ResponseEntity<?> licenseCheck = checkLicenseEdition();
+        if (licenseCheck != null) {
+            return licenseCheck; // Return error response
+        }
+
         String username = getCurrentUsername();
 
         try {
             boolean onlyValid = "true".equalsIgnoreCase(uploadOnlyValid);
 
-            logger.info("Processing bulk upload: {} PDF files, Excel file: {}, Has edited metadata: {}, Upload only valid: {}",
+            logger.info("✅ ED2 License validated - Processing bulk upload: {} PDF files, Excel file: {}, Has edited metadata: {}, Upload only valid: {}",
                     pdfFiles != null ? pdfFiles.length : 0,
                     excelFile != null ? excelFile.getOriginalFilename() : "null",
                     selfValidationJson != null && !selfValidationJson.isEmpty() ? "YES" : "NO",
@@ -245,15 +316,44 @@ public class BulkUploadController {
                     duration,
                     result.getSuccessCount(),
                     result.getFailedCount());
+            // ✅ LOG INDIVIDUAL DOCUMENT UPLOADS
+            if (result.getSuccessfulUploads() != null && !result.getSuccessfulUploads().isEmpty()) {
+                for (Map.Entry<String, String> entry : result.getSuccessfulUploads().entrySet()) {
 
-            // Log success
+                    String filename = entry.getKey();
+                    String title = entry.getValue();
+
+                    activityLogService.logByUsername(
+                            username,
+                            ActivityLogService.DOCUMENT_UPLOAD,
+                            "Uploaded document: \"" + filename + "\" as \"" + title + "\" " +
+                                    "(Bulk Upload" +
+                                    (selfValidationJson != null && !selfValidationJson.isEmpty()
+                                            ? ", edited metadata"
+                                            : "") +
+                                    ")"
+                    );
+                }
+            }
+
+// ✅ OPTIONAL: KEEP ONE SUMMARY LOG (recommended)
             activityLogService.logByUsername(
                     username,
                     ActivityLogService.BULK_DOCUMENT_UPLOADED,
-                    "Successfully processed bulk upload of " + result.getSuccessCount() +
-                            " document(s) using metadata file: " + excelFile.getOriginalFilename() +
-                            (selfValidationJson != null && !selfValidationJson.isEmpty() ? " (with edited metadata)" : "")
+                    "Bulk upload completed: " + result.getSuccessCount() +
+                            " document(s) uploaded using " + excelFile.getOriginalFilename()
             );
+
+
+            // Log success
+//            activityLogService.logByUsername(
+//                    username,
+//                    ActivityLogService.BULK_DOCUMENT_UPLOADED,
+//                    "Successfully processed bulk upload of " + result.getSuccessCount() +
+//                            " document(s) using metadata file: " + excelFile.getOriginalFilename() +
+//                            (selfValidationJson != null && !selfValidationJson.isEmpty() ? " (with edited metadata)" : "") +
+//                            " [ED2 Professional Edition]"
+//            );
             return ResponseEntity.ok(result);
 
         } catch (Exception e) {

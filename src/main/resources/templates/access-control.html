@@ -913,7 +913,21 @@
     let allUsers = [];
     let createModal, viewGroupModal, editGroupModal, deleteModal;
     let deleteGroupId = null;
-    let currentEditGroupData = null; // Store full group data for editing
+    let currentEditGroupData = null;
+
+    // ✅ NEW: Edition permissions
+    let editionPermissions = {
+        isLicenseValid: false,
+        edition: 'ED1',
+        editionName: 'Essential Edition',
+        canCreateGroups: false,
+        canEditGroups: true,
+        canEditGroupDetails: false,
+        canDeleteGroups: true,
+        defaultGroupsOnly: true,
+        defaultGroups: ['Design', 'Manufacturing', 'Quality', 'Support'],
+        message: ''
+    };
 
     // Get user role from hidden input
     const userRole = document.getElementById('userRole')?.value || 'Viewer';
@@ -931,6 +945,9 @@
         viewGroupModal = new bootstrap.Modal(document.getElementById('viewGroupModal'));
         editGroupModal = new bootstrap.Modal(document.getElementById('editGroupModal'));
         deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+        // ✅ Load edition permissions first
+        await loadEditionPermissions();
 
         // Apply role-based restrictions
         applyRoleBasedRestrictions();
@@ -965,16 +982,70 @@
         });
     }
 
-    // Apply role-based restrictions (Only Admin can manage)
+    // ✅ NEW FUNCTION: Load edition permissions
+    async function loadEditionPermissions() {
+        try {
+            const response = await fetch('/api/access-groups/edition-permissions', {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load edition permissions');
+            }
+
+            editionPermissions = await response.json();
+
+            console.log('====== EDITION INFO ======');
+            console.log('Edition:', editionPermissions.edition);
+            console.log('Edition Name:', editionPermissions.editionName);
+            console.log('Can Create Groups:', editionPermissions.canCreateGroups);
+            console.log('Default Groups Only:', editionPermissions.defaultGroupsOnly);
+            console.log('License Valid:', editionPermissions.isLicenseValid);
+            console.log('Days Remaining:', editionPermissions.daysRemaining);
+            console.log('==========================');
+
+            // Show edition info banner if ED1
+            if (editionPermissions.edition === 'ED1' && editionPermissions.isLicenseValid) {
+                showEditionInfoBanner();
+            }
+
+        } catch (error) {
+            console.error('Error loading edition permissions:', error);
+            // Default to ED1 with restrictions
+            editionPermissions.canCreateGroups = false;
+        }
+    }
+
+    // ✅ NEW FUNCTION: Show edition info banner
+    function showEditionInfoBanner() {
+        const alertContainer = document.getElementById('alertContainer');
+        const bannerDiv = document.createElement('div');
+        bannerDiv.className = 'alert alert-info alert-dismissible fade show';
+        bannerDiv.innerHTML = `
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>${editionPermissions.editionName}</strong>: ${editionPermissions.message}
+            <a href="/license-activation" class="alert-link ms-2">Upgrade to Professional Edition</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        alertContainer.appendChild(bannerDiv);
+    }
+
+    // ✅ UPDATED: Apply role-based AND edition-based restrictions
     function applyRoleBasedRestrictions() {
         const isAdmin = userRole === 'Admin';
+        const canCreate = isAdmin && editionPermissions.canCreateGroups;
 
-        console.log('Is Admin?', isAdmin);
+        console.log('====== ACCESS RESTRICTIONS ======');
+        console.log('Is Admin:', isAdmin);
+        console.log('Can Create Groups:', canCreate);
+        console.log('=================================');
 
         const createBtn = document.getElementById('createGroupBtn');
         const emptyCreateBtn = document.getElementById('emptyCreateBtn');
 
-        if (isAdmin) {
+        // Show create button only if Admin AND has ED2 license
+        if (canCreate) {
             if (createBtn) createBtn.style.display = 'flex';
             if (emptyCreateBtn) emptyCreateBtn.style.display = 'inline-flex';
         } else {
@@ -1054,12 +1125,25 @@
         });
 
         document.getElementById('editGroupModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('editGroupForm').reset();
-            document.getElementById('editGroupId').value = '';
-            document.getElementById('editDocumentsList').innerHTML = '';
-            document.getElementById('editUsersList').innerHTML = '';
-            currentEditGroupData = null;
-        });
+        document.getElementById('editGroupForm').reset();
+        document.getElementById('editGroupId').value = '';
+        document.getElementById('editDocumentsList').innerHTML = '';
+        document.getElementById('editUsersList').innerHTML = '';
+        currentEditGroupData = null;
+
+        // ✅ NEW: Clean up restriction message and styles
+        const helpText = document.getElementById('editNameRestriction');
+        if (helpText) helpText.remove();
+
+        const groupNameInput = document.getElementById('editGroupName');
+        const groupDescInput = document.getElementById('editGroupDescription');
+        groupNameInput.readOnly = false;
+        groupDescInput.readOnly = false;
+        groupNameInput.style.backgroundColor = '';
+        groupNameInput.style.cursor = '';
+        groupDescInput.style.backgroundColor = '';
+        groupDescInput.style.cursor = '';
+    });
     }
 
     // Setup tab switching
@@ -1189,7 +1273,7 @@
         });
     }
 
-    // Create group card element
+    // ✅ UPDATED: Create group card with edition-aware delete button
     function createGroupCard(group) {
         const div = document.createElement('div');
         div.className = 'group-card';
@@ -1202,19 +1286,38 @@
         const description = group.description || 'Access to all ' + escapeHtml(group.groupName).toLowerCase() + ' documents';
 
         const isAdmin = userRole === 'Admin';
+        const isDefaultGroup = Array.isArray(editionPermissions.defaultGroups) && editionPermissions.defaultGroups.includes(group.groupName);
+        const canDeleteThisGroup = isAdmin && editionPermissions.canDeleteGroups &&
+                                   (editionPermissions.edition === 'ED2' || !isDefaultGroup);
 
-        const actionsHTML = isAdmin ? `
-            <div class="group-actions" onclick="event.stopPropagation();">
-                <button class="btn-action-icon btn-edit-group" title="Edit group"
-                    onclick="openEditGroupModal(${group.id})">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button class="btn-action-icon btn-delete-group" title="Delete group"
-                    onclick="openDeleteModal(${group.id}, '${escapeHtml(group.groupName).replace(/'/g, "\\'")}')">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
-        ` : '';
+        let actionsHTML = '';
+
+        if (isAdmin && editionPermissions.canEditGroups) {
+            actionsHTML = `
+                <div class="group-actions" onclick="event.stopPropagation();">
+                    <button class="btn-action-icon btn-edit-group" title="Edit group"
+                        onclick="openEditGroupModal(${group.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>`;
+
+            if (canDeleteThisGroup) {
+                actionsHTML += `
+                    <button class="btn-action-icon btn-delete-group" title="Delete group"
+                        onclick="openDeleteModal(${group.id}, '${escapeHtml(group.groupName).replace(/'/g, "\\'")}')">
+                        <i class="bi bi-trash"></i>
+                    </button>`;
+            } else if (isDefaultGroup && editionPermissions.edition === 'ED1') {
+                actionsHTML += `
+                    <button class="btn-action-icon btn-delete-group"
+                        style="opacity: 0.5; cursor: not-allowed;"
+                        title="Cannot delete default groups in Essential Edition"
+                        onclick="event.stopPropagation(); showEditionRestrictionAlert('delete');">
+                        <i class="bi bi-trash"></i>
+                    </button>`;
+            }
+
+            actionsHTML += `</div>`;
+        }
 
         div.innerHTML = `
             <div class="group-header">
@@ -1224,6 +1327,8 @@
                 <div class="group-info">
                     <div class="group-name">
                         ${escapeHtml(group.groupName)}
+                        ${isDefaultGroup && editionPermissions.edition === 'ED1' ?
+                            '<span class="badge bg-primary ms-2">Default</span>' : ''}
                         <div class="group-count-badge">
                             <span class="count-item">
                                 <i class="bi bi-file-earmark"></i>
@@ -1247,13 +1352,27 @@
 
         // Make the card clickable to open view modal
         div.addEventListener('click', function(e) {
-            // Don't open if clicking on action buttons
             if (!e.target.closest('.group-actions')) {
                 openViewGroupModal(group.id);
             }
         });
 
         return div;
+    }
+
+    // ✅ NEW FUNCTION: Show edition restriction alert
+    function showEditionRestrictionAlert(action) {
+        let message = '';
+
+        if (action === 'delete') {
+            message = 'Cannot delete default groups (Design, Manufacturing, Quality, Support) in Essential Edition. ' +
+                     'Upgrade to Professional Edition to manage custom groups.';
+        } else if (action === 'create') {
+            message = 'Group creation is not available in Essential Edition. ' +
+                     'Upgrade to Professional Edition to create custom groups.';
+        }
+
+        showAlert(message, 'warning');
     }
 
     // Open create modal and populate documents/users
@@ -1363,9 +1482,15 @@
         });
     }
 
-    // Handle create group
+    // ✅ UPDATED: Handle create group with edition check
     async function handleCreateGroup(e) {
         e.preventDefault();
+
+        // Check edition permission
+        if (!editionPermissions.canCreateGroups) {
+            showEditionRestrictionAlert('create');
+            return;
+        }
 
         const groupName = document.getElementById('createGroupName').value.trim();
         const description = document.getElementById('createGroupDescription').value.trim();
@@ -1527,6 +1652,47 @@
             document.getElementById('editGroupName').value = group.groupName;
             document.getElementById('editGroupDescription').value = group.description || '';
 
+            // ✅ NEW: Apply edition restrictions on name/description fields
+            const canEditDetails = editionPermissions.canEditGroupDetails || editionPermissions.edition === 'ED2';
+            const groupNameInput = document.getElementById('editGroupName');
+            const groupDescInput = document.getElementById('editGroupDescription');
+
+            if (!canEditDetails) {
+                // Disable fields in ED1
+                groupNameInput.readOnly = true;
+                groupDescInput.readOnly = true;
+
+                // Add visual styling
+                groupNameInput.style.backgroundColor = '#f3f4f6';
+                groupNameInput.style.cursor = 'not-allowed';
+                groupDescInput.style.backgroundColor = '#f3f4f6';
+                groupDescInput.style.cursor = 'not-allowed';
+
+                // Add helper text if not already present
+                if (!document.getElementById('editNameRestriction')) {
+                    const nameHelp = document.createElement('small');
+                    nameHelp.id = 'editNameRestriction';
+                    nameHelp.className = 'text-warning d-flex align-items-center mt-1';
+                    nameHelp.innerHTML = `
+                        <i class="bi bi-lock-fill me-1"></i>
+                        Name and description editing requires Professional Edition
+                    `;
+                    groupNameInput.parentElement.appendChild(nameHelp);
+                }
+            } else {
+                // Enable fields in ED2
+                groupNameInput.readOnly = false;
+                groupDescInput.readOnly = false;
+                groupNameInput.style.backgroundColor = '';
+                groupNameInput.style.cursor = '';
+                groupDescInput.style.backgroundColor = '';
+                groupDescInput.style.cursor = '';
+
+                // Remove helper text if exists
+                const helpText = document.getElementById('editNameRestriction');
+                if (helpText) helpText.remove();
+            }
+
             // Populate documents with pre-selected items
             populateDocumentsList('edit', group.documentIds || []);
 
@@ -1569,6 +1735,19 @@
         const errorEl = getOrCreateErrorElement(document.getElementById('editGroupName'));
 
         errorEl.textContent = '';
+
+        // ✅ NEW: Check if name/description were changed in ED1
+        const canEditDetails = editionPermissions.canEditGroupDetails || editionPermissions.edition === 'ED2';
+
+        if (!canEditDetails && currentEditGroupData) {
+            // In ED1, check if name or description was changed
+            if (groupName !== currentEditGroupData.groupName ||
+                description !== (currentEditGroupData.description || '')) {
+                showAlert('Editing group name and description requires Professional Edition. ' +
+                         'You can still modify documents and users.', 'warning');
+                return;
+            }
+        }
 
         if (groupName.length < 3 || groupName.length > 100) {
             errorEl.textContent = 'Group name must be between 3 and 100 characters.';
@@ -1622,7 +1801,7 @@
         deleteModal.show();
     }
 
-    // Handle delete group
+    // ✅ UPDATED: Handle delete group with edition check
     async function handleDeleteGroup() {
         if (!deleteGroupId) return;
 
@@ -1676,7 +1855,6 @@
         }
         return errorEl;
     }
-
     // Date formatting function
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';

@@ -636,7 +636,7 @@
             }
 
             .breadcrumb {
-                font-size: 50px;
+                font-size: 12px;
             }
 
             .view-btn {
@@ -833,6 +833,33 @@
     </div>
 </div>
 
+<!-- ⭐ UPDATED: Access Denied Modal with clearer message -->
+<div class="modal fade" id="accessDeniedModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center pt-0 pb-4">
+                <div style="width: 70px; height: 70px; background: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                    <i class="bi bi-lock-fill" style="font-size: 32px; color: #ef4444;"></i>
+                </div>
+                <h5 style="font-size: 20px; font-weight: 600; color: #1a2332; margin-bottom: 8px;">Access Denied</h5>
+                <p class="text-muted mb-0" id="accessDeniedMessage">You don't have permission to view this document.</p>
+                <div class="alert alert-warning mt-3 mb-0" style="font-size: 13px; text-align: left;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Possible reasons:</strong>
+                    <ul class="mb-0 mt-2" style="padding-left: 20px;">
+                        <li>You were removed from the group</li>
+                        <li>The document was removed from your group</li>
+                        <li>Access permissions were changed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap JS -->
 <script src="/js/bootstrap.bundle.min.js"></script>
 <!-- Include Navbar JavaScript -->
@@ -846,6 +873,7 @@
     let currentView = 'grid';
     const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
     const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    const accessDeniedModal = new bootstrap.Modal(document.getElementById('accessDeniedModal'));
 
     // Fetch bookmarks on page load
     window.addEventListener('load', function() {
@@ -1043,10 +1071,73 @@
         document.getElementById('totalCount').textContent = `${total} Total Bookmarks`;
     }
 
-    // View document - Navigate to DocViewer with page number (opens in new tab)
-    function viewDocument(documentId, pageNumber) {
-        if (documentId) {
+    // ⭐ NEW: Check document access before viewing
+    async function checkDocumentAccess(documentId) {
+        try {
+            const response = await fetch(`/api/documents/${documentId}/check-access`);
+            const data = await response.json();
+
+            console.log('Access check result:', data);
+
+            return {
+                hasAccess: data.hasAccess || false,
+                message: data.message || 'Unknown error',
+                reason: data.reason || null
+            };
+        } catch (error) {
+            console.error('Error checking document access:', error);
+            return {
+                hasAccess: false,
+                message: 'Unable to verify access. Please try again.',
+                reason: 'ERROR'
+            };
+        }
+    }
+
+    // ⭐ UPDATED: View document with enhanced access check
+    async function viewDocument(documentId, pageNumber) {
+        if (!documentId) {
+            showAlert('danger', 'Invalid document ID');
+            return;
+        }
+
+        // Show loading indicator
+        showAlert('info', 'Checking access permissions...');
+
+        // Check access first
+        const accessResult = await checkDocumentAccess(documentId);
+
+        // Clear loading alert
+        const alertContainer = document.getElementById('alertContainer');
+        alertContainer.innerHTML = '';
+
+        if (accessResult.hasAccess) {
+            // Access granted - open document
+            console.log('✅ Access granted - opening document');
+            console.log('Access details:', accessResult);
             window.open(`/DocViewer?id=${documentId}&page=${pageNumber || 1}`, '_blank');
+        } else {
+            // Access denied - show modal with detailed message
+            console.log('❌ Access denied');
+            console.log('Denial reason:', accessResult.reason);
+            console.log('Access details:', accessResult);
+
+            // ⭐ Enhanced message based on reason
+            let message = accessResult.message || "You don't have permission to view this document.";
+
+            if (accessResult.reason === 'NOT_IN_ALLOWED_GROUPS') {
+                message += "\n\nPossible reasons:";
+                message += "\n• You were removed from the group(s) that have access to this document";
+                message += "\n• This document was removed from the group(s) you belong to";
+                message += "\n• Access restrictions were changed by an administrator";
+
+                if (accessResult.requiredGroups) {
+                    message += `\n\nRequired groups: ${accessResult.requiredGroups}`;
+                }
+            }
+
+            document.getElementById('accessDeniedMessage').innerHTML = message.replace(/\n/g, '<br>');
+            accessDeniedModal.show();
         }
     }
 
@@ -1132,6 +1223,8 @@
         const alertContainer = document.getElementById('alertContainer');
         const icon = type === 'success'
             ? '<i class="bi bi-check-circle-fill me-2"></i>'
+            : type === 'info'
+            ? '<i class="bi bi-info-circle-fill me-2"></i>'
             : '<i class="bi bi-exclamation-circle-fill me-2"></i>';
 
         const alertHTML = `

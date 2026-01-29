@@ -236,9 +236,6 @@
         .user-details-modal {
             display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
             background: white;
             border-radius: 12px;
             padding: 30px;
@@ -248,6 +245,7 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             max-height: 80vh;
             overflow-y: auto;
+            transition: all 0.3s ease; /* Smooth transition when sidebar toggles */
         }
         .user-details-modal.active {
             display: block;
@@ -334,6 +332,107 @@
         #scrollTopBtn:hover {
             background-color:#1e3a5f;
         }
+        /* ✅ Enhanced Upgrade Alert Styling */
+.alert-warning {
+    background: linear-gradient(135deg, #fff9e6 0%, #fffcf0 100%);
+    border: 2px solid #ffc107;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+}
+
+.alert-warning h5 {
+    color: #856404;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.alert-warning p {
+    color: #856404;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.alert-warning small {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #6c5100;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+    font-weight: 600;
+    padding: 10px 24px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 193, 7, 0.4);
+}
+
+.bi-lock-fill {
+    animation: lockPulse 2s ease-in-out infinite;
+}
+
+@keyframes lockPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+<!--        /* Stat cards - work in BOTH editions */-->
+<!--.stat-card {-->
+<!--    border-radius: 12px;-->
+<!--    padding: 5px;-->
+<!--    color: white;-->
+<!--    transition: all 0.2s;-->
+<!--    display: flex;-->
+<!--    justify-content: flex-end;-->
+<!--    align-items: center;-->
+<!--    text-align: right;-->
+<!--    cursor: pointer;-->
+<!--    position: relative;-->
+<!--}-->
+
+<!--.stat-card:hover {-->
+<!--    transform: translateY(-5px);-->
+<!--    box-shadow: 0 8px 16px rgba(0,0,0,0.1);-->
+<!--}-->
+
+<!--.stat-card.active {-->
+<!--    border: 2px solid #1E78D7;-->
+<!--    box-shadow: 0 0 12px rgba(30,120,215,0.4);-->
+<!--}-->
+
+<!--.stat-card.active::after {-->
+<!--    content: '✓';-->
+<!--    position: absolute;-->
+<!--    top: 5px;-->
+<!--    left: 10px;-->
+<!--    font-size: 20px;-->
+<!--    font-weight: bold;-->
+<!--}-->
+
+<!--.stat-number {-->
+<!--    font-size: 2rem;-->
+<!--    font-weight: bold;-->
+<!--    padding-left:0px;-->
+<!--    padding-right:5px;-->
+<!--}-->
+
+<!--.stat-label {-->
+<!--    font-size: 0.9rem;-->
+<!--    opacity: 0.9;-->
+<!--    padding-left:0px;-->
+<!--    padding-top:15px;-->
+<!--    padding-right:5px;-->
+<!--}-->
 
     </style>
 </head>
@@ -365,7 +464,7 @@
             </div>
         </div>
 
-        <!-- Statistics Cards (Now clickable filters) -->
+        <!-- Statistics Cards (Clickable filters - WORKS IN BOTH EDITIONS) -->
         <div class="row mb-4">
             <div class="col-md-2">
                 <div class="stat-card d-flex flex-row active" style="background-color: #1e3a5f"
@@ -403,28 +502,62 @@
                 </div>
             </div>
         </div>
+        <!-- Search box with conditional toolbar -->
         <div class="search-box mb-4">
-            <!-- Toolbar with search, filters and date download controls -->
-            <div class="toolbar">
-                <div class="filter-left">
-                    <div class="input-group search-input">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0"
-                               placeholder="Search by ID, user, action, or details....."
-                               id="searchInput">
+            <!-- ✅ CHECK IF PROFESSIONAL EDITION (ED2) AND VALID LICENSE -->
+            <div th:if="${hasValidLicense and isProfessionalEdition}">
+                <!-- Toolbar with search, filters and date download controls -->
+                <div class="toolbar">
+                    <div class="filter-left">
+                        <div class="input-group search-input">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0"
+                                   placeholder="Search by ID, user, action, or details....."
+                                   id="searchInput">
+                        </div>
+                    </div>
+
+                    <!-- Right side: Date pickers + Download button -->
+                    <div class="filter-right controls-inline">
+                        <input type="date" id="startDate" class="form-control" style="width:160px;"
+                               onchange="filterByDateRange()" />
+                        <span class="muted-small">to</span>
+                        <input type="date" id="endDate" class="form-control" style="width:160px;"
+                               onchange="filterByDateRange()" />
+                        <button class="btn" style="background-color: #1e3a5f; color:#ffffff;" onclick="downloadLogsAsCSV()">
+                            <i class="bi bi-download me-1"></i> Download
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Right side: Date pickers + Download button -->
-                <div class="filter-right controls-inline">
-                    <input type="date" id="startDate" class="form-control" style="width:160px;"
-                           onchange="filterByDateRange()" />
-                    <span class="muted-small">to</span>
-                    <input type="date" id="endDate" class="form-control" style="width:160px;"
-                           onchange="filterByDateRange()" />
-                    <button class="btn " style="background-color: #1e3a5f; color:#ffffff;" onclick="downloadLogsAsCSV()">
-                        <i class="bi bi-download me-1"></i> Download
-                    </button>
+            <!-- ✅ ESSENTIAL EDITION (ED1) OR NO LICENSE - SHOW UPGRADE MESSAGE -->
+            <div th:if="${!hasValidLicense or !isProfessionalEdition}">
+                <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert" style="margin-bottom: 0;">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-lock-fill me-3" style="font-size: 1.8rem; color: #856404;"></i>
+                        <div>
+                            <h5 class="mb-1" style="color: #856404; font-weight: 600;">
+                                <span th:if="${!hasValidLicense}">No Active License</span>
+                                <span th:if="${hasValidLicense and !isProfessionalEdition}">Advanced Features Locked</span>
+                            </h5>
+                            <p class="mb-0" style="color: #856404; font-size: 14px;">
+                        <span th:if="${!hasValidLicense}">
+                            Please activate a valid license to access activity logs features.
+                        </span>
+                                <span th:if="${hasValidLicense and !isProfessionalEdition}">
+                            You are currently using <strong th:text="${currentEdition}">Essential Edition</strong>.
+                            Upgrade to <strong>Professional Edition (ED2)</strong> to unlock:
+                            <br>
+                            <small>
+                                ✓ Advanced search filters
+                                ✓ Date range selection
+                                ✓ CSV export capabilities
+                            </small>
+                        </span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -531,13 +664,13 @@
 </div>
 
 <!-- Modal Overlay -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeUserModal()"></div>
+<div class="modal-overlay" id="modalOverlay"></div>
 
 <!-- User Details Modal -->
 <div class="user-details-modal" id="userDetailsModal">
     <div class="modal-header-custom">
         <h4>User Details</h4>
-        <button class="modal-close" onclick="closeUserModal()">&times;</button>
+        <button class="modal-close" id="modalCloseBtn" type="button">&times;</button>
     </div>
     <div id="userDetailsContent">
         <div class="text-center py-4">
@@ -559,6 +692,31 @@
 
 <script>
     let currentFilter = 'all';
+    let isProfessional = [[${isProfessionalEdition and hasValidLicense}]];
+    // ==================== CENTER MODAL TO MAIN CONTENT ====================
+    function centerModalToMainContent() {
+        const modal = document.getElementById('userDetailsModal');
+        const mainContent = document.querySelector('.main-content');
+
+        if (!modal || !mainContent) return;
+
+        // Get main-content dimensions and position
+        const mainRect = mainContent.getBoundingClientRect();
+
+        // Calculate center position relative to main-content
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
+
+        // Center horizontally within main-content
+        const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+
+        // Center vertically within viewport (but considering navbar)
+        const top = window.innerHeight / 2 - modalHeight / 2;
+
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.transform = 'none'; // Remove transform since we're using absolute positioning
+    }
 
     // Initialize event listeners when DOM is loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -579,7 +737,7 @@
             });
         }
 
-        // Initialize search input listener
+        // Initialize search input listener (only if exists - ED2 only)
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', function() {
@@ -613,6 +771,57 @@
             });
         }
     });
+    // ✅ ADD THIS: Close modal when clicking close button
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeUserModal();
+        });
+    }
+
+    // ✅ ADD THIS: Close modal when clicking overlay
+    const modalOverlay = document.getElementById('modalOverlay');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeUserModal();
+            }
+        });
+    }
+
+    // ✅ UPDATE THIS: Enhanced Escape key handler
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('userDetailsModal');
+            if (modal && modal.classList.contains('active')) {
+                closeUserModal();
+            }
+        }
+    });
+
+    // ✅ ADD THIS: Re-center modal when window resizes
+    window.addEventListener('resize', function() {
+        const modal = document.getElementById('userDetailsModal');
+        if (modal && modal.classList.contains('active')) {
+            centerModalToMainContent();
+        }
+    });
+
+    // ✅ ADD THIS: Listen for sidebar toggle events
+    const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            // Wait for sidebar animation to complete
+            setTimeout(() => {
+                const modal = document.getElementById('userDetailsModal');
+                if (modal && modal.classList.contains('active')) {
+                    centerModalToMainContent();
+                }
+            }, 350); // Match Bootstrap's offcanvas transition duration
+        });
+    }
 
     // Function to show user details modal
     function showUserDetails(userId) {
@@ -623,6 +832,11 @@
         // Show modal and overlay
         modal.classList.add('active');
         overlay.classList.add('active');
+
+        // ✅ Center modal after showing it
+        setTimeout(() => {
+            centerModalToMainContent();
+        }, 10);
 
         // Show loading spinner
         content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
@@ -636,69 +850,68 @@
                 return response.json();
             })
             .then(user => {
-    let createdDate = 'N/A';
-    if (user.createdAt) {
-        const date = new Date(user.createdAt);
-        createdDate = date.toLocaleString('en-IN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        });
-    }
+                let createdDate = 'N/A';
+                if (user.createdAt) {
+                    const date = new Date(user.createdAt);
+                    createdDate = date.toLocaleString('en-IN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                }
 
-    let roleName = user.roleName || 'N/A';
-    // ✅ ADD THIS: Format groups for display
-    let groupsHtml = '<span class="text-muted">No groups assigned</span>';
-    if (user.groups && user.groups.length > 0) {
-        groupsHtml = user.groups.map(group =>
-            `<span class="badge rounded-pill" style="background-color: #d1fae5; color: #065f46; margin-right: 4px; margin-bottom: 4px; padding: 6px 12px; font-size: 11px;">${group.groupName}</span>`
-        ).join('');
-    }
+                let roleName = user.roleName || 'N/A';
+                let groupsHtml = '<span class="text-muted">No groups assigned</span>';
+                if (user.groups && user.groups.length > 0) {
+                    groupsHtml = user.groups.map(group =>
+                        `<span class="badge rounded-pill" style="background-color: #d1fae5; color: #065f46; margin-right: 4px; margin-bottom: 4px; padding: 6px 12px; font-size: 11px;">${group.groupName}</span>`
+                    ).join('');
+                }
 
-    content.innerHTML = `
-<!--        <div class="user-detail-row">-->
-<!--            <div class="user-detail-label">User ID:</div>-->
-<!--            <div class="user-detail-value">${user.id || 'N/A'}</div>-->
-<!--        </div>-->
-        <div class="user-detail-row">
-            <div class="user-detail-label">First Name:</div>
-            <div class="user-detail-value">${user.firstName || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Last Name:</div>
-            <div class="user-detail-value">${user.lastName || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Username:</div>
-            <div class="user-detail-value">${user.username || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Email:</div>
-            <div class="user-detail-value">${user.email || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Role:</div>
-            <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
-        </div>
-        <div class="user-detail-row">
-             <div class="user-detail-label">Groups:</div>
-             <div class="user-detail-value">${groupsHtml}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Created At:</div>
-            <div class="user-detail-value">${createdDate}</div>
-        </div>
-        <div class="user-detail-row" style="border-bottom: none;">
-            <div class="user-detail-label">Created By:</div>
-            <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
-        </div>
-    `;
-})
+                content.innerHTML = `
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">First Name:</div>
+                        <div class="user-detail-value">${user.firstName || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Last Name:</div>
+                        <div class="user-detail-value">${user.lastName || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Username:</div>
+                        <div class="user-detail-value">${user.username || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Email:</div>
+                        <div class="user-detail-value">${user.email || 'N/A'}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Role:</div>
+                        <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
+                    </div>
+                    <div class="user-detail-row">
+                         <div class="user-detail-label">Groups:</div>
+                         <div class="user-detail-value">${groupsHtml}</div>
+                    </div>
+                    <div class="user-detail-row">
+                        <div class="user-detail-label">Created At:</div>
+                        <div class="user-detail-value">${createdDate}</div>
+                    </div>
+                    <div class="user-detail-row" style="border-bottom: none;">
+                        <div class="user-detail-label">Created By:</div>
+                        <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
+                    </div>
+                `;
 
+                // ✅ Re-center after content loads (height may change)
+                setTimeout(() => {
+                    centerModalToMainContent();
+                }, 10);
+            })
             .catch(error => {
                 content.innerHTML = `
                     <div class="alert alert-danger">
@@ -706,16 +919,35 @@
                         Failed to load user details. ${error.message}
                     </div>
                 `;
+
+                // ✅ Re-center after error message loads
+                setTimeout(() => {
+                    centerModalToMainContent();
+                }, 10);
             });
     }
 
     // Function to close user details modal
     function closeUserModal() {
-        document.getElementById('userDetailsModal').classList.remove('active');
-        document.getElementById('modalOverlay').classList.remove('active');
+        const modal = document.getElementById('userDetailsModal');
+        const overlay = document.getElementById('modalOverlay');
+
+        if (modal) {
+            modal.classList.remove('active');
+            // Reset inline styles
+            modal.style.left = '';
+            modal.style.top = '';
+            modal.style.transform = '';
+        }
+
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+
+        console.log('✅ User modal closed');
     }
 
-    // Filter by stat card
+    // ✅ Filter by stat card - WORKS IN BOTH ED1 AND ED2
     function filterByStatCard(card) {
         const filter = card.getAttribute('data-filter');
 
@@ -729,19 +961,26 @@
         applyFilters();
     }
 
-    // Filter by date range
+    // ✅ Filter by date range - ONLY WORKS IN ED2 (toolbar feature)
     function filterByDateRange() {
+        if (!isProfessional) {
+            return; // Date range filtering is ED2 only
+        }
         applyFilters();
     }
 
-    // Apply all filters
+    // ✅ Apply all filters - WORKS IN BOTH EDITIONS (but with different features)
     function applyFilters() {
-        const startDateInput = document.getElementById('startDate').value;
-        const endDateInput = document.getElementById('endDate').value;
-        const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+        // Get search query only if it exists (ED2 feature)
+        const searchInput = document.getElementById('searchInput');
+        const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-        const startDate = startDateInput ? new Date(startDateInput) : null;
-        const endDate = endDateInput ? new Date(endDateInput) : null;
+        // Get date range only if it exists (ED2 feature)
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        const startDate = startDateInput && startDateInput.value ? new Date(startDateInput.value) : null;
+        const endDate = endDateInput && endDateInput.value ? new Date(endDateInput.value) : null;
         if (endDate) endDate.setHours(23, 59, 59, 999);
 
         const today = new Date();
@@ -759,16 +998,17 @@
 
             let show = true;
 
-            // Date filter
+            // Get log date
             const dateText = cells[4].children[0]?.textContent?.trim() || cells[4].textContent.trim();
             const logDate = parseDateFromText(dateText);
 
-            if (logDate) {
+            // ✅ ED2 ONLY: Date range filter (only if elements exist)
+            if (isProfessional && logDate) {
                 if (startDate && logDate < startDate) show = false;
                 if (endDate && logDate > endDate) show = false;
             }
 
-            // Stat card filter
+            // ✅ BOTH EDITIONS: Stat card filter (Today, Success, Failures, Downloads)
             if (currentFilter === 'today' && logDate) {
                 if (logDate.getTime() !== today.getTime()) show = false;
             } else if (currentFilter === 'success') {
@@ -782,7 +1022,7 @@
                 if (action !== 'DOCUMENT_DOWNLOAD') show = false;
             }
 
-            // Search filter (excluding date/time column)
+            // ✅ ED2 ONLY: Search filter (only if search input exists)
             if (searchQuery && show) {
                 let searchText = '';
                 for (let i = 0; i < cells.length - 1; i++) {
@@ -795,7 +1035,11 @@
             if (show) visibleCount++;
         });
 
-        document.getElementById('visibleLogsCount').textContent = visibleCount;
+        // Update visible count
+        const visibleLogsCount = document.getElementById('visibleLogsCount');
+        if (visibleLogsCount) {
+            visibleLogsCount.textContent = visibleCount;
+        }
     }
 
     // Parse date from text format "14 Oct 2025"
@@ -820,20 +1064,25 @@
         return null;
     }
 
-    // Download logs as CSV
+    // ✅ Download logs as CSV - ONLY WORKS IN ED2 (toolbar feature)
     function downloadLogsAsCSV() {
+        if (!isProfessional) {
+            alert("CSV Export is only available in Professional Edition (ED2).\n\nPlease upgrade to access this feature.");
+            return;
+        }
+
         const table = document.querySelector("#activityLogsTable");
         if (!table) {
             alert("No logs table found!");
             return;
         }
 
-        const startDate = document.querySelector("#startDate").value;
-        const endDate = document.querySelector("#endDate").value;
+        const startDateInput = document.querySelector("#startDate");
+        const endDateInput = document.querySelector("#endDate");
 
-        const start = startDate ? new Date(startDate) : null;
-        const end = endDate ? new Date(endDate) : null;
-        if (end) end.setHours(23, 59, 59, 999);
+        const startDate = startDateInput && startDateInput.value ? new Date(startDateInput.value) : null;
+        const endDate = endDateInput && endDateInput.value ? new Date(endDateInput.value) : null;
+        if (endDate) endDate.setHours(23, 59, 59, 999);
 
         let csvContent = "";
         const rows = table.querySelectorAll("tr");
@@ -859,8 +1108,8 @@
             const logDate = parseDateFromText(dateText);
 
             if (
-                (!start || logDate >= start) &&
-                (!end || logDate <= end)
+                (!startDate || logDate >= startDate) &&
+                (!endDate || logDate <= endDate)
             ) {
                 const rowData = Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",");
                 csvContent += rowData + "\n";
@@ -875,8 +1124,8 @@
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        const s = startDate || 'All';
-        const e = endDate || 'All';
+        const s = startDate ? startDateInput.value : 'All';
+        const e = endDate ? endDateInput.value : 'All';
         link.href = url;
         link.download = `Activity_Logs_${s}_to_${e}.csv`;
         document.body.appendChild(link);

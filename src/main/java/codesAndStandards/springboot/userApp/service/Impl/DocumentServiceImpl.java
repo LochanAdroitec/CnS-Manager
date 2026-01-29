@@ -368,4 +368,74 @@ public class DocumentServiceImpl implements DocumentService {
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
+    /**
+     * ⭐ NEW METHOD - Get accessible document IDs using document library logic
+     * This ensures bookmarks use the SAME access logic as the document library
+     */
+    @Override
+    public List<Long> getAccessibleDocumentIds(Long userId) {
+        try {
+            logger.info("Getting accessible document IDs for user: {}", userId);
+
+            // Use the SAME method that document library uses
+            List<Document> accessibleDocs = documentRepository.findDocumentsAccessibleByUser(userId);
+
+            List<Long> documentIds = accessibleDocs.stream()
+                    .map(Document::getId)
+                    .collect(Collectors.toList());
+
+            logger.info("User {} has access to {} documents", userId, documentIds.size());
+
+            return documentIds;
+
+        } catch (Exception e) {
+            logger.error("Error getting accessible documents for user {}: {}", userId, e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+    /**
+     * ⭐ NEW METHOD - Check if a user has access to a specific document
+     * - Admins always have access (checked in controller)
+     * - For other users, check if they're in allowed groups
+     *
+     * @param userId - User ID to check
+     * @param documentId - Document ID to check
+     * @return true if user has access, false otherwise
+     */
+    /**
+     * ⭐ ENHANCED - Check if a user has access to a specific document
+     * Now with detailed logging for debugging access issues
+     */
+    /**
+     * ⭐ UPDATED - Check access using document library logic
+     * Now uses the SAME logic as document library for consistency
+     */
+    @Override
+    public boolean hasUserAccessToDocument(Long userId, Long documentId) {
+        try {
+            logger.info("=== ACCESS CHECK (Using Document Library Logic) ===");
+            logger.info("User ID: {}, Document ID: {}", userId, documentId);
+
+            // Get all accessible document IDs using document library logic
+            List<Long> accessibleDocIds = getAccessibleDocumentIds(userId);
+
+            // Check if the document is in the accessible list
+            boolean hasAccess = accessibleDocIds.contains(documentId);
+
+            if (hasAccess) {
+                logger.info("✅ User {} HAS access to document {} (found in document library)", userId, documentId);
+            } else {
+                logger.warn("❌ User {} DOES NOT have access to document {} (NOT in document library)", userId, documentId);
+            }
+
+            logger.info("=== ACCESS CHECK END: {} ===", hasAccess ? "GRANTED" : "DENIED");
+            return hasAccess;
+
+        } catch (Exception e) {
+            logger.error("❌ ERROR checking document access for user {} and document {}: {}",
+                    userId, documentId, e.getMessage(), e);
+            logger.info("=== ACCESS CHECK END: DENIED (Error) ===");
+            return false;
+        }
+    }
 }

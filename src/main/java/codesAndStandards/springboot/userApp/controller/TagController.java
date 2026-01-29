@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
+//@CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
 public class TagController {
 
     private final TagService tagService;

@@ -1,29 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!-- ==================== META INFORMATION ==================== -->
-    <!-- Character encoding for proper text rendering -->
     <meta charset="UTF-8">
-    <!-- Responsive viewport settings for mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Page title displayed in browser tab -->
-    <title>PDF Viewer</title>
+    <title>PDF Viewer - Fixed</title>
 
-    <!-- ==================== CSRF SECURITY TOKENS ==================== -->
-    <!-- CSRF token for secure form submissions -->
+    <!-- CSRF Tokens -->
     <meta name="_csrf" th:content="${_csrf.token}"/>
-    <!-- CSRF header name for AJAX requests -->
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
-    <!-- ==================== THYMELEAF INLINE JAVASCRIPT ==================== -->
-    <!-- Inject server-side variables into JavaScript -->
+    <!-- Thymeleaf Inline JavaScript -->
     <script th:if="${documentId}" th:inline="javascript">
-        // Document identifier passed from server
         window.documentId = /*[[${documentId}]]*/ null;
-        // User's role (Viewer, Editor, Admin) for permission control
         window.userRole = /*[[${userRole}]]*/ 'Viewer';
-
-        // Document metadata object containing all document information
         window.documentInfo = {
             title: /*[[${document != null ? document.title : 'Document'}]]*/ 'Document',
             productCode: /*[[${document != null ? document.productCode : 'N/A'}]]*/ 'N/A',
@@ -37,106 +26,56 @@
         };
     </script>
 
-    <!-- ==================== EXTERNAL RESOURCES ==================== -->
-    <!-- Bootstrap Icons for UI elements -->
     <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
-    <!-- PDF.js library for rendering PDF documents -->
     <script src="/pdfjs/pdf.min.js"></script>
 
-    <!-- ==================== STYLES ==================== -->
     <style>
-        /* ==================== GLOBAL RESET ==================== */
-        /* Remove default browser margins, paddings, and enforce box-sizing */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* ==================== BODY STYLES ==================== */
-        /* Main page container styling with system fonts */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f5f7fa; /* Light gray background */
-            overflow: hidden; /* Prevent body scroll */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #525659;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease;
         }
 
-        /* ==================== UNIFIED NAVIGATION BAR ==================== */
-        /* Top navigation bar containing all controls */
+        /* ==================== NAVIGATION BAR - FIXED HEIGHT ==================== */
         .unified-nav {
-            height: 56px; /* Fixed navigation height */
-            background: white; /* White background for light mode */
-            border-bottom: 1px solid #e2e8f0; /* Subtle bottom border */
+            height: 56px;
+            min-height: 56px;
+            max-height: 56px;
+            background: #323639;
+            border-bottom: 1px solid #1e1e1e;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            justify-content: space-between; /* Distribute space between sections */
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000; /* Stay above other content */
+            justify-content: space-between;
+            position: relative;
+            z-index: 1000;
             gap: 20px;
+            flex-shrink: 0;
+            transition: background-color 0.3s ease;
         }
 
-        /* ==================== NAVIGATION SECTIONS ==================== */
-        /* Left section: Thumbnail toggle and document info */
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-shrink: 0; /* Prevent shrinking */
-        }
+        .nav-left { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+        .nav-center { display: flex; align-items: center; gap: 20px; flex: 1; justify-content: center; max-width: 800px; }
+        .nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-        /* Center section: Zoom controls and page navigation */
-        .nav-center {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            flex: 1; /* Take available space */
-            justify-content: center;
-            max-width: 800px; /* Limit maximum width */
-        }
-
-        /* Right section: Action buttons (download, bookmark, present, theme) */
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
-        /* ==================== DOCUMENT HEADER IN NAVBAR ==================== */
-        /* Container for document title and metadata */
-        .document-header {
-            display: flex;
-            flex-direction: column;
-            min-width: 0; /* Allow text truncation */
-        }
-
-        /* Document title styling with ellipsis for overflow */
+        .document-header { display: flex; flex-direction: column; min-width: 0; }
         .document-title {
             font-size: 14px;
             font-weight: 600;
-            color: #1a202c;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis; /* Show ... when text is too long */
-            max-width: 300px;
-        }
-
-        /* Document metadata (product code, edition, pages) */
-        .document-meta {
-            font-size: 12px;
-            color: #718096;
-            margin-top: 2px;
+            color: #f1f3f4;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 300px;
         }
+        .document-meta { font-size: 12px; color: #9aa0a6; margin-top: 2px; }
 
-        /* ==================== NAVIGATION ICON BUTTONS ==================== */
-        /* Circular icon buttons in navigation bar */
         .nav-icon-btn {
             width: 36px;
             height: 36px;
@@ -148,221 +87,221 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
-            color: #4a5568;
+            color: #9aa0a6;
             font-size: 16px;
-            flex-shrink: 0;
         }
-
-        /* Hover effect for icon buttons */
-        .nav-icon-btn:hover {
-            background: #f7fafc;
-            color: #2d3748;
-        }
-
-        /* Active state (e.g., bookmarked document) */
-        .nav-icon-btn.active {
-            color: #f59e0b; /* Amber color for active state */
-        }
+        .nav-icon-btn:hover { background: #4e5256; color: #e8eaed; }
+        .nav-icon-btn.active { color: #4285f4; }
 
         /* ==================== ZOOM CONTROLS ==================== */
-        /* Container for zoom in/out buttons and zoom percentage display */
-        .zoom-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-        }
-
-        /* Zoom in/out buttons */
+        .zoom-group { display: flex; align-items: center; gap: 8px; position: relative; }
         .zoom-btn {
             width: 32px;
             height: 32px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #5f6368;
             border-radius: 6px;
-            background: white;
+            background: #3c4043;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
             font-size: 14px;
-            color: #4a5568;
+            color: #e8eaed;
         }
+        .zoom-btn:hover { background: #4e5256; }
+        .zoom-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* Hover effect for zoom buttons */
-        .zoom-btn:hover {
-            background: #f7fafc;
-        }
-
-        /* Disabled state for zoom buttons */
-        .zoom-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* Container for zoom value display */
-        .zoom-value-container {
-            position: relative;
-        }
-
-        /* Zoom percentage display (clickable to show dropdown) */
+        .zoom-value-container { position: relative; }
         #zoomValue {
             min-width: 60px;
             text-align: center;
             font-size: 13px;
-            color: #2d3748;
+            color: #e8eaed;
             font-weight: 500;
             cursor: pointer;
             padding: 6px 8px;
             border-radius: 4px;
             transition: background 0.2s;
-            user-select: none; /* Prevent text selection */
+            user-select: none;
         }
+        #zoomValue:hover { background: #4e5256; }
 
-        /* Hover effect for zoom value */
-        #zoomValue:hover {
-            background: #f7fafc;
-        }
-
-        /* ==================== ZOOM DROPDOWN MENU ==================== */
-        /* Dropdown menu for selecting zoom percentage */
         .zoom-dropdown {
             position: absolute;
             top: 100%;
             left: 50%;
-            transform: translateX(-50%); /* Center align */
+            transform: translateX(-50%);
             margin-top: 8px;
-            background: white;
-            border: 1px solid #e2e8f0;
+            background: #3c4043;
+            border: 1px solid #5f6368;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             min-width: 120px;
-            z-index: 2000; /* Above other elements */
-            display: none; /* Hidden by default */
+            z-index: 2000;
+            display: none;
             overflow: hidden;
         }
+        .zoom-dropdown.show { display: block; }
 
-        /* Show dropdown when active */
-        .zoom-dropdown.show {
-            display: block;
-        }
-
-        /* Individual zoom option in dropdown */
         .zoom-option {
             padding: 10px 16px;
             font-size: 13px;
-            color: #2d3748;
+            color: #e8eaed;
             cursor: pointer;
             transition: background 0.2s;
             text-align: center;
         }
+        .zoom-option:hover { background: #4e5256; }
+        .zoom-option.active { background: #4285f4; color: white; font-weight: 600; }
 
-        /* Hover effect for zoom options */
-        .zoom-option:hover {
-            background: #f7fafc;
-        }
-
-        /* Active/selected zoom option */
-        .zoom-option.active {
-            background: #4285f4; /* Blue background */
-            color: white;
-            font-weight: 600;
-        }
-
-        /* ==================== PAGE JUMP CONTROLS ==================== */
-        /* Container for page number input and total pages display */
+        /* ==================== PAGE JUMP ==================== */
         .page-jump-group {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 4px 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #5f6368;
             border-radius: 6px;
-            background: #f8f9fa;
+            background: #3c4043;
         }
-
-        /* Label for page jump (separator slash) */
-        .page-jump-label {
-            font-size: 13px;
-            color: #718096;
-            white-space: nowrap;
-        }
-
-        /* Page number input field */
+        .page-jump-label { font-size: 13px; color: #9aa0a6; white-space: nowrap; }
         .page-jump-input {
             width: 50px;
             padding: 3px 6px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #5f6368;
             border-radius: 4px;
             font-size: 13px;
             text-align: center;
             outline: none;
+            background: #292a2d;
+            color: #e8eaed;
         }
+        .page-jump-input:focus { border-color: #4285f4; }
+        .page-jump-total { font-size: 13px; color: #e8eaed; font-weight: 500; }
 
-        /* Focus state for page input */
-        .page-jump-input:focus {
-            border-color: #4285f4; /* Blue border on focus */
-        }
-
-        /* Total pages display */
-        .page-jump-total {
-            font-size: 13px;
-            color: #2d3748;
-            font-weight: 500;
-        }
-
-        /* ==================== MAIN CONTAINER ==================== */
-        /* Main content area below navigation bar */
+        /* ==================== MAIN CONTAINER - PERFECTLY ALIGNED ==================== */
         .main-container {
             display: flex;
-            position: fixed;
-            top: 56px; /* Below navbar */
-            left: 0;
-            right: 0;
-            bottom: 0;
+            flex: 1;
+            height: calc(100vh - 56px);
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* ==================== PDF VIEWER AREA ==================== */
-        /* Central area where PDF pages are displayed */
-        .pdf-viewer-area {
-            flex: 1; /* Take remaining space */
-            background: #525659; /* Dark gray background */
-            display: block;
-            overflow: auto; /* Enable scrolling */
-            padding: 20px;
+        /* ==================== THUMBNAIL SIDEBAR - FIXED WIDTH ==================== */
+        .thumbnail-sidebar {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            background: #2d3748;
+            border-right: 1px solid #1e1e1e;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px;
+            transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease;
+            flex-shrink: 0;
+        }
+        .thumbnail-sidebar.closed {
+            width: 0;
+            min-width: 0;
+            max-width: 0;
+            padding: 0;
+            border: none;
+            overflow: hidden;
+        }
+
+        .thumbnails-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            padding-bottom: 20px;
+        }
+
+        .thumbnail-item {
+            cursor: pointer;
             text-align: center;
-            scroll-behavior: auto;
+            transition: all 0.2s;
+            padding: 5px;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .thumbnail-item:hover { background: #4a5568; }
+        .thumbnail-item.active {
+            background: #4285f4;
+            box-shadow: 0 0 0 2px #4285f4;
         }
 
-        /* Container for all PDF pages */
+        .thumbnail-canvas {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            max-width: 150px;
+            display: block;
+            margin: 0 auto;
+            border: 2px solid transparent;
+        }
+
+        .thumbnail-item.active .thumbnail-canvas {
+            border-color: #4285f4;
+        }
+
+        .thumbnail-page-num {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .thumbnail-item.active .thumbnail-page-num {
+            color: white;
+            font-weight: 600;
+        }
+
+        /* ==================== PDF VIEWER - CHROME ACCURATE ==================== */
+        .pdf-viewer-area {
+            flex: 1;
+            background: #525659;
+            display: flex;
+            overflow: auto;
+            position: relative;
+            scroll-behavior: auto !important;
+            min-width: 0;
+            transition: background-color 0.3s ease;
+        }
+
         .pdf-pages-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px; /* Space between pages */
-            padding: 10px 0;
+            gap: 0px;
+            padding: 20px 0;
+            margin: 0 auto;
             min-height: 100%;
         }
 
-        /* ==================== PDF PAGE WRAPPER ==================== */
-        /* Individual page wrapper with shadow */
         .pdf-canvas-wrapper {
             background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.2);
             display: inline-block;
             position: relative;
             margin: 0;
+            margin-bottom: 10px;
             flex-shrink: 0;
         }
 
-        /* Canvas element for PDF rendering */
+        .pdf-canvas-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
         .pdf-canvas-wrapper canvas {
             display: block;
             width: 100%;
             height: auto;
         }
 
-        /* Loading state for page wrapper */
         .pdf-canvas-wrapper.loading {
             display: flex;
             align-items: center;
@@ -370,7 +309,6 @@
             background: #f8f9fa;
         }
 
-        /* Loading spinner for individual pages */
         .pdf-canvas-wrapper.loading::before {
             content: '';
             width: 30px;
@@ -381,7 +319,8 @@
             animation: spin 1s linear infinite;
         }
 
-        /* Page number label overlay on each page */
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .page-number-label {
             position: absolute;
             bottom: 8px;
@@ -389,275 +328,273 @@
             transform: translateX(-50%);
             font-size: 11px;
             color: #fff;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 4px 8px;
             border-radius: 4px;
             font-weight: 500;
-            pointer-events: none; /* Don't interfere with clicks */
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
         }
 
-        /* ==================== THUMBNAIL SIDEBAR ==================== */
-        /* Left sidebar showing page thumbnails */
-        .thumbnail-sidebar {
-            width: 200px;
-            background: #2d3748; /* Dark blue-gray */
-            border-right: 1px solid #4a5568;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto; /* Enable vertical scrolling */
-            padding: 10px;
-            transition: width 0.3s ease;
+        .pdf-canvas-wrapper:hover .page-number-label {
+            opacity: 1;
         }
 
-        /* Closed state for thumbnail sidebar */
-        .thumbnail-sidebar.closed {
-            width: 0;
-            padding: 0;
-            border: none;
-            overflow: hidden;
-        }
-
-        /* Container for thumbnail items */
-        .thumbnails-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-
-        /* Individual thumbnail item */
-        .thumbnail-item {
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s;
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        /* Hover effect for thumbnails */
-        .thumbnail-item:hover {
-            background: #4a5568;
-        }
-
-        /* Active/selected thumbnail */
-        .thumbnail-item.active {
-            background: #4285f4; /* Blue background */
-        }
-
-        /* Thumbnail canvas element */
-        .thumbnail-canvas {
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            max-width: 150px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        /* Page number text under thumbnail */
-        .thumbnail-page-num {
-            color: #a0aec0;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        /* Page number color for active thumbnail */
-        .thumbnail-item.active .thumbnail-page-num {
-            color: white;
-        }
-
-        /* ==================== DOCUMENT INFO SIDEBAR ==================== */
-        /* Right sidebar showing document metadata */
+        /* ==================== DOCUMENT INFO SIDEBAR - FIXED WIDTH ==================== */
         .sidebar {
             width: 320px;
-            background: white;
-            border-left: 1px solid #e2e8f0;
+            min-width: 320px;
+            max-width: 320px;
+            background: #3c4043;
+            border-left: 1px solid #1e1e1e;
             display: flex;
             flex-direction: column;
-            overflow-y: auto; /* Enable vertical scrolling */
+            overflow-y: auto;
             padding: 24px;
-            transition: width 0.3s ease, transform 0.3s ease;
+            transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease, background-color 0.3s ease;
+            flex-shrink: 0;
         }
-
-        /* Closed state for info sidebar */
         .sidebar.closed {
             width: 0;
+            min-width: 0;
+            max-width: 0;
             padding: 0;
             border: none;
             overflow: hidden;
         }
 
-        /* Expanded PDF viewer when sidebar is closed */
-        .pdf-viewer-area.expanded {
-            width: 100%;
-        }
+        .sidebar-title { font-size: 18px; font-weight: 600; color: #e8eaed; margin-bottom: 20px; }
 
-        /* Sidebar title */
-        .sidebar-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 20px;
-        }
-
-        /* Individual info item in sidebar */
-        .info-item {
-            margin-bottom: 20px;
-        }
-
-        /* Label for info items */
+        .info-item { margin-bottom: 20px; }
         .info-label {
             font-size: 12px;
-            color: #718096;
+            color: #9aa0a6;
             margin-bottom: 6px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
-        /* Value for info items */
-        .info-value {
-            font-size: 14px;
-            color: #2d3748;
-            font-weight: 500;
-        }
-
-        /* Container for tags */
-        .info-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        /* Tag badge styling */
+        .info-value { font-size: 14px; color: #e8eaed; font-weight: 500; }
+        .info-tags { display: flex; flex-wrap: wrap; gap: 6px; }
         .tag-badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 500;
-            background: #e2e8f0;
-            color: #2d3748;
+            background: #5f6368;
+            color: #e8eaed;
         }
-
-        /* Classification badge styling */
         .classification-badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 500;
-            background: #dbeafe;
-            color: #1e40af;
+            background: #1a73e8;
+            color: white;
         }
-
-        /* Group badge styling - NEW */
         .group-badge {
             display: inline-block;
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: 500;
+            background: #188038;
+            color: white;
+        }
+        .info-notes { font-size: 13px; color: #9aa0a6; line-height: 1.6; }
+
+        /* ==================== EMPTY STATE TEXT STYLING ==================== */
+        .empty-state-text {
+            font-size: 13px;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        body.light-mode .empty-state-text {
+            color: #9ca3af;
+        }
+
+        /* ==================== LIGHT MODE ==================== */
+        body.light-mode {
+            background: #f5f7fa;
+        }
+
+        body.light-mode .unified-nav {
+            background: white;
+            border-bottom-color: #e2e8f0;
+        }
+
+        body.light-mode .document-title {
+            color: #1a202c;
+        }
+
+        body.light-mode .document-meta {
+            color: #718096;
+        }
+
+        body.light-mode .nav-icon-btn {
+            color: #4a5568;
+        }
+
+        body.light-mode .nav-icon-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        body.light-mode .zoom-btn {
+            background: white;
+            border-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        body.light-mode .zoom-btn:hover {
+            background: #f7fafc;
+        }
+
+        body.light-mode #zoomValue {
+            color: #2d3748;
+        }
+
+        body.light-mode #zoomValue:hover {
+            background: #f7fafc;
+        }
+
+        body.light-mode .zoom-dropdown {
+            background: white;
+            border-color: #e2e8f0;
+        }
+
+        body.light-mode .zoom-option {
+            color: #2d3748;
+        }
+
+        body.light-mode .zoom-option:hover {
+            background: #f7fafc;
+        }
+
+        body.light-mode .page-jump-group {
+            background: #f8f9fa;
+            border-color: #e2e8f0;
+        }
+
+        body.light-mode .page-jump-label {
+            color: #718096;
+        }
+
+        body.light-mode .page-jump-input {
+            background: white;
+            border-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        body.light-mode .page-jump-total {
+            color: #2d3748;
+        }
+
+        body.light-mode .pdf-viewer-area {
+            background: #e5e7eb;
+        }
+
+        body.light-mode .sidebar {
+            background: white;
+            border-left-color: #e2e8f0;
+        }
+
+        body.light-mode .sidebar-title {
+            color: #1a202c;
+        }
+
+        body.light-mode .info-label {
+            color: #718096;
+        }
+
+        body.light-mode .info-value {
+            color: #2d3748;
+        }
+
+        body.light-mode .tag-badge {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        body.light-mode .classification-badge {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        body.light-mode .group-badge {
             background: #d1fae5;
             color: #065f46;
         }
 
-        /* Notes text styling */
-        .info-notes {
-            font-size: 13px;
+        body.light-mode .info-notes {
             color: #718096;
-            line-height: 1.6;
         }
 
-        /* ==================== TOGGLE SIDEBAR BUTTON - ENHANCED ==================== */
-        /* Fixed position button to toggle document info sidebar
-         * Colors change based on:
-         * 1. Light mode sidebar expanded: White background, black icon
-         * 2. Light mode sidebar closed: Body background (#f5f7fa), dark icon
-         * 3. Dark mode sidebar expanded: Sidebar background (#2d3748), light icon
-         * 4. Dark mode sidebar closed: Body background (#1a202c), light icon
-         */
+        /* ==================== TOGGLE BUTTONS ==================== */
         .toggle-sidebar-btn {
             position: fixed;
             top: 70px;
             right: 20px;
             width: 40px;
             height: 40px;
-            border-radius: 50%; /* Circular button */
-            background: white; /* Light mode expanded (matches sidebar) */
-            color: #1a202c; /* Black icon for light mode expanded */
+            border-radius: 50%;
+            background: #3c4043;
+            color: #e8eaed;
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
             transition: all 0.3s ease;
-            z-index: 1001; /* Above sidebar */
+            z-index: 1001;
+        }
+        .toggle-sidebar-btn:hover { background: #5f6368; transform: scale(1.1); }
+
+        body.light-mode .toggle-sidebar-btn {
+            background: white;
+            color: #2d3748;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
-        /* Hover effect for light mode sidebar expanded */
-        .toggle-sidebar-btn:hover {
-            background: #e2e8f0; /* Slightly darker white/gray */
-            transform: scale(1.1);
+        body.light-mode .toggle-sidebar-btn:hover {
+            background: #f7fafc;
         }
 
-        /* Light mode sidebar closed state */
-        .toggle-sidebar-btn.sidebar-closed {
-            right: 20px;
-            background: #f5f7fa; /* Matches body background in light mode */
-            color: #2d3748; /* Dark icon */
-        }
-
-        /* Hover effect for light mode sidebar closed */
-        .toggle-sidebar-btn.sidebar-closed:hover {
-            background: #e2e8f0; /* Slightly darker */
-        }
-
-        /* Icon inside toggle button */
-        .toggle-sidebar-btn i {
-            font-size: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        /* ==================== LOADING SPINNER OVERLAY ==================== */
-        /* Full-screen loading indicator */
-        .loading-spinner {
-            display: none;
+        /* ==================== ZOOM INDICATOR ==================== */
+        .zoom-indicator {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.9);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 16px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px 35px;
+            border-radius: 12px;
+            font-size: 32px;
+            font-weight: 600;
+            z-index: 9998;
+            display: none;
+            pointer-events: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .zoom-indicator.show {
+            display: block;
+            animation: zoomPulse 0.5s ease;
         }
 
-        /* Active state for loading spinner */
-        .loading-spinner.active {
-            display: flex;
+        @keyframes zoomPulse {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
-        /* Spinner animation */
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid #e2e8f0;
-            border-top-color: #4285f4;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Spin animation keyframes */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ==================== MODAL DIALOGS ==================== */
-        /* Modal overlay for dialogs */
+        /* ==================== MODALS ==================== */
         .modal {
             display: none;
             position: fixed;
@@ -665,43 +602,43 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5); /* Semi-transparent overlay */
+            background: rgba(0,0,0,0.7);
             z-index: 10000;
             align-items: center;
             justify-content: center;
         }
+        .modal.active { display: flex; }
 
-        /* Active state for modal */
-        .modal.active {
-            display: flex;
-        }
-
-        /* Modal content container */
         .modal-content {
-            background: white;
+            background: #3c4043;
             border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
-        /* Modal header section */
+        body.light-mode .modal-content {
+            background: white;
+        }
+
         .modal-header {
             padding: 20px 24px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #5f6368;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* Modal title */
-        .modal-header h2 {
-            font-size: 18px;
-            font-weight: 600;
+        body.light-mode .modal-header {
+            border-bottom-color: #e2e8f0;
+        }
+
+        .modal-header h2 { font-size: 18px; font-weight: 600; color: #e8eaed; }
+
+        body.light-mode .modal-header h2 {
             color: #1a202c;
         }
 
-        /* Modal close button */
         .modal-close {
             width: 32px;
             height: 32px;
@@ -709,25 +646,21 @@
             background: none;
             cursor: pointer;
             font-size: 20px;
+            color: #9aa0a6;
+        }
+        .modal-close:hover { color: #e8eaed; }
+
+        body.light-mode .modal-close {
             color: #718096;
         }
 
-        /* Close button hover effect */
-        .modal-close:hover {
+        body.light-mode .modal-close:hover {
             color: #2d3748;
         }
 
-        /* Modal body section */
-        .modal-body {
-            padding: 24px;
-        }
+        .modal-body { padding: 24px; }
+        .modal-body-center { text-align: center; }
 
-        /* Centered modal body */
-        .modal-body-center {
-            text-align: center;
-        }
-
-        /* Modal icon (for confirmations) */
         .modal-icon {
             width: 80px;
             height: 80px;
@@ -738,73 +671,59 @@
             justify-content: center;
             margin: 0 auto 20px;
         }
+        .modal-icon i { font-size: 36px; color: white; }
+        .modal-icon.danger { background: #f56565; }
 
-        /* Icon inside modal icon container */
-        .modal-icon i {
-            font-size: 36px;
-            color: white;
-        }
+        .modal-title-large { font-size: 20px; font-weight: 600; color: #e8eaed; margin-bottom: 8px; }
 
-        /* Danger/warning icon variant */
-        .modal-icon.danger {
-            background: #f56565; /* Red background */
-        }
-
-        /* Large modal title */
-        .modal-title-large {
-            font-size: 20px;
-            font-weight: 600;
+        body.light-mode .modal-title-large {
             color: #1a202c;
-            margin-bottom: 8px;
         }
 
-        /* Modal description text */
-        .modal-text {
-            font-size: 14px;
+        .modal-text { font-size: 14px; color: #9aa0a6; line-height: 1.6; }
+
+        body.light-mode .modal-text {
             color: #718096;
-            line-height: 1.6;
         }
 
-        /* Form group in modal */
-        .form-group {
-            margin-bottom: 16px;
-        }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; color: #e8eaed; margin-bottom: 8px; }
 
-        /* Form label */
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
+        body.light-mode .form-label {
             color: #2d3748;
-            margin-bottom: 8px;
         }
 
-        /* Form input field */
         .form-input {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #5f6368;
             border-radius: 6px;
             font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
+            background: #292a2d;
+            color: #e8eaed;
+        }
+        .form-input:focus { border-color: #4285f4; }
+
+        body.light-mode .form-input {
+            background: white;
+            border-color: #e2e8f0;
+            color: #2d3748;
         }
 
-        /* Input focus state */
-        .form-input:focus {
-            border-color: #4285f4;
-        }
-
-        /* Modal footer section */
         .modal-footer {
             padding: 20px 24px;
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid #5f6368;
             display: flex;
             gap: 12px;
             justify-content: flex-end;
         }
 
-        /* Modal button styles */
+        body.light-mode .modal-footer {
+            border-top-color: #e2e8f0;
+        }
+
         .btn-cancel, .btn-primary, .btn-danger {
             padding: 10px 20px;
             border-radius: 6px;
@@ -813,91 +732,98 @@
             transition: all 0.2s;
             border: none;
         }
+        .btn-cancel { background: #5f6368; color: #e8eaed; }
+        .btn-cancel:hover { background: #80868b; }
+        .btn-primary { background: #4285f4; color: white; }
+        .btn-primary:hover { background: #3367d6; }
+        .btn-danger { background: #f56565; color: white; }
+        .btn-danger:hover { background: #e53e3e; }
 
-        /* Cancel button */
-        .btn-cancel {
-            background: white;
+        body.light-mode .btn-cancel {
+            background: #e2e8f0;
             color: #2d3748;
-            border: 1px solid #e2e8f0;
         }
 
-        /* Cancel button hover */
-        .btn-cancel:hover {
-            background: #f7fafc;
+        body.light-mode .btn-cancel:hover {
+            background: #cbd5e0;
         }
 
-        /* Primary action button */
-        .btn-primary {
-            background: #4285f4; /* Blue */
-            color: white;
-        }
-
-        /* Primary button hover */
-        .btn-primary:hover {
-            background: #3367d6;
-        }
-
-        /* Danger/delete button */
-        .btn-danger {
-            background: #f56565; /* Red */
-            color: white;
-        }
-
-        /* Danger button hover */
-        .btn-danger:hover {
-            background: #e53e3e;
-        }
-
-        /* ==================== NOTIFICATION TOAST ==================== */
-        /* Toast notification for user feedback */
+        /* ==================== NOTIFICATIONS ==================== */
         .notification {
             position: fixed;
             top: 70px;
             right: 20px;
-            background: white;
+            background: #3c4043;
             padding: 16px 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
             display: none;
             align-items: center;
             gap: 12px;
             z-index: 10001;
             animation: slideIn 0.3s ease;
+            color: #e8eaed;
         }
+        .notification.show { display: flex; }
 
-        /* Show notification */
-        .notification.show {
-            display: flex;
-        }
-
-        /* Slide in animation */
         @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        /* Notification variants */
-        .notification.success { border-left: 4px solid #48bb78; } /* Green */
-        .notification.error { border-left: 4px solid #f56565; } /* Red */
-        .notification.warning { border-left: 4px solid #ed8936; } /* Orange */
+        .notification.success { border-left: 4px solid #48bb78; }
+        .notification.error { border-left: 4px solid #f56565; }
+        .notification.warning { border-left: 4px solid #ed8936; }
 
-        /* Notification close button */
+        body.light-mode .notification {
+            background: white;
+            color: #2d3748;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
         .notification-close {
             background: none;
             border: none;
             cursor: pointer;
-            color: #718096;
+            color: #9aa0a6;
             padding: 4px;
         }
 
-        /* ==================== PRESENT MODE STYLES ==================== */
-        /* Full-screen presentation mode */
+        body.light-mode .notification-close {
+            color: #718096;
+        }
+
+        /* ==================== LOADING SPINNER ==================== */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .loading-spinner.active { display: flex; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #5f6368;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-spinner span {
+            color: #e8eaed;
+        }
+
+        /* ==================== PRESENT MODE ==================== */
         .present-mode {
             position: fixed !important;
             top: 0 !important;
@@ -905,11 +831,10 @@
             right: 0 !important;
             bottom: 0 !important;
             z-index: 10000 !important;
-            background: #000 !important; /* Black background */
+            background: #000 !important;
             padding: 20px !important;
         }
 
-        /* Center pages in present mode */
         .present-mode .pdf-pages-container {
             display: flex;
             align-items: center;
@@ -917,7 +842,6 @@
             min-height: 100%;
         }
 
-        /* Present mode navigation controls */
         .present-mode-controls {
             position: fixed;
             bottom: 20px;
@@ -931,13 +855,8 @@
             gap: 15px;
             z-index: 10001;
         }
+        .present-mode-controls.show { display: flex; }
 
-        /* Show present mode controls */
-        .present-mode-controls.show {
-            display: flex;
-        }
-
-        /* Present mode control buttons */
         .present-mode-controls button {
             background: transparent;
             border: none;
@@ -948,346 +867,31 @@
             border-radius: 4px;
             transition: background 0.2s;
         }
-
-        /* Present mode button hover */
-        .present-mode-controls button:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        /* Page info in present mode */
-        .present-mode-controls .page-info {
-            color: white;
-            font-size: 14px;
-        }
-
-        /* ==================== DARK MODE STYLES ==================== */
-        /* Dark mode body background */
-        body.dark-mode {
-            background: #1a202c; /* Dark blue-gray */
-        }
-
-        /* ==================== DARK MODE - NAVIGATION ==================== */
-        /* Dark mode navigation bar */
-        body.dark-mode .unified-nav {
-            background: #2d3748;
-            border-bottom-color: #4a5568;
-        }
-
-        /* Dark mode document title */
-        body.dark-mode .document-title {
-            color: #f7fafc;
-        }
-
-        /* Dark mode document metadata */
-        body.dark-mode .document-meta {
-            color: #a0aec0;
-        }
-
-        /* Dark mode navigation icon buttons */
-        body.dark-mode .nav-icon-btn {
-            color: #a0aec0;
-        }
-
-        /* Dark mode icon button hover */
-        body.dark-mode .nav-icon-btn:hover {
-            background: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* ==================== DARK MODE - ZOOM CONTROLS ==================== */
-        /* Dark mode zoom buttons */
-        body.dark-mode .zoom-btn {
-            background: #4a5568;
-            border-color: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* Dark mode zoom button hover */
-        body.dark-mode .zoom-btn:hover {
-            background: #718096;
-        }
-
-        /* Dark mode zoom value */
-        body.dark-mode #zoomValue {
-            color: #f7fafc;
-        }
-
-        /* Dark mode zoom value hover */
-        body.dark-mode #zoomValue:hover {
-            background: #4a5568;
-        }
-
-        /* Dark mode zoom dropdown */
-        body.dark-mode .zoom-dropdown {
-            background: #2d3748;
-            border-color: #4a5568;
-        }
-
-        /* Dark mode zoom option */
-        body.dark-mode .zoom-option {
-            color: #f7fafc;
-        }
-
-        /* Dark mode zoom option hover */
-        body.dark-mode .zoom-option:hover {
-            background: #4a5568;
-        }
-
-        /* ==================== DARK MODE - PAGE JUMP ==================== */
-        /* Dark mode page jump group */
-        body.dark-mode .page-jump-group {
-            background: #4a5568;
-            border-color: #4a5568;
-        }
-
-        /* Dark mode page jump label */
-        body.dark-mode .page-jump-label {
-            color: #a0aec0;
-        }
-
-        /* Dark mode page jump input */
-        body.dark-mode .page-jump-input {
-            background: #2d3748;
-            border-color: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* Dark mode page total */
-        body.dark-mode .page-jump-total {
-            color: #f7fafc;
-        }
-
-        /* ==================== DARK MODE - PDF VIEWER ==================== */
-        /* Dark mode PDF viewer area */
-        body.dark-mode .pdf-viewer-area {
-            background: #1a202c;
-        }
-
-        /* Dark mode page wrapper shadow */
-        body.dark-mode .pdf-canvas-wrapper {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-        }
-
-        /* ==================== DARK MODE - SIDEBAR ==================== */
-        /* Dark mode document info sidebar */
-        body.dark-mode .sidebar {
-            background: #2d3748;
-            border-left-color: #4a5568;
-        }
-
-        /* Dark mode sidebar title */
-        body.dark-mode .sidebar-title {
-            color: #f7fafc;
-        }
-
-        /* Dark mode info labels */
-        body.dark-mode .info-label {
-            color: #a0aec0;
-        }
-
-        /* Dark mode info values */
-        body.dark-mode .info-value {
-            color: #f7fafc;
-        }
-
-        /* Dark mode tag badges */
-        body.dark-mode .tag-badge {
-            background: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* Dark mode classification badges */
-        body.dark-mode .classification-badge {
-            background: #2b4c7e;
-            color: #90cdf4;
-        }
-
-        /* Dark mode group badges - NEW */
-        body.dark-mode .group-badge {
-            background: #064e3b;
-            color: #6ee7b7;
-        }
-
-        /* Dark mode notes text */
-        body.dark-mode .info-notes {
-            color: #a0aec0;
-        }
-
-        /* ==================== DARK MODE - TOGGLE SIDEBAR BUTTON ==================== */
-        /* Dark mode toggle button - sidebar expanded
-         * Matches dark mode sidebar background (#2d3748)
-         */
-        body.dark-mode .toggle-sidebar-btn {
-            background: #2d3748; /* Matches sidebar background in dark mode */
-            color: #f7fafc; /* Light icon */
-        }
-
-        /* Dark mode toggle button hover - sidebar expanded */
-        body.dark-mode .toggle-sidebar-btn:hover {
-            background: #4a5568; /* Lighter shade */
-        }
-
-        /* Dark mode toggle button - sidebar closed
-         * Matches dark mode body background (#1a202c)
-         */
-        body.dark-mode .toggle-sidebar-btn.sidebar-closed {
-            background: #1a202c; /* Matches body background in dark mode */
-            color: #f7fafc; /* Light icon */
-        }
-
-        /* Dark mode toggle button hover - sidebar closed */
-        body.dark-mode .toggle-sidebar-btn.sidebar-closed:hover {
-            background: #2d3748; /* Slightly lighter */
-        }
-
-        /* ==================== DARK MODE - MODALS ==================== */
-        /* Dark mode modal content */
-        body.dark-mode .modal-content {
-            background: #2d3748;
-        }
-
-        /* Dark mode modal header */
-        body.dark-mode .modal-header {
-            border-bottom-color: #4a5568;
-        }
-
-        /* Dark mode modal title */
-        body.dark-mode .modal-header h2 {
-            color: #f7fafc;
-        }
-
-        /* Dark mode modal close button */
-        body.dark-mode .modal-close {
-            color: #a0aec0;
-        }
-
-        /* Dark mode large modal title */
-        body.dark-mode .modal-title-large {
-            color: #f7fafc;
-        }
-
-        /* Dark mode modal text */
-        body.dark-mode .modal-text {
-            color: #a0aec0;
-        }
-
-        /* Dark mode form label */
-        body.dark-mode .form-label {
-            color: #f7fafc;
-        }
-
-        /* Dark mode form input */
-        body.dark-mode .form-input {
-            background: #4a5568;
-            border-color: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* Dark mode modal footer */
-        body.dark-mode .modal-footer {
-            border-top-color: #4a5568;
-        }
-
-        /* Dark mode cancel button */
-        body.dark-mode .btn-cancel {
-            background: #4a5568;
-            border-color: #4a5568;
-            color: #f7fafc;
-        }
-
-        /* ==================== DARK MODE - NOTIFICATION ==================== */
-        /* Dark mode notification */
-        body.dark-mode .notification {
-            background: #2d3748;
-            color: #f7fafc;
-        }
-
-        /* ==================== SECURITY OVERLAY STYLES ==================== */
-        /* Full-screen security warning overlay */
-        .security-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 999999;
-            backdrop-filter: blur(8px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        /* Active security overlay */
-        .security-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Warning icon in security overlay */
-        .security-overlay .warning-icon {
-            font-size: 64px;
-            color: #f56565;
-            margin-bottom: 20px;
-            animation: pulse 1s ease-in-out;
-        }
-
-        /* Warning title */
-        .security-overlay .warning-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        /* Warning message */
-        .security-overlay .warning-message {
-            font-size: 16px;
-            color: #e2e8f0;
-            text-align: center;
-            max-width: 400px;
-        }
-
-        /* Pulse animation for warning icon */
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
+        .present-mode-controls button:hover { background: rgba(255,255,255,0.2); }
+        .present-mode-controls .page-info { color: white; font-size: 14px; }
     </style>
 </head>
 <body>
-<!-- ==================== UNIFIED NAVIGATION BAR ==================== -->
-<!-- Top navigation bar containing all primary controls -->
+
+<!-- ==================== NAVIGATION BAR ==================== -->
 <div class="unified-nav">
-    <!-- ==================== LEFT SECTION ==================== -->
-    <!-- Contains thumbnail toggle and document information -->
     <div class="nav-left">
-        <!-- Thumbnail sidebar toggle button -->
-        <button class="nav-icon-btn" id="toggleThumbnailBtn" onclick="toggleThumbnailSidebar()" title="Toggle Thumbnails">
+        <button class="nav-icon-btn" onclick="toggleThumbnailSidebar()" title="Toggle Thumbnails">
             <i class="bi bi-grid-3x3-gap"></i>
         </button>
-        <!-- Document title and metadata display -->
         <div class="document-header">
             <div class="document-title" id="topDocTitle">Loading...</div>
             <div class="document-meta" id="topDocMeta">Loading...</div>
         </div>
     </div>
 
-    <!-- ==================== CENTER SECTION ==================== -->
-    <!-- Contains zoom controls and page navigation -->
     <div class="nav-center">
-        <!-- Zoom Controls with Dropdown -->
         <div class="zoom-group">
-            <!-- Zoom out button -->
             <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">
                 <i class="bi bi-dash"></i>
             </button>
-            <!-- Current zoom percentage (clickable to show dropdown) -->
             <div class="zoom-value-container">
                 <span id="zoomValue" onclick="toggleZoomDropdown()">100%</span>
-                <!-- Zoom percentage dropdown menu -->
                 <div class="zoom-dropdown" id="zoomDropdown">
                     <div class="zoom-option" onclick="setZoom(0.5)">50%</div>
                     <div class="zoom-option" onclick="setZoom(0.75)">75%</div>
@@ -1300,40 +904,30 @@
                     <div class="zoom-option" onclick="setZoom(3.0)">300%</div>
                 </div>
             </div>
-            <!-- Zoom in button -->
             <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">
                 <i class="bi bi-plus"></i>
             </button>
         </div>
 
-        <!-- Page Jump Controls -->
         <div class="page-jump-group">
-            <!-- Current page input (user can type to jump to page) -->
             <input type="number" class="page-jump-input" id="pageJumpInput" min="1"
-                   placeholder="1" onchange="jumpToPage()"/>
+                   placeholder="1" onkeypress="if(event.key==='Enter') jumpToPageInstant()"/>
             <span class="page-jump-label">/</span>
-            <!-- Total pages display -->
             <span class="page-jump-total" id="totalPagesDisplay">--</span>
         </div>
     </div>
 
-    <!-- ==================== RIGHT SECTION ==================== -->
-    <!-- Contains action buttons -->
     <div class="nav-right">
-        <!-- Download button (only shown for non-Viewer roles) -->
         <button class="nav-icon-btn" id="downloadIconBtn" onclick="showDownloadModal()"
                 th:if="${userRole != 'Viewer'}" style="display: none;" title="Download">
             <i class="bi bi-download"></i>
         </button>
-        <!-- Bookmark button (toggle bookmark status) -->
         <button class="nav-icon-btn" id="bookmarkIconBtn" onclick="handleBookmarkClick()" title="Bookmark">
             <i class="bi bi-bookmark" id="bookmarkIcon"></i>
         </button>
-        <!-- Present mode button (fullscreen presentation) -->
         <button class="nav-icon-btn" onclick="enterPresentMode()" title="Present Mode">
             <i class="bi bi-display"></i>
         </button>
-        <!-- Theme toggle button (dark/light mode) -->
         <button class="nav-icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
             <i class="bi bi-moon-fill"></i>
         </button>
@@ -1341,101 +935,80 @@
 </div>
 
 <!-- ==================== MAIN CONTAINER ==================== -->
-<!-- Contains thumbnail sidebar, PDF viewer, and info sidebar -->
 <div class="main-container">
-    <!-- ==================== THUMBNAIL SIDEBAR ==================== -->
-    <!-- Left sidebar showing page thumbnails for quick navigation -->
     <div class="thumbnail-sidebar" id="thumbnailSidebar">
-        <div class="thumbnails-container" id="thumbnailsContainer">
-            <!-- Thumbnails will be dynamically rendered here by JavaScript -->
-        </div>
+        <div class="thumbnails-container" id="thumbnailsContainer"></div>
     </div>
 
-    <!-- ==================== PDF VIEWER AREA ==================== -->
-    <!-- Central area where PDF pages are displayed -->
     <div class="pdf-viewer-area" id="pdfViewerArea">
-        <div class="pdf-pages-container" id="pdfPagesContainer">
-            <!-- PDF pages will be dynamically rendered here by JavaScript -->
-        </div>
+        <div class="pdf-pages-container" id="pdfPagesContainer"></div>
     </div>
 
-    <!-- ==================== DOCUMENT INFO SIDEBAR ==================== -->
-    <!-- Right sidebar showing document metadata and information -->
     <div class="sidebar" id="sidebar">
         <h2 class="sidebar-title">Document Info</h2>
 
-        <!-- Document title -->
         <div class="info-item">
             <div class="info-label">Title</div>
-            <div class="info-value" id="sidebarTitle">API Documentation v4.2</div>
+            <div class="info-value" id="sidebarTitle">Loading...</div>
         </div>
 
-        <!-- Product code -->
         <div class="info-item">
             <div class="info-label">Product Code</div>
-            <div class="info-value" id="sidebarProductCode">API-011</div>
+            <div class="info-value" id="sidebarProductCode">Loading...</div>
         </div>
 
-        <!-- Edition -->
         <div class="info-item">
             <div class="info-label">Edition</div>
-            <div class="info-value" id="sidebarEdition">4.2</div>
+            <div class="info-value" id="sidebarEdition">Loading...</div>
         </div>
 
-        <!-- Publication date -->
         <div class="info-item">
             <div class="info-label">Publication Date</div>
-            <div class="info-value format-date" id="sidebarPublishDate">3/18/2024</div>
+            <div class="info-value format-date" id="sidebarPublishDate">Loading...</div>
         </div>
 
-        <!-- Tags -->
         <div class="info-item">
             <div class="info-label">Tags</div>
             <div class="info-tags" id="sidebarTags">
-                <span class="tag-badge">api</span>
-                <span class="tag-badge">documentation</span>
+                <span class="empty-state-text">No tags</span>
             </div>
         </div>
 
-        <!-- Classifications -->
         <div class="info-item">
             <div class="info-label">Classifications</div>
             <div class="info-tags" id="sidebarClassifications">
-                <span class="classification-badge">Technical</span>
+                <span class="empty-state-text">No classifications</span>
             </div>
         </div>
 
-        <!-- Groups - NEW SECTION -->
         <div class="info-item">
             <div class="info-label">Groups</div>
             <div class="info-tags" id="sidebarGroups">
-                <span>No groups assigned</span>
+                <span class="empty-state-text">No groups assigned</span>
             </div>
         </div>
 
-        <!-- Notes -->
         <div class="info-item">
             <div class="info-label">Notes</div>
-            <div class="info-notes" id="sidebarNotes">Complete API reference documentation</div>
+            <div class="info-notes" id="sidebarNotes">
+                <span class="empty-state-text">No notes available</span>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- ==================== TOGGLE SIDEBAR BUTTON ==================== -->
-<!-- Floating button to toggle document info sidebar visibility -->
 <button class="toggle-sidebar-btn" id="toggleSidebarBtn" onclick="toggleSidebar()" title="Toggle Document Info">
     <i class="bi bi-arrow-bar-right"></i>
 </button>
 
-<!-- ==================== LOADING SPINNER ==================== -->
-<!-- Full-screen loading overlay shown during document load -->
 <div class="loading-spinner" id="loadingSpinner">
     <div class="spinner"></div>
     <span>Loading document...</span>
 </div>
 
-<!-- ==================== BOOKMARK MODAL ==================== -->
-<!-- Modal dialog for creating a new bookmark -->
+<div class="zoom-indicator" id="zoomIndicator">100%</div>
+
+<!-- MODALS -->
 <div class="modal" id="bookmarkModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1445,8 +1018,7 @@
         <div class="modal-body">
             <div class="form-group">
                 <label class="form-label">Bookmark Name</label>
-                <input type="text" class="form-input" id="bookmarkName"
-                       placeholder="Enter a name for this bookmark"/>
+                <input type="text" class="form-input" id="bookmarkName" placeholder="Enter a name for this bookmark"/>
             </div>
         </div>
         <div class="modal-footer">
@@ -1456,8 +1028,6 @@
     </div>
 </div>
 
-<!-- ==================== REMOVE BOOKMARK MODAL ==================== -->
-<!-- Confirmation dialog for removing a bookmark -->
 <div class="modal" id="removeBookmarkModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1478,8 +1048,6 @@
     </div>
 </div>
 
-<!-- ==================== DOWNLOAD MODAL ==================== -->
-<!-- Confirmation dialog for downloading PDF with watermark -->
 <div class="modal" id="downloadModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -1500,8 +1068,6 @@
     </div>
 </div>
 
-<!-- ==================== NOTIFICATION TOAST ==================== -->
-<!-- Toast notification for user feedback messages -->
 <div class="notification" id="notification">
     <i class="bi bi-check-circle-fill"></i>
     <span id="notificationText"></span>
@@ -1510,126 +1076,68 @@
     </button>
 </div>
 
-<!-- ==================== SECURITY OVERLAY ==================== -->
-<!-- Full-screen overlay shown when security actions are blocked -->
-<div class="security-overlay" id="securityOverlay">
-    <i class="bi bi-shield-fill-exclamation warning-icon"></i>
-    <div class="warning-title">Action Blocked</div>
-    <div class="warning-message" id="securityMessage">This action is not permitted for security reasons.</div>
-</div>
-
-<!-- ==================== PRESENT MODE CONTROLS ==================== -->
-<!-- Navigation controls shown in fullscreen presentation mode -->
 <div class="present-mode-controls" id="presentModeControls">
-    <!-- Previous page button -->
     <button onclick="presentPrevPage()" title="Previous Page">
         <i class="bi bi-chevron-left"></i>
     </button>
-    <!-- Current page info -->
     <span class="page-info" id="presentPageInfo">1 / 1</span>
-    <!-- Next page button -->
     <button onclick="presentNextPage()" title="Next Page">
         <i class="bi bi-chevron-right"></i>
     </button>
-    <!-- Exit present mode button -->
     <button onclick="exitPresentMode()" title="Exit Present Mode">
         <i class="bi bi-x-lg"></i>
     </button>
 </div>
 
-<!-- ==================== USERNAME INJECTION ==================== -->
-<!-- Inject username from server for watermarking -->
 <script th:inline="javascript">
     window.username = [[${username}]];
 </script>
 
-<!-- ==================== MAIN APPLICATION SCRIPT ==================== -->
 <script>
-    // ==================== GLOBAL STATE VARIABLES ====================
-    /**
-     * Application state management
-     * These variables track the current state of the PDF viewer
-     */
-    let isCurrentlyBookmarked = false; // Whether current document is bookmarked
-    let isDarkMode = false; // Current theme state (light/dark)
-    let activeThumbnail = 1; // Currently active thumbnail page number
-    let isPresentMode = false; // Whether in fullscreen presentation mode
-    let presentCurrentPage = 1; // Current page in presentation mode
+    // ==================== GLOBAL STATE ====================
+    let isCurrentlyBookmarked = false;
+    let isDarkMode = true;
+    let isPresentMode = false;
+    let zoomTimeout = null;
+    let pendingZoom = null;
+    let isZooming = false;
+    let presentCurrentPage = 1;
 
-    // ==================== API AND PDF.JS CONFIGURATION ====================
-    /**
-     * API endpoint and PDF.js configuration
-     */
-    const API_BASE_URL = '/documents'; // Base URL for document API endpoints
-    let pdfDoc = null; // PDF.js document object
-    let scale = 1.0; // Current zoom scale (1.0 = 100%)
-    let documentId = window.documentId; // Document ID from server
-    let renderedPages = new Map(); // Map of rendered page numbers to canvas objects
-    let isRendering = false; // Flag to prevent concurrent rendering
+    const API_BASE_URL = '/documents';
+    let pdfDoc = null;
+    let scale = 1.0;
+    let documentId = window.documentId;
+    let renderedPages = new Map();
+    let currentVisiblePage = 1;
+    let pageRegistry = new Map();
+    let pageHeights = new Map();
+    let zoomIndicatorTimeout = null;
+    let isInitialLoad = true;
 
-    // ==================== ZOOM SYSTEM ====================
-    /**
-     * Zoom operation queue for handling rapid zoom changes
-     * Prevents UI lag by batching zoom operations
-     */
-    let zoomQueue = []; // Queue of pending zoom operations
-    let isProcessingZoom = false; // Flag for zoom processing state
-
-    // ==================== PAGE TRACKING SYSTEM ====================
-    /**
-     * Ultra-accurate page tracking system
-     * Tracks which page is currently visible in viewport
-     */
-    let currentVisiblePage = 1; // Current visible page number
-    let pageRegistry = new Map(); // Registry of page positions and dimensions
-    let updateScheduled = false; // Flag for scheduled position updates
-
-    // ==================== LAZY LOADING CONFIGURATION ====================
-    /**
-     * Lazy loading system for efficient PDF rendering
-     * Only renders visible and nearby pages to save memory
-     */
-    const INITIAL_PAGES_TO_LOAD = 5; // Number of pages to load initially
-    const PAGES_BUFFER = 3; // Number of pages to buffer above/below viewport
-    let pageHeights = new Map(); // Map of page heights for layout
-    let renderQueue = []; // Queue of pages waiting to be rendered
-    let isProcessingQueue = false; // Flag for render queue processing
-
-    // Configure PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
     // ==================== INITIALIZATION ====================
-    /**
-     * Document ready event handler
-     * Initializes the PDF viewer when page loads
-     */
     document.addEventListener('DOMContentLoaded', function() {
-        // Load user's theme preference from localStorage
         loadThemePreference();
 
-        // Update UI with document information if available
         if (window.documentInfo) {
             updateDocumentInfo(window.documentInfo);
         }
 
-        // Format all date strings in the UI
         formatAllDates();
 
-        // Show download button if user has permission
         const downloadBtn = document.getElementById('downloadIconBtn');
         if (downloadBtn && window.userRole !== 'Viewer') {
             downloadBtn.style.display = 'flex';
         }
 
-        // Load PDF document if ID is provided
         if (documentId) {
             loadDocument(documentId);
-            checkIfBookmarked(); // Check if document is already bookmarked
+            checkIfBookmarked();
         } else {
             showError('No document ID provided');
         }
 
-        // Close zoom dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('zoomDropdown');
             const zoomValue = document.getElementById('zoomValue');
@@ -1637,153 +1145,242 @@
                 dropdown.classList.remove('show');
             }
         });
+
+        const pdfViewerArea = document.getElementById('pdfViewerArea');
+        pdfViewerArea.addEventListener('wheel', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const delta = -e.deltaY;
+
+                if (zoomTimeout) {
+                    clearTimeout(zoomTimeout);
+                }
+
+                zoomTimeout = setTimeout(() => {
+                    if (delta > 0) {
+                        zoomIn();
+                    } else if (delta < 0) {
+                        zoomOut();
+                    }
+                }, 50);
+
+                return false;
+            }
+        }, { passive: false });
     });
 
-    // ==================== ZOOM DROPDOWN FUNCTIONS ====================
-    /**
-     * Toggle zoom percentage dropdown menu
-     */
-    function toggleZoomDropdown() {
-        const dropdown = document.getElementById('zoomDropdown');
-        dropdown.classList.toggle('show');
+    // ==================== THEME TOGGLE (UPDATED - NO NOTIFICATIONS) ====================
+    function loadThemePreference() {
+        const savedTheme = localStorage.getItem('pdfViewerTheme');
+        console.log('Loading theme preference:', savedTheme);
 
-        // Update active state to highlight current zoom
-        updateZoomDropdownActive();
-    }
-
-    /**
-     * Update active state in zoom dropdown
-     * Highlights the current zoom percentage
-     */
-    function updateZoomDropdownActive() {
-        const currentZoom = Math.round(scale * 100);
-        document.querySelectorAll('.zoom-option').forEach(option => {
-            const optionText = option.textContent;
-            const optionZoom = parseInt(optionText);
-            if (optionZoom === currentZoom) {
-                option.classList.add('active');
-            } else {
-                option.classList.remove('active');
-            }
-        });
-    }
-
-    /**
-     * Set zoom to specific scale from dropdown
-     * @param {number} targetScale - Target zoom scale (e.g., 1.0 for 100%)
-     */
-    function setZoom(targetScale) {
-        const dropdown = document.getElementById('zoomDropdown');
-        dropdown.classList.remove('show');
-
-        // Queue the zoom operation
-        queueZoomOperation(targetScale);
-    }
-
-    // ==================== ZOOM OPERATION QUEUE ====================
-    /**
-     * Queue a zoom operation for processing
-     * Prevents UI lag from rapid zoom changes
-     * @param {number} targetScale - Target zoom scale
-     */
-    function queueZoomOperation(targetScale) {
-        zoomQueue.push(targetScale);
-        processZoomQueue();
-    }
-
-    /**
-     * Process queued zoom operations
-     * Only processes the most recent zoom request
-     */
-    async function processZoomQueue() {
-        if (isProcessingZoom || zoomQueue.length === 0) return;
-
-        isProcessingZoom = true;
-
-        // Get the LAST zoom request (most recent)
-        const targetScale = zoomQueue[zoomQueue.length - 1];
-        zoomQueue = []; // Clear queue
-
-        await performZoom(targetScale);
-
-        isProcessingZoom = false;
-
-        // Process any new requests that came in
-        if (zoomQueue.length > 0) {
-            processZoomQueue();
+        if (savedTheme === 'light') {
+            isDarkMode = false;
+            document.body.classList.add('light-mode');
+            updateThemeButton();
+        } else {
+            isDarkMode = true;
+            document.body.classList.remove('light-mode');
+            updateThemeButton();
         }
     }
 
-    /**
-     * Perform zoom operation and maintain scroll position
-     * @param {number} targetScale - Target zoom scale
-     */
-    async function performZoom(targetScale) {
+    function toggleTheme() {
+        isDarkMode = !isDarkMode;
+
+        console.log('Toggling theme to:', isDarkMode ? 'dark' : 'light');
+
+        if (isDarkMode) {
+            document.body.classList.remove('light-mode');
+            localStorage.setItem('pdfViewerTheme', 'dark');
+        } else {
+            document.body.classList.add('light-mode');
+            localStorage.setItem('pdfViewerTheme', 'light');
+        }
+
+        updateThemeButton();
+    }
+
+    function updateThemeButton() {
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+            if (isDarkMode) {
+                btn.innerHTML = '<i class="bi bi-sun-fill"></i>';
+                btn.title = 'Switch to Light Mode';
+            } else {
+                btn.innerHTML = '<i class="bi bi-moon-fill"></i>';
+                btn.title = 'Switch to Dark Mode';
+            }
+        }
+    }
+
+    // ==================== ZOOM FUNCTIONS ====================
+    function toggleZoomDropdown() {
+        const dropdown = document.getElementById('zoomDropdown');
+        dropdown.classList.toggle('show');
+        updateZoomDropdownActive();
+    }
+
+    function updateZoomDropdownActive() {
+        const currentZoom = Math.round(scale * 100);
+        document.querySelectorAll('.zoom-option').forEach(option => {
+            const optionZoom = parseInt(option.textContent);
+            option.classList.toggle('active', optionZoom === currentZoom);
+        });
+    }
+
+    function setZoom(targetScale) {
+        document.getElementById('zoomDropdown').classList.remove('show');
+        performInstantZoom(targetScale);
+    }
+
+    function zoomIn() {
+        if (scale >= 3) return;
+        performInstantZoom(Math.min(3, Math.round((scale + 0.1) * 100) / 100));
+    }
+
+    function zoomOut() {
+        if (scale <= 0.25) return;
+        performInstantZoom(Math.max(0.25, Math.round((scale - 0.1) * 100) / 100));
+    }
+
+    function showZoomIndicator() {
+        const indicator = document.getElementById('zoomIndicator');
+        indicator.textContent = Math.round(scale * 100) + '%';
+        indicator.classList.add('show');
+
+        if (zoomIndicatorTimeout) {
+            clearTimeout(zoomIndicatorTimeout);
+        }
+
+        zoomIndicatorTimeout = setTimeout(() => {
+            indicator.classList.remove('show');
+        }, 600);
+    }
+
+    function performInstantZoom(targetScale) {
+        if (isZooming) {
+            pendingZoom = targetScale;
+            return;
+        }
+
+        isZooming = true;
+
         const viewer = document.getElementById('pdfViewerArea');
+        const currentPage = currentVisiblePage || 1;
 
-        // Calculate the CENTER point of viewport for maintaining position
-        const viewerRect = viewer.getBoundingClientRect();
+        buildPageRegistry();
+        const pageData = pageRegistry.get(currentPage);
+
+        if (!pageData) {
+            scale = targetScale;
+            document.getElementById('zoomValue').textContent = Math.round(scale * 100) + '%';
+            updateZoomDropdownActive();
+            showZoomIndicator();
+
+            pendingZoom = null;
+            reRenderAllPages().then(() => {
+                isZooming = false;
+                if (pendingZoom !== null) {
+                    const nextZoom = pendingZoom;
+                    pendingZoom = null;
+                    performInstantZoom(nextZoom);
+                }
+            });
+            return;
+        }
+
         const scrollTop = viewer.scrollTop;
-        const viewerCenterY = scrollTop + (viewerRect.height / 2);
+        const pageTop = pageData.top;
+        const viewportCenter = scrollTop + (viewer.clientHeight / 2);
+        const relativePosition = (viewportCenter - pageTop) / pageData.height;
 
-        const oldScale = scale;
         scale = targetScale;
-        const scaleRatio = scale / oldScale;
 
-        // Update zoom display
         document.getElementById('zoomValue').textContent = Math.round(scale * 100) + '%';
         updateZoomDropdownActive();
+        showZoomIndicator();
 
-        // Disable scroll during zoom to prevent jumping
-        viewer.style.pointerEvents = 'none';
-        viewer.style.overflow = 'hidden';
+        const wrappers = document.querySelectorAll('.pdf-canvas-wrapper');
+        for (let i = 0; i < wrappers.length; i++) {
+            const wrapper = wrappers[i];
+            const pageNum = parseInt(wrapper.getAttribute('data-page-number'));
+            const pageDims = pageHeights.get(pageNum);
+            if (pageDims) {
+                wrapper.style.width = (pageDims.width * scale) + 'px';
+                wrapper.style.minHeight = (pageDims.height * scale) + 'px';
+            }
+        }
 
-        // Re-render all loaded pages at new scale
-        await reRenderAllLoadedPagesFast();
-
-        // Restore exact scroll position
-        const newScrollTop = (viewerCenterY * scaleRatio) - (viewerRect.height / 2);
-        viewer.scrollTop = Math.max(0, newScrollTop);
-
-        // Re-enable scrolling
-        viewer.style.pointerEvents = 'auto';
-        viewer.style.overflow = 'auto';
-
-        // Update page tracking
         buildPageRegistry();
-        detectCurrentPage();
+
+        const newPageData = pageRegistry.get(currentPage);
+        if (newPageData) {
+            const newViewportCenter = newPageData.top + (relativePosition * newPageData.height);
+            viewer.scrollTop = newViewportCenter - (viewer.clientHeight / 2);
+        }
+
+        pendingZoom = null;
+
+        requestAnimationFrame(() => {
+            reRenderAllPages().then(() => {
+                isZooming = false;
+                if (pendingZoom !== null) {
+                    const nextZoom = pendingZoom;
+                    pendingZoom = null;
+                    performInstantZoom(nextZoom);
+                }
+            });
+        });
     }
 
-    /**
-     * Zoom in by 10%
-     * Maximum zoom: 300%
-     */
-    function zoomIn() {
-        if (scale >= 3) return; // Max zoom is 300%
-        const newScale = Math.min(3, scale + 0.1);
-        queueZoomOperation(Math.round(newScale * 100) / 100);
-    }
+    // ==================== PAGE JUMP ====================
+    function jumpToPageInstant() {
+        const input = document.getElementById('pageJumpInput');
+        let pageNumber = parseInt(input.value);
 
-    /**
-     * Zoom out by 10%
-     * Minimum zoom: 25%
-     */
-    function zoomOut() {
-        if (scale <= 0.25) return; // Min zoom is 25%
-        const newScale = Math.max(0.25, scale - 0.1);
-        queueZoomOperation(Math.round(newScale * 100) / 100);
+        if (!pageNumber || isNaN(pageNumber)) {
+            showNotification("Please enter a valid page number", "warning");
+            return;
+        }
+
+        const totalPages = pdfDoc ? pdfDoc.numPages : 1;
+        pageNumber = Math.max(1, Math.min(pageNumber, totalPages));
+        input.value = pageNumber;
+
+        isManualJump = true;
+
+        buildPageRegistry();
+
+        const pageData = pageRegistry.get(pageNumber);
+        if (pageData) {
+            const viewer = document.getElementById('pdfViewerArea');
+
+            viewer.scrollTop = pageData.top;
+
+            currentVisiblePage = pageNumber;
+
+            updateActiveThumbnailInstant(pageNumber);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    isManualJump = false;
+                });
+            });
+
+        } else {
+            console.error('Page data not found:', pageNumber);
+            isManualJump = false;
+        }
     }
 
     // ==================== DOCUMENT LOADING ====================
-    /**
-     * Load PDF document from server
-     * @param {number} id - Document ID
-     */
     async function loadDocument(id) {
         try {
             showLoading(true);
 
-            // Fetch PDF from server
             const response = await fetch(`${API_BASE_URL}/DocViewer-view/${id}`);
             if (!response.ok) throw new Error('Failed to load PDF');
 
@@ -1794,37 +1391,26 @@
             const totalPages = pdfDoc.numPages;
             document.getElementById('totalPagesDisplay').textContent = totalPages;
             document.getElementById('pageJumpInput').setAttribute('max', totalPages);
+            document.getElementById('pageJumpInput').value = 1;
 
-            // Show progress message for large documents
-            if (totalPages > 50) {
-                updateLoadingMessage(`Analyzing ${totalPages} pages...`);
-            }
-
-            // Get dimensions of all pages
             await getPageDimensions();
-
-            if (totalPages > 50) {
-                updateLoadingMessage('Preparing viewer...');
-            }
-
-            // Create placeholder elements for all pages
             createPagePlaceholders();
-            // Load initial pages
             await loadInitialPages();
 
-            // Setup page tracking system
-            setupAccuratePageTracking();
-            forcePageNumberUpdate();
+            const viewer = document.getElementById('pdfViewerArea');
+            viewer.scrollTop = 0;
 
-            // Render thumbnails (delayed for large documents)
-            if (totalPages > 20) {
-                setTimeout(() => renderThumbnails(), 100);
-            } else {
+            setTimeout(() => {
+                buildPageRegistry();
+                setupPageTracking();
                 renderThumbnails();
-            }
 
-            // Setup lazy loading for remaining pages
-            setupLazyLoading();
+                currentVisiblePage = 1;
+                updateActiveThumbnail(1);
+
+                console.log('✓ Document loaded - Starting at page 1');
+                isInitialLoad = false;
+            }, 100);
 
         } catch (error) {
             console.error('Error loading document:', error);
@@ -1834,74 +1420,17 @@
         }
     }
 
-    /**
-     * Update loading message text
-     * @param {string} message - Message to display
-     */
-    function updateLoadingMessage(message) {
-        const spinner = document.getElementById('loadingSpinner');
-        const messageEl = spinner.querySelector('span');
-        if (messageEl) {
-            messageEl.textContent = message;
-        }
-    }
-
-    /**
-     * Get dimensions of all PDF pages
-     * For large documents, samples first 10 pages and estimates rest
-     */
     async function getPageDimensions() {
-        if (pdfDoc.numPages <= 50) {
-            // For small documents, get exact dimensions for all pages
-            for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                const page = await pdfDoc.getPage(pageNum);
-                const viewport = page.getViewport({ scale: 1.0 });
-
-                pageHeights.set(pageNum, {
-                    width: viewport.width,
-                    height: viewport.height
-                });
-            }
-        } else {
-            // For large documents, sample first 10 pages
-            const sampleSize = Math.min(10, pdfDoc.numPages);
-            const sampledDimensions = [];
-
-            for (let i = 1; i <= sampleSize; i++) {
-                const page = await pdfDoc.getPage(i);
-                const viewport = page.getViewport({ scale: 1.0 });
-                sampledDimensions.push({
-                    width: viewport.width,
-                    height: viewport.height
-                });
-
-                pageHeights.set(i, {
-                    width: viewport.width,
-                    height: viewport.height
-                });
-            }
-
-            // Use first page dimensions as default for remaining pages
-            const defaultDims = sampledDimensions[0];
-
-            for (let pageNum = sampleSize + 1; pageNum <= pdfDoc.numPages; pageNum++) {
-                pageHeights.set(pageNum, {
-                    width: defaultDims.width,
-                    height: defaultDims.height,
-                    estimated: true // Mark as estimated
-                });
-            }
+        for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 1.0 });
+            pageHeights.set(i, {
+                width: viewport.width,
+                height: viewport.height
+            });
         }
-
-        // Store default dimensions
-        const firstPageDims = pageHeights.get(1);
-        pageHeights.set('default', firstPageDims);
     }
 
-    /**
-     * Create placeholder divs for all PDF pages
-     * This creates the layout structure before rendering
-     */
     function createPagePlaceholders() {
         const container = document.getElementById('pdfPagesContainer');
         container.innerHTML = '';
@@ -1911,299 +1440,79 @@
             const scaledWidth = pageDims.width * scale;
             const scaledHeight = pageDims.height * scale;
 
-            // Create page wrapper element
             const pageWrapper = document.createElement('div');
             pageWrapper.className = 'pdf-canvas-wrapper loading';
             pageWrapper.id = `page-wrapper-${pageNum}`;
             pageWrapper.setAttribute('data-page-number', pageNum);
-
             pageWrapper.style.width = `${scaledWidth}px`;
             pageWrapper.style.minHeight = `${scaledHeight}px`;
-            pageWrapper.style.height = 'auto';
 
-            // Add page number label
             const pageLabel = document.createElement('div');
             pageLabel.className = 'page-number-label';
-            pageLabel.textContent = `${pageNum}`;
+            pageLabel.textContent = `Page ${pageNum}`;
 
             pageWrapper.appendChild(pageLabel);
             container.appendChild(pageWrapper);
         }
     }
 
-    /**
-     * Load initial pages on document load
-     * Loads first N pages immediately for quick display
-     */
     async function loadInitialPages() {
-        const pagesToLoad = Math.min(INITIAL_PAGES_TO_LOAD, pdfDoc.numPages);
-
+        const pagesToLoad = Math.min(5, pdfDoc.numPages);
         for (let pageNum = 1; pageNum <= pagesToLoad; pageNum++) {
             await renderPage(pageNum);
         }
-    }
-
-    // ==================== PAGE TRACKING SYSTEM ====================
-    /**
-     * Setup accurate page tracking system
-     * Detects which page is currently visible in viewport
-     */
-    function setupAccuratePageTracking() {
-        const viewerArea = document.getElementById('pdfViewerArea');
-
-        buildPageRegistry(); // Build initial registry
-
-        let ticking = false;
-
-        // Track scroll events
-        viewerArea.addEventListener('scroll', function() {
-            if (!ticking) {
-                window.requestAnimationFrame(function() {
-                    detectCurrentPage();
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        }, { passive: true });
-
-        // Update on window resize
-        window.addEventListener('resize', () => {
-            setTimeout(() => {
-                buildPageRegistry();
-                detectCurrentPage();
-            }, 200);
-        });
-    }
-
-    /**
-     * Build registry of page positions
-     * Maps page numbers to their vertical positions
-     */
-    function buildPageRegistry() {
-        pageRegistry.clear();
-
-        const wrappers = document.querySelectorAll('.pdf-canvas-wrapper');
-
-        wrappers.forEach((wrapper) => {
-            const pageNum = parseInt(wrapper.getAttribute('data-page-number'));
-            const height = wrapper.offsetHeight;
-
-            pageRegistry.set(pageNum, {
-                top: wrapper.offsetTop,
-                bottom: wrapper.offsetTop + height,
-                height: height,
-                element: wrapper
-            });
-        });
-    }
-
-    /**
-     * Detect which page is currently most visible
-     * Updates current page based on viewport visibility
-     */
-    function detectCurrentPage() {
-        const viewer = document.getElementById('pdfViewerArea');
-        const scrollTop = viewer.scrollTop;
-        const viewportHeight = viewer.clientHeight;
-        const viewportTop = scrollTop;
-        const viewportBottom = scrollTop + viewportHeight;
-
-        let detectedPage = 1;
-        let maxVisibleArea = 0;
-
-        // Find page with maximum visible area
-        for (const [pageNum, pageData] of pageRegistry) {
-            const pageTop = pageData.top;
-            const pageBottom = pageData.bottom;
-
-            // Calculate visible area
-            const visibleTop = Math.max(viewportTop, pageTop);
-            const visibleBottom = Math.min(viewportBottom, pageBottom);
-            const visibleHeight = Math.max(0, visibleBottom - visibleTop);
-
-            if (visibleHeight > maxVisibleArea) {
-                maxVisibleArea = visibleHeight;
-                detectedPage = pageNum;
-            }
-        }
-
-        // Update UI if page changed
-        if (detectedPage !== currentVisiblePage) {
-            currentVisiblePage = detectedPage;
-            updateAllPageIndicators(detectedPage);
-        }
-    }
-
-    /**
-     * Force page number update
-     * Rebuilds registry and detects current page
-     */
-    function forcePageNumberUpdate() {
-        buildPageRegistry();
-        detectCurrentPage();
-    }
-
-    /**
-     * Update all page number indicators
-     * @param {number} pageNum - Current page number
-     */
-    function updateAllPageIndicators(pageNum) {
-        document.getElementById('pageJumpInput').value = pageNum;
-        updateActiveThumbnail(pageNum);
-
-        // Update present mode page info
-        if (isPresentMode) {
-            presentCurrentPage = pageNum;
-            updatePresentPageInfo();
-        }
-    }
-
-    // ==================== PAGE JUMP FUNCTIONALITY ====================
-    /**
-     * Jump to specific page number
-     * Validates input and scrolls to page
-     */
-    function jumpToPage() {
-        const input = document.getElementById('pageJumpInput');
-        let pageNumber = parseInt(input.value);
-
-        if (!pageNumber || isNaN(pageNumber)) {
-            showNotification("Please enter a valid page number", "warning");
-            return;
-        }
-
-        const totalPages = pdfDoc ? pdfDoc.numPages : 1;
-
-        // Clamp to valid range
-        if (pageNumber < 1) {
-            pageNumber = 1;
-        } else if (pageNumber > totalPages) {
-            pageNumber = totalPages;
-        }
-
-        input.value = pageNumber;
-        scrollToPagePrecise(pageNumber);
-    }
-
-    /**
-     * Scroll to specific page with smooth animation
-     * @param {number} pageNum - Page number to scroll to
-     */
-    function scrollToPagePrecise(pageNum) {
-        const pageData = pageRegistry.get(pageNum);
-        if (!pageData) return;
-
-        const viewer = document.getElementById('pdfViewerArea');
-        const viewerHeight = viewer.clientHeight;
-        const pageTop = pageData.top;
-        const pageHeight = pageData.height;
-
-        // Center page in viewport
-        const targetScroll = pageTop - (viewerHeight / 2) + (pageHeight / 2);
-
-        viewer.scrollTo({
-            top: Math.max(0, targetScroll),
-            behavior: 'smooth'
-        });
-
-        // Update indicators after scroll
-        setTimeout(() => {
-            currentVisiblePage = pageNum;
-            updateAllPageIndicators(pageNum);
-        }, 50);
-    }
-
-    /**
-     * Handle Enter key in page jump input
-     * @param {Event} event - Keyboard event
-     */
-    function handlePageJumpEnter(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            jumpToPage();
-        }
+        setupLazyLoading();
     }
 
     // ==================== PAGE RENDERING ====================
-    /**
-     * Render a specific PDF page to canvas
-     * @param {number} pageNum - Page number to render
-     */
     async function renderPage(pageNum) {
-        if (renderedPages.has(pageNum)) return; // Already rendered
-
         try {
             const page = await pdfDoc.getPage(pageNum);
             const viewport = page.getViewport({ scale: scale });
-
-            // Update exact dimensions if estimated
-            const storedDims = pageHeights.get(pageNum);
-            if (storedDims && storedDims.estimated) {
-                const exactViewport = page.getViewport({ scale: 1.0 });
-                pageHeights.set(pageNum, {
-                    width: exactViewport.width,
-                    height: exactViewport.height,
-                    estimated: false
-                });
-            }
-
             const pageWrapper = document.getElementById(`page-wrapper-${pageNum}`);
             if (!pageWrapper) return;
 
             pageWrapper.classList.remove('loading');
 
-            // Create canvas element
+            const allExistingCanvases = pageWrapper.querySelectorAll('canvas');
+            for (let i = 0; i < allExistingCanvases.length; i++) {
+                allExistingCanvases[i].remove();
+            }
+
             const canvas = document.createElement('canvas');
             canvas.id = `pdf-canvas-${pageNum}`;
-            canvas.className = 'pdf-page-canvas';
             canvas.width = viewport.width;
             canvas.height = viewport.height;
 
-            pageWrapper.style.width = `${viewport.width}px`;
-            pageWrapper.style.minHeight = `${viewport.height}px`;
-            pageWrapper.style.height = 'auto';
+            pageWrapper.style.width = viewport.width + 'px';
+            pageWrapper.style.minHeight = viewport.height + 'px';
 
-            // Insert canvas before page label
             const pageLabel = pageWrapper.querySelector('.page-number-label');
             pageWrapper.insertBefore(canvas, pageLabel);
 
             const ctx = canvas.getContext('2d');
 
-            // Render PDF page to canvas
             await page.render({
                 canvasContext: ctx,
                 viewport: viewport
             }).promise;
 
-            // Add watermark
             addWatermark(ctx, canvas);
-
-            // Store rendered page
             renderedPages.set(pageNum, { canvas, ctx, page });
-
-            // Rebuild page registry periodically
-            if (renderedPages.size % 10 === 0) {
-                buildPageRegistry();
-            }
 
         } catch (error) {
             console.error(`Error rendering page ${pageNum}:`, error);
         }
     }
 
-    /**
-     * Add watermark to rendered page
-     * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {HTMLCanvasElement} canvas - Canvas element
-     */
     function addWatermark(ctx, canvas) {
         if (!ctx || !canvas) return;
 
         const watermarkText = window.username || 'User';
         const fontSize = 48;
         const opacity = 0.1;
-        const gapX = 300; // Horizontal spacing
-        const gapY = 200; // Vertical spacing
+        const gapX = 300;
+        const gapY = 200;
 
         ctx.save();
         ctx.globalAlpha = opacity;
@@ -2212,12 +1521,10 @@
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // Rotate canvas for diagonal watermark
         ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(-Math.PI / 4); // -45 degrees
+        ctx.rotate(-Math.PI / 4);
         ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-        // Draw watermark grid
         for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
             for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
                 ctx.fillText(watermarkText, x, y);
@@ -2227,128 +1534,30 @@
         ctx.restore();
     }
 
-    // ==================== FAST ZOOM RE-RENDERING ====================
-    /**
-     * Re-render all currently loaded pages at new zoom level
-     * Optimized for speed during zoom operations
-     */
-    async function reRenderAllLoadedPagesFast() {
-        if (isRendering) return;
-        isRendering = true;
-
+    async function reRenderAllPages() {
         const pagesToRerender = Array.from(renderedPages.keys());
+
         renderedPages.clear();
 
-        // Update all page wrapper dimensions
-        document.querySelectorAll('.pdf-canvas-wrapper').forEach(wrapper => {
-            const pageNum = parseInt(wrapper.getAttribute('data-page-number'));
-            const existingCanvas = wrapper.querySelector('canvas');
-            if (existingCanvas) {
-                existingCanvas.remove();
-            }
-
-            const pageDims = pageHeights.get(pageNum);
-            if (pageDims) {
-                const scaledWidth = pageDims.width * scale;
-                const scaledHeight = pageDims.height * scale;
-
-                wrapper.style.width = `${scaledWidth}px`;
-                wrapper.style.minHeight = `${scaledHeight}px`;
-                wrapper.style.height = 'auto';
-            }
-        });
-
-        // Re-render all pages in parallel
-        const renderPromises = pagesToRerender.map(pageNum => renderPageFast(pageNum));
-        await Promise.all(renderPromises);
-
-        isRendering = false;
-        checkAndLoadVisiblePages();
-    }
-
-    /**
-     * Fast render for zoom operations
-     * Optimized version of renderPage for bulk rendering
-     * @param {number} pageNum - Page number to render
-     */
-    async function renderPageFast(pageNum) {
-        if (renderedPages.has(pageNum)) return;
-
-        try {
-            const page = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale: scale });
-
-            const storedDims = pageHeights.get(pageNum);
-            if (storedDims && storedDims.estimated) {
-                const exactViewport = page.getViewport({ scale: 1.0 });
-                pageHeights.set(pageNum, {
-                    width: exactViewport.width,
-                    height: exactViewport.height,
-                    estimated: false
-                });
-            }
-
-            const pageWrapper = document.getElementById(`page-wrapper-${pageNum}`);
-            if (!pageWrapper) return;
-
-            const canvas = document.createElement('canvas');
-            canvas.id = `pdf-canvas-${pageNum}`;
-            canvas.className = 'pdf-page-canvas';
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-
-            pageWrapper.style.width = `${viewport.width}px`;
-            pageWrapper.style.minHeight = `${viewport.height}px`;
-            pageWrapper.style.height = 'auto';
-
-            const pageLabel = pageWrapper.querySelector('.page-number-label');
-            pageWrapper.insertBefore(canvas, pageLabel);
-
-            const ctx = canvas.getContext('2d');
-
-            await page.render({
-                canvasContext: ctx,
-                viewport: viewport
-            }).promise;
-
-            addWatermark(ctx, canvas);
-
-            renderedPages.set(pageNum, { canvas, ctx, page });
-
-        } catch (error) {
-            console.error(`Error rendering page ${pageNum}:`, error);
+        const canvases = document.querySelectorAll('.pdf-canvas-wrapper canvas');
+        for (let i = 0; i < canvases.length; i++) {
+            canvases[i].remove();
         }
+
+        const batchSize = 15;
+        for (let i = 0; i < pagesToRerender.length; i += batchSize) {
+            const batch = pagesToRerender.slice(i, i + batchSize);
+            await Promise.all(batch.map(pageNum => renderPage(pageNum)));
+        }
+
+        return Promise.resolve();
     }
 
-    // ==================== LAZY LOADING SYSTEM ====================
-    /**
-     * Setup lazy loading for PDF pages
-     * Only renders pages that are visible or nearby
-     */
+    // ==================== LAZY LOADING ====================
     function setupLazyLoading() {
-        const viewerArea = document.getElementById('pdfViewerArea');
-        let scrollTimeout;
-
-        // Check for visible pages on scroll
-        viewerArea.addEventListener('scroll', function() {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                checkAndLoadVisiblePages();
-            }, 100);
-        });
-
-        // Setup intersection observer for efficient detection
-        setupIntersectionObserver();
-    }
-
-    /**
-     * Setup Intersection Observer for page visibility detection
-     * More efficient than scroll-based detection
-     */
-    function setupIntersectionObserver() {
         const options = {
             root: document.getElementById('pdfViewerArea'),
-            rootMargin: '300px 0px', // Load pages 300px before visible
+            rootMargin: '500px 0px',
             threshold: 0
         };
 
@@ -2357,234 +1566,225 @@
                 if (entry.isIntersecting) {
                     const pageNum = parseInt(entry.target.getAttribute('data-page-number'));
                     if (!renderedPages.has(pageNum)) {
-                        queuePageForRendering(pageNum);
+                        renderPage(pageNum);
                     }
                 }
             });
         }, options);
 
-        // Observe all page wrappers
         document.querySelectorAll('.pdf-canvas-wrapper').forEach(wrapper => {
             observer.observe(wrapper);
         });
     }
 
-    /**
-     * Check and load pages visible in viewport
-     * Loads pages within buffer distance of viewport
-     */
-    function checkAndLoadVisiblePages() {
-        const viewerArea = document.getElementById('pdfViewerArea');
-        const scrollTop = viewerArea.scrollTop;
-        const viewerHeight = viewerArea.clientHeight;
+    // ==================== PAGE TRACKING ====================
+    let scrollTrackingTimeout = null;
+    let isManualJump = false;
 
+    function setupPageTracking() {
+        const viewerArea = document.getElementById('pdfViewerArea');
+
+        let ticking = false;
+        viewerArea.addEventListener('scroll', function() {
+            if (isManualJump) return;
+
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    if (scrollTrackingTimeout) clearTimeout(scrollTrackingTimeout);
+
+                    scrollTrackingTimeout = setTimeout(() => {
+                        detectCurrentPage();
+                    }, 100);
+
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+    function buildPageRegistry() {
+        pageRegistry.clear();
         const wrappers = document.querySelectorAll('.pdf-canvas-wrapper');
 
-        wrappers.forEach(wrapper => {
+        wrappers.forEach((wrapper) => {
             const pageNum = parseInt(wrapper.getAttribute('data-page-number'));
-            if (renderedPages.has(pageNum)) return;
+            const height = wrapper.offsetHeight;
+            const top = wrapper.offsetTop;
 
-            const wrapperTop = wrapper.offsetTop;
-            const wrapperBottom = wrapperTop + wrapper.offsetHeight;
-
-            // Calculate buffer zone
-            const bufferTop = scrollTop - (viewerHeight * PAGES_BUFFER);
-            const bufferBottom = scrollTop + viewerHeight + (viewerHeight * PAGES_BUFFER);
-
-            // Queue page if in buffer zone
-            if (wrapperBottom >= bufferTop && wrapperTop <= bufferBottom) {
-                queuePageForRendering(pageNum);
-            }
+            pageRegistry.set(pageNum, {
+                top: top,
+                bottom: top + height,
+                height: height,
+                element: wrapper
+            });
         });
+
+        if (pageRegistry.size > 0) {
+            const firstThree = Array.from(pageRegistry.entries()).slice(0, 3);
+            console.log('✓ Page registry built:',
+                firstThree.map(([page, data]) => ({
+                    page,
+                    top: Math.round(data.top),
+                    height: Math.round(data.height)
+                }))
+            );
+        }
     }
 
-    /**
-     * Queue a page for rendering
-     * @param {number} pageNum - Page number to queue
-     */
-    function queuePageForRendering(pageNum) {
-        if (renderedPages.has(pageNum) || renderQueue.includes(pageNum)) return;
+    function detectCurrentPage() {
+        if (isManualJump) return;
 
-        renderQueue.push(pageNum);
-        processRenderQueue();
-    }
+        const viewer = document.getElementById('pdfViewerArea');
+        const scrollTop = viewer.scrollTop;
+        const viewportHeight = viewer.clientHeight;
+        const viewportCenter = scrollTop + (viewportHeight / 2);
 
-    /**
-     * Process render queue
-     * Renders queued pages one at a time
-     */
-    async function processRenderQueue() {
-        if (isProcessingQueue || renderQueue.length === 0) return;
+        let detectedPage = 1;
+        let minDistance = Infinity;
 
-        isProcessingQueue = true;
+        for (const [pageNum, pageData] of pageRegistry) {
+            const pageCenter = pageData.top + (pageData.height / 2);
+            const distance = Math.abs(pageCenter - viewportCenter);
 
-        while (renderQueue.length > 0) {
-            const pageNum = renderQueue.shift();
-
-            if (!renderedPages.has(pageNum)) {
-                await renderPage(pageNum);
+            if (distance < minDistance) {
+                minDistance = distance;
+                detectedPage = pageNum;
             }
         }
 
-        isProcessingQueue = false;
+        if (detectedPage !== currentVisiblePage) {
+            currentVisiblePage = detectedPage;
+            document.getElementById('pageJumpInput').value = detectedPage;
+
+            updateActiveThumbnail(detectedPage);
+        }
     }
 
     // ==================== THUMBNAIL FUNCTIONS ====================
-    /**
-     * Toggle thumbnail sidebar visibility
-     */
     function toggleThumbnailSidebar() {
-        const sidebar = document.getElementById('thumbnailSidebar');
-        sidebar.classList.toggle('closed');
+        document.getElementById('thumbnailSidebar').classList.toggle('closed');
     }
 
-    /**
-     * Render thumbnails for all pages
-     * Creates small preview images for navigation
-     */
     async function renderThumbnails() {
         if (!pdfDoc) return;
 
         const container = document.getElementById('thumbnailsContainer');
         container.innerHTML = '';
-
-        const thumbnailScale = 0.2; // 20% of original size
+        const thumbnailScale = 0.2;
 
         for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-            // Create thumbnail item
             const thumbnailItem = document.createElement('div');
             thumbnailItem.className = 'thumbnail-item';
             thumbnailItem.id = `thumbnail-${pageNum}`;
             thumbnailItem.setAttribute('data-page', pageNum);
-            thumbnailItem.onclick = () => scrollToPagePrecise(pageNum);
 
-            if (pageNum === 1) {
-                thumbnailItem.classList.add('active');
-            }
+            thumbnailItem.onclick = function() {
+                const targetPage = parseInt(this.getAttribute('data-page'));
+
+                isManualJump = true;
+
+                buildPageRegistry();
+
+                const pageData = pageRegistry.get(targetPage);
+                if (pageData) {
+                    const viewer = document.getElementById('pdfViewerArea');
+
+                    viewer.scrollTop = pageData.top;
+
+                    currentVisiblePage = targetPage;
+                    document.getElementById('pageJumpInput').value = targetPage;
+
+                    updateActiveThumbnailInstant(targetPage);
+
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            isManualJump = false;
+                        });
+                    });
+                }
+            };
+
+            if (pageNum === 1) thumbnailItem.classList.add('active');
 
             const canvas = document.createElement('canvas');
             canvas.className = 'thumbnail-canvas';
 
             const pageNumLabel = document.createElement('div');
             pageNumLabel.className = 'thumbnail-page-num';
-            pageNumLabel.textContent = pageNum;
+            pageNumLabel.textContent = `Page ${pageNum}`;
 
             thumbnailItem.appendChild(canvas);
             thumbnailItem.appendChild(pageNumLabel);
             container.appendChild(thumbnailItem);
 
             try {
-                // Render thumbnail
                 const page = await pdfDoc.getPage(pageNum);
                 const viewport = page.getViewport({ scale: thumbnailScale });
-
                 canvas.width = viewport.width;
                 canvas.height = viewport.height;
-
                 const ctx = canvas.getContext('2d');
-                await page.render({
-                    canvasContext: ctx,
-                    viewport: viewport
-                }).promise;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
             } catch (error) {
                 console.error(`Error rendering thumbnail ${pageNum}:`, error);
             }
         }
     }
 
-    /**
-     * Update active thumbnail highlight
-     * @param {number} pageNum - Current page number
-     */
-    function updateActiveThumbnail(pageNum) {
-        // Remove active class from all thumbnails
-        document.querySelectorAll('.thumbnail-item').forEach(item => {
-            item.classList.remove('active');
-        });
+    function updateActiveThumbnailInstant(pageNum) {
+        const allThumbnails = document.querySelectorAll('.thumbnail-item');
+        for (let i = 0; i < allThumbnails.length; i++) {
+            allThumbnails[i].classList.remove('active');
+        }
 
-        // Add active class to current thumbnail
-        const activeThumbnailEl = document.getElementById(`thumbnail-${pageNum}`);
-        if (activeThumbnailEl) {
-            activeThumbnailEl.classList.add('active');
+        const activeThumbnail = document.getElementById(`thumbnail-${pageNum}`);
+        if (activeThumbnail) {
+            activeThumbnail.classList.add('active');
 
-            // Scroll thumbnail into view
-            activeThumbnailEl.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
-                inline: 'nearest'
+            activeThumbnail.scrollIntoView({
+                behavior: 'instant',
+                block: 'center'
             });
         }
     }
 
-    // ==================== SIDEBAR TOGGLE FUNCTION ====================
-    /**
-     * Toggle document info sidebar visibility
-     * Updates button position and icon based on state
-     */
+    function updateActiveThumbnail(pageNum) {
+        console.log(`📍 Updating active thumbnail to page ${pageNum}`);
+
+        document.querySelectorAll('.thumbnail-item').forEach(item => {
+            item.classList.remove('active');
+        });
+
+        const activeThumbnail = document.getElementById(`thumbnail-${pageNum}`);
+        if (activeThumbnail) {
+            activeThumbnail.classList.add('active');
+
+            activeThumbnail.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+
+            console.log(`✓ Thumbnail ${pageNum} activated and scrolled into view`);
+        } else {
+            console.warn(`❌ Thumbnail element not found for page ${pageNum}`);
+        }
+    }
+
+    // ==================== SIDEBAR TOGGLE ====================
     function toggleSidebar() {
         const sidebar = document.getElementById("sidebar");
-        const viewer = document.querySelector(".pdf-viewer-area");
         const btn = document.getElementById("toggleSidebarBtn");
 
         sidebar.classList.toggle("closed");
 
         if (sidebar.classList.contains("closed")) {
-            // Sidebar is now closed
-            viewer.classList.add("expanded");
-            btn.classList.add("sidebar-closed");
             btn.innerHTML = '<i class="bi bi-arrow-bar-left"></i>';
-            btn.title = "Show Document Info";
         } else {
-            // Sidebar is now open
-            viewer.classList.remove("expanded");
-            btn.classList.remove("sidebar-closed");
             btn.innerHTML = '<i class="bi bi-arrow-bar-right"></i>';
-            btn.title = "Hide Document Info";
         }
     }
 
-    // ==================== THEME TOGGLE FUNCTION ====================
-    /**
-     * Toggle between light and dark mode
-     * Saves preference to localStorage
-     */
-    function toggleTheme() {
-        isDarkMode = !isDarkMode;
-        document.body.classList.toggle('dark-mode', isDarkMode);
-
-        const btn = document.getElementById('themeToggleBtn');
-        if (isDarkMode) {
-            btn.innerHTML = '<i class="bi bi-sun-fill"></i>';
-            btn.title = 'Switch to Light Mode';
-        } else {
-            btn.innerHTML = '<i class="bi bi-moon-fill"></i>';
-            btn.title = 'Switch to Dark Mode';
-        }
-
-        // Save theme preference
-        localStorage.setItem('pdfViewerDarkMode', isDarkMode);
-    }
-
-    /**
-     * Load theme preference from localStorage
-     * Applies saved theme on page load
-     */
-    function loadThemePreference() {
-        const savedTheme = localStorage.getItem('pdfViewerDarkMode');
-        if (savedTheme === 'true') {
-            isDarkMode = true;
-            document.body.classList.add('dark-mode');
-            const btn = document.getElementById('themeToggleBtn');
-            btn.innerHTML = '<i class="bi bi-sun-fill"></i>';
-            btn.title = 'Switch to Light Mode';
-        }
-    }
-
-    // ==================== PRESENT MODE FUNCTIONS ====================
-    /**
-     * Enter fullscreen presentation mode
-     * Hides UI elements and shows only PDF
-     */
+    // ==================== PRESENT MODE ====================
     function enterPresentMode() {
         isPresentMode = true;
         presentCurrentPage = currentVisiblePage || 1;
@@ -2592,132 +1792,88 @@
         const viewerArea = document.getElementById('pdfViewerArea');
         const controls = document.getElementById('presentModeControls');
 
-        // Request fullscreen
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
             elem.requestFullscreen();
         } else if (elem.webkitRequestFullscreen) {
             elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
         }
 
-        // Add present mode styling
         viewerArea.classList.add('present-mode');
         controls.classList.add('show');
 
-        // Hide other UI elements
         document.querySelector('.unified-nav').style.display = 'none';
         document.getElementById('sidebar').style.display = 'none';
         document.getElementById('thumbnailSidebar').style.display = 'none';
         document.getElementById('toggleSidebarBtn').style.display = 'none';
 
         updatePresentPageInfo();
-        scrollToPagePrecise(presentCurrentPage);
 
-        // Add keyboard navigation
+        buildPageRegistry();
+        const pageData = pageRegistry.get(presentCurrentPage);
+        if (pageData) viewerArea.scrollTop = pageData.top;
+
         document.addEventListener('keydown', handlePresentModeKeys);
     }
 
-    /**
-     * Exit presentation mode
-     * Restores normal UI
-     */
     function exitPresentMode() {
         isPresentMode = false;
 
         const viewerArea = document.getElementById('pdfViewerArea');
         const controls = document.getElementById('presentModeControls');
 
-        // Exit fullscreen
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
         }
 
-        // Remove present mode styling
         viewerArea.classList.remove('present-mode');
         controls.classList.remove('show');
 
-        // Restore UI elements
         document.querySelector('.unified-nav').style.display = 'flex';
         document.getElementById('sidebar').style.display = 'flex';
         document.getElementById('thumbnailSidebar').style.display = 'flex';
         document.getElementById('toggleSidebarBtn').style.display = 'flex';
 
-        // Remove keyboard navigation
         document.removeEventListener('keydown', handlePresentModeKeys);
     }
 
-    /**
-     * Handle fullscreen change events
-     * Auto-exits present mode when fullscreen is exited
-     */
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
 
     function handleFullscreenChange() {
-        const isFullscreen = document.fullscreenElement ||
-                            document.webkitFullscreenElement ||
-                            document.msFullscreenElement;
-
-        // Exit present mode if fullscreen was exited
+        const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement;
         if (!isFullscreen && isPresentMode) {
-            isPresentMode = false;
-
-            const viewerArea = document.getElementById('pdfViewerArea');
-            const controls = document.getElementById('presentModeControls');
-
-            viewerArea.classList.remove('present-mode');
-            controls.classList.remove('show');
-
-            document.querySelector('.unified-nav').style.display = 'flex';
-            document.getElementById('sidebar').style.display = 'flex';
-            document.getElementById('thumbnailSidebar').style.display = 'flex';
-            document.getElementById('toggleSidebarBtn').style.display = 'flex';
-
-            document.removeEventListener('keydown', handlePresentModeKeys);
+            exitPresentMode();
         }
     }
 
-    /**
-     * Navigate to previous page in present mode
-     */
     function presentPrevPage() {
         if (presentCurrentPage > 1) {
             presentCurrentPage--;
-            scrollToPagePrecise(presentCurrentPage);
+            buildPageRegistry();
+            const pageData = pageRegistry.get(presentCurrentPage);
+            if (pageData) document.getElementById('pdfViewerArea').scrollTop = pageData.top;
             updatePresentPageInfo();
         }
     }
 
-    /**
-     * Navigate to next page in present mode
-     */
     function presentNextPage() {
         if (pdfDoc && presentCurrentPage < pdfDoc.numPages) {
             presentCurrentPage++;
-            scrollToPagePrecise(presentCurrentPage);
+            buildPageRegistry();
+            const pageData = pageRegistry.get(presentCurrentPage);
+            if (pageData) document.getElementById('pdfViewerArea').scrollTop = pageData.top;
             updatePresentPageInfo();
         }
     }
 
-    /**
-     * Update page info display in present mode
-     */
     function updatePresentPageInfo() {
         const totalPages = pdfDoc ? pdfDoc.numPages : 1;
         document.getElementById('presentPageInfo').textContent = `${presentCurrentPage} / ${totalPages}`;
     }
 
-    /**
-     * Handle keyboard navigation in present mode
-     * @param {KeyboardEvent} e - Keyboard event
-     */
     function handlePresentModeKeys(e) {
         if (!isPresentMode) return;
 
@@ -2738,100 +1894,72 @@
         }
     }
 
-    // ==================== DOCUMENT INFO FUNCTIONS ====================
-    /**
-     * Update document information in UI
-     * @param {Object} info - Document metadata object
-     */
+    // ==================== DOCUMENT INFO (UPDATED WITH EMPTY STATE STYLING) ====================
     function updateDocumentInfo(info) {
         const title = info.title || 'Document';
         const productCode = info.productCode || '';
         const edition = info.edition || '';
         const totalPages = info.totalPages || info.noOfPages || 0;
 
-        // Update navbar document info
         document.getElementById('topDocTitle').textContent = title;
-        document.getElementById('topDocMeta').textContent =
-            `${productCode} • v${edition} • ${totalPages} pages`;
-
-        // Update sidebar document info
+        document.getElementById('topDocMeta').textContent = `${productCode} • v${edition} • ${totalPages} pages`;
         document.getElementById('sidebarTitle').textContent = title;
         document.getElementById('sidebarProductCode').textContent = productCode || 'N/A';
         document.getElementById('sidebarEdition').textContent = edition || 'N/A';
         document.getElementById('sidebarPublishDate').textContent = info.publishDate || 'N/A';
-        document.getElementById('sidebarNotes').textContent = info.notes || 'No notes available';
 
-        // Update tags
+        // Notes with empty state styling
+        const notesContainer = document.getElementById('sidebarNotes');
+        if (info.notes && info.notes.trim() !== '' && info.notes !== 'No notes available') {
+            notesContainer.textContent = info.notes;
+            notesContainer.classList.remove('empty-state-text');
+        } else {
+            notesContainer.innerHTML = '<span class="empty-state-text">No notes available</span>';
+        }
+
+        // Tags with empty state styling
         const tagsContainer = document.getElementById('sidebarTags');
         if (info.tagNames && info.tagNames.trim() !== '') {
             const tagsArray = info.tagNames.split(',').map(tag => tag.trim());
-            tagsContainer.innerHTML = tagsArray.map(tag =>
-                `<span class="tag-badge">${tag}</span>`
-            ).join('');
-        } else if (info.tags && info.tags.length > 0) {
-            tagsContainer.innerHTML = info.tags.map(tag =>
-                `<span class="tag-badge">${tag.tagName || tag}</span>`
-            ).join('');
+            tagsContainer.innerHTML = tagsArray.map(tag => `<span class="tag-badge">${tag}</span>`).join('');
         } else {
-            tagsContainer.innerHTML = '<span>No tags</span>';
+            tagsContainer.innerHTML = '<span class="empty-state-text">No tags</span>';
         }
 
-        // Update classifications
+        // Classifications with empty state styling
         const clsContainer = document.getElementById('sidebarClassifications');
-        if (clsContainer) {
-            if (info.classificationNames && info.classificationNames.trim() !== '') {
-                const clsArray = info.classificationNames.split(',').map(c => c.trim());
-                clsContainer.innerHTML = clsArray.map(c =>
-                    `<span class="classification-badge">${c}</span>`
-                ).join('');
-            } else {
-                clsContainer.innerHTML = '<span>No classifications</span>';
-            }
+        if (info.classificationNames && info.classificationNames.trim() !== '') {
+            const clsArray = info.classificationNames.split(',').map(c => c.trim());
+            clsContainer.innerHTML = clsArray.map(c => `<span class="classification-badge">${c}</span>`).join('');
+        } else {
+            clsContainer.innerHTML = '<span class="empty-state-text">No classifications</span>';
         }
 
-        // Update groups - NEW
+        // Groups with empty state styling
         const groupsContainer = document.getElementById('sidebarGroups');
-        if (groupsContainer) {
-            if (info.groupNames && info.groupNames.trim() !== '') {
-                const groupsArray = info.groupNames.split(',').map(g => g.trim());
-                groupsContainer.innerHTML = groupsArray.map(g =>
-                    `<span class="group-badge">${g}</span>`
-                ).join('');
-            } else if (info.groups && info.groups.length > 0) {
-                groupsContainer.innerHTML = info.groups.map(group =>
-                    `<span class="group-badge">${group.groupName || group}</span>`
-                ).join('');
-            } else {
-                groupsContainer.innerHTML = '<span>No groups assigned</span>';
-            }
+        if (info.groupNames && info.groupNames.trim() !== '') {
+            const groupsArray = info.groupNames.split(',').map(g => g.trim());
+            groupsContainer.innerHTML = groupsArray.map(g => `<span class="group-badge">${g}</span>`).join('');
+        } else {
+            groupsContainer.innerHTML = '<span class="empty-state-text">No groups assigned</span>';
         }
     }
 
     // ==================== DATE FORMATTING ====================
-    /**
-     * Format date string to DD-MMM-YYYY format
-     * @param {string} dateStr - Date string to format
-     * @returns {string} Formatted date string
-     */
     function formatDateToDDMMMYYYY(dateStr) {
         if (!dateStr || dateStr === '-' || dateStr === 'N/A') return dateStr;
 
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
         try {
             let date;
-
-            // Handle ISO format dates
             if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
                 date = new Date(dateStr.split(' ')[0]);
             } else {
                 date = new Date(dateStr);
             }
 
-            if (isNaN(date.getTime())) {
-                return dateStr; // Return original if invalid
-            }
+            if (isNaN(date.getTime())) return dateStr;
 
             const day = String(date.getDate()).padStart(2, '0');
             const month = monthNames[date.getMonth()];
@@ -2843,32 +1971,21 @@
         }
     }
 
-    /**
-     * Format all dates in the document
-     * Applies formatting to elements with 'format-date' class
-     */
     function formatAllDates() {
-        const dateElements = document.querySelectorAll('.format-date');
-        dateElements.forEach(element => {
+        document.querySelectorAll('.format-date').forEach(element => {
             const originalDate = element.textContent.trim();
             if (originalDate && originalDate !== '-' && originalDate !== 'N/A') {
-                const formattedDate = formatDateToDDMMMYYYY(originalDate);
-                element.textContent = formattedDate;
+                element.textContent = formatDateToDDMMMYYYY(originalDate);
             }
         });
     }
 
     // ==================== BOOKMARK FUNCTIONS ====================
-    /**
-     * Check if current document is bookmarked
-     * Updates bookmark button state
-     */
     async function checkIfBookmarked() {
         if (!documentId) return;
 
         try {
             const response = await fetch(`/bookmark/check/${documentId}`);
-
             if (response.ok) {
                 const data = await response.json();
                 isCurrentlyBookmarked = typeof data === 'object' ? data.bookmarked : data;
@@ -2879,10 +1996,6 @@
         }
     }
 
-    /**
-     * Update bookmark button appearance
-     * @param {boolean} isBookmarked - Whether document is bookmarked
-     */
     function updateBookmarkButton(isBookmarked) {
         const bookmarkBtn = document.getElementById("bookmarkIconBtn");
         const bookmarkIcon = document.getElementById("bookmarkIcon");
@@ -2895,18 +2008,12 @@
         if (isBookmarked) {
             bookmarkBtn.classList.add('active');
             bookmarkIcon.className = "bi bi-bookmark-fill";
-            bookmarkBtn.title = 'Remove Bookmark';
         } else {
             bookmarkBtn.classList.remove('active');
             bookmarkIcon.className = "bi bi-bookmark";
-            bookmarkBtn.title = "Bookmark Document";
         }
     }
 
-    /**
-     * Handle bookmark button click
-     * Shows add or remove modal based on current state
-     */
     function handleBookmarkClick() {
         if (isCurrentlyBookmarked) {
             showRemoveBookmarkModal();
@@ -2915,44 +2022,23 @@
         }
     }
 
-    /**
-     * Show bookmark creation modal
-     */
     function showBookmarkModal() {
-        const modal = document.getElementById("bookmarkModal");
-        if (modal) {
-            modal.classList.add("active");
-            document.getElementById("bookmarkName").value = "";
-        }
+        document.getElementById("bookmarkModal").classList.add("active");
+        document.getElementById("bookmarkName").value = "";
     }
 
-    /**
-     * Close bookmark creation modal
-     */
     function closeBookmarkModal() {
-        const modal = document.getElementById("bookmarkModal");
-        if (modal) modal.classList.remove("active");
+        document.getElementById("bookmarkModal").classList.remove("active");
     }
 
-    /**
-     * Show bookmark removal confirmation modal
-     */
     function showRemoveBookmarkModal() {
-        const modal = document.getElementById("removeBookmarkModal");
-        if (modal) modal.classList.add("active");
+        document.getElementById("removeBookmarkModal").classList.add("active");
     }
 
-    /**
-     * Close bookmark removal modal
-     */
     function closeRemoveBookmarkModal() {
-        const modal = document.getElementById("removeBookmarkModal");
-        if (modal) modal.classList.remove("active");
+        document.getElementById("removeBookmarkModal").classList.remove("active");
     }
 
-    /**
-     * Save bookmark with user-provided name
-     */
     async function saveBookmark() {
         const name = document.getElementById("bookmarkName").value.trim();
         if (!name) {
@@ -2989,9 +2075,6 @@
         }
     }
 
-    /**
-     * Confirm and remove bookmark
-     */
     async function confirmRemoveBookmark() {
         if (!documentId) return;
 
@@ -3026,23 +2109,14 @@
     }
 
     // ==================== DOWNLOAD FUNCTIONS ====================
-    /**
-     * Show download confirmation modal
-     */
     function showDownloadModal() {
         document.getElementById('downloadModal').classList.add('active');
     }
 
-    /**
-     * Close download modal
-     */
     function closeDownloadModal() {
         document.getElementById('downloadModal').classList.remove('active');
     }
 
-    /**
-     * Confirm and download PDF with watermark
-     */
     async function confirmDownload() {
         try {
             const response = await fetch(`/documents/download/${documentId}`);
@@ -3056,7 +2130,6 @@
                 if (match) filename = match[1];
             }
 
-            // Create download link
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -3074,24 +2147,10 @@
     }
 
     // ==================== UTILITY FUNCTIONS ====================
-    /**
-     * Show or hide loading spinner
-     * @param {boolean} show - Whether to show spinner
-     */
     function showLoading(show) {
-        const spinner = document.getElementById('loadingSpinner');
-        if (show) {
-            spinner.classList.add('active');
-        } else {
-            spinner.classList.remove('active');
-        }
+        document.getElementById('loadingSpinner').classList.toggle('active', show);
     }
 
-    /**
-     * Show notification toast
-     * @param {string} message - Message to display
-     * @param {string} type - Notification type (success/error/warning)
-     */
     function showNotification(message, type = 'success') {
         const notification = document.getElementById('notification');
         const text = document.getElementById('notificationText');
@@ -3099,57 +2158,35 @@
         notification.className = `notification ${type} show`;
         text.textContent = message;
 
-        // Auto-hide after 5 seconds
         setTimeout(() => {
             notification.classList.remove('show');
         }, 5000);
     }
 
-    /**
-     * Close notification toast
-     */
     function closeNotification() {
         document.getElementById('notification').classList.remove('show');
     }
 
-    /**
-     * Show error notification
-     * @param {string} message - Error message
-     */
     function showError(message) {
         showNotification(message, 'error');
     }
 
     // ==================== KEYBOARD SHORTCUTS ====================
-    /**
-     * Handle global keyboard shortcuts
-     */
     document.addEventListener('keydown', function(e) {
-        // Ignore shortcuts when typing in input fields
         if (e.target.tagName === 'INPUT') return;
 
-        switch(e.key) {
-            case '+':
-            case '=':
-                // Ctrl/Cmd + Plus: Zoom in
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    zoomIn();
-                }
-                break;
-            case '-':
-                // Ctrl/Cmd + Minus: Zoom out
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    zoomOut();
-                }
-                break;
+        if ((e.ctrlKey || e.metaKey) && e.key === '+') {
+            e.preventDefault();
+            zoomIn();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '-') {
+            e.preventDefault();
+            zoomOut();
+        } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            setZoom(1.0);
         }
     });
 
-    /**
-     * Close modals when clicking outside
-     */
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('active');
@@ -3157,17 +2194,12 @@
     });
 </script>
 
-<!-- ==================== SECURITY SCRIPT ==================== -->
-<!-- Prevents unauthorized actions like screenshots, printing, copying -->
+<!-- ==================== SECURITY SCRIPT ====================-->
 <script>
     (function() {
-        // ==================== SECURITY CONFIGURATION ====================
-        const BLUR_INTENSITY = '20px'; // Blur intensity for security overlay
-        let isBlurred = false; // Current blur state
+        const BLUR_INTENSITY = '20px';
+        let isBlurred = false;
 
-        /**
-         * Security messages for different blocked actions
-         */
         const securityMessages = {
             screenshot: 'Screenshots and screen captures are not allowed for this document.',
             print: 'Printing is disabled for security purposes.',
@@ -3178,120 +2210,75 @@
             default: 'This action is not permitted for security reasons.'
         };
 
-        /**
-         * Show security notification to user
-         * @param {string} messageType - Type of security message to show
-         */
         function showSecurityNotification(messageType) {
             const message = securityMessages[messageType] || securityMessages.default;
-
             if (typeof showNotification === 'function') {
                 showNotification(message, 'error');
             }
         }
 
-        /**
-         * Apply security blur to document content
-         * Prevents visual capture of document
-         */
         function applySecurityBlur() {
             if (!isBlurred) {
                 isBlurred = true;
                 document.body.style.filter = `blur(${BLUR_INTENSITY})`;
-
                 const pdfContainer = document.getElementById('pdfPagesContainer');
-                if (pdfContainer) {
-                    pdfContainer.style.visibility = 'hidden';
-                }
+                if (pdfContainer) pdfContainer.style.visibility = 'hidden';
             }
         }
 
-        /**
-         * Remove security blur from document
-         */
         function removeSecurityBlur() {
             if (isBlurred) {
                 isBlurred = false;
                 document.body.style.filter = 'none';
-
                 const pdfContainer = document.getElementById('pdfPagesContainer');
-                if (pdfContainer) {
-                    pdfContainer.style.visibility = 'visible';
-                }
+                if (pdfContainer) pdfContainer.style.visibility = 'visible';
             }
         }
 
-        // ==================== PREVENT RIGHT-CLICK ====================
-        /**
-         * Block context menu (right-click)
-         */
         document.addEventListener('contextmenu', e => {
             e.preventDefault();
             showSecurityNotification('copy');
         });
 
-        // ==================== PREVENT DRAG AND DROP ====================
-        /**
-         * Block drag and drop of elements
-         */
         document.addEventListener('dragstart', e => e.preventDefault());
 
-        // ==================== PREVENT TEXT SELECTION ====================
-        /**
-         * Block text selection in PDF viewer area
-         */
         document.addEventListener('selectstart', e => {
             if (e.target.closest('.pdf-viewer-area')) {
                 e.preventDefault();
             }
         });
 
-        // ==================== KEYBOARD SHORTCUT BLOCKING ====================
-        /**
-         * Block common keyboard shortcuts for security
-         */
         document.addEventListener('keydown', function(e) {
-            // Block Ctrl+P (Print)
             if (e.ctrlKey && e.key.toLowerCase() === 'p') {
                 e.preventDefault();
-                e.stopPropagation();
                 showSecurityNotification('print');
                 return false;
             }
 
-            // Block Ctrl+S (Save)
             if (e.ctrlKey && e.key.toLowerCase() === 's') {
                 e.preventDefault();
-                e.stopPropagation();
                 showSecurityNotification('save');
                 return false;
             }
 
-            // Block Ctrl+U (View Source)
             if (e.ctrlKey && e.key.toLowerCase() === 'u') {
                 e.preventDefault();
-                e.stopPropagation();
                 showSecurityNotification('devtools');
                 return false;
             }
 
-            // Block Developer Tools shortcuts
             if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c', 'k'].includes(e.key.toLowerCase())) {
                 e.preventDefault();
-                e.stopPropagation();
                 showSecurityNotification('devtools');
                 return false;
             }
 
-            // Block F12 (Developer Tools)
             if (e.key === 'F12') {
                 e.preventDefault();
-                e.stopPropagation();
                 showSecurityNotification('devtools');
                 return false;
             }
 
-            // Block Print Screen
             if (e.key === 'PrintScreen') {
                 e.preventDefault();
                 applySecurityBlur();
@@ -3301,7 +2288,6 @@
                 return false;
             }
 
-            // Block Windows Snipping Tool (Shift+Win+S)
             if (e.shiftKey && e.key.toLowerCase() === 's' && (e.metaKey || e.getModifierState('OS'))) {
                 e.preventDefault();
                 applySecurityBlur();
@@ -3310,7 +2296,6 @@
                 return false;
             }
 
-            // Block Alt+Print Screen
             if (e.altKey && e.key === 'PrintScreen') {
                 e.preventDefault();
                 applySecurityBlur();
@@ -3321,9 +2306,6 @@
             }
         }, true);
 
-        /**
-         * Handle Print Screen key release
-         */
         window.addEventListener('keyup', function(e) {
             if (e.key === 'PrintScreen') {
                 applySecurityBlur();
@@ -3333,46 +2315,26 @@
             }
         }, true);
 
-        // ==================== PREVENT COPY/CUT ====================
-        /**
-         * Block copy operation
-         */
         document.addEventListener('copy', e => {
             e.preventDefault();
             showSecurityNotification('copy');
         });
 
-        /**
-         * Block cut operation
-         */
         document.addEventListener('cut', e => {
             e.preventDefault();
             showSecurityNotification('copy');
         });
 
-        // ==================== WINDOW FOCUS DETECTION ====================
-        /**
-         * Apply blur when window loses focus (potential screen capture)
-         */
         let blurTimeout;
         window.addEventListener('blur', () => {
             applySecurityBlur();
             if (blurTimeout) clearTimeout(blurTimeout);
         });
 
-        /**
-         * Remove blur when window regains focus
-         */
         window.addEventListener('focus', () => {
-            blurTimeout = setTimeout(() => {
-                removeSecurityBlur();
-            }, 500);
+            blurTimeout = setTimeout(removeSecurityBlur, 500);
         });
 
-        // ==================== VISIBILITY CHANGE DETECTION ====================
-        /**
-         * Handle page visibility changes (tab switching)
-         */
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 applySecurityBlur();
@@ -3381,25 +2343,13 @@
             }
         });
 
-        // ==================== PRINT BLOCKING ====================
-        /**
-         * Block before print event
-         */
         window.onbeforeprint = function() {
             applySecurityBlur();
             showSecurityNotification('print');
         };
 
-        /**
-         * Handle after print event
-         */
-        window.onafterprint = function() {
-            removeSecurityBlur();
-        };
+        window.onafterprint = removeSecurityBlur;
 
-        /**
-         * Override window.print function
-         */
         window.print = function() {
             showSecurityNotification('print');
             return false;

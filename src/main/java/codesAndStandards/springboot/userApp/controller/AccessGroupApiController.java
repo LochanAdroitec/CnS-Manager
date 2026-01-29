@@ -2,6 +2,7 @@ package codesAndStandards.springboot.userApp.controller;
 
 import codesAndStandards.springboot.userApp.dto.*;
 import codesAndStandards.springboot.userApp.service.GroupService;
+import codesAndStandards.springboot.userApp.service.LicenseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.propertyeditors.CustomCollectionEditor;
@@ -22,6 +23,63 @@ import java.util.Map;
 public class AccessGroupApiController {
 
     private final GroupService groupService;
+    private final LicenseService licenseService;
+    @GetMapping("/edition-permissions")
+    @PreAuthorize("hasAnyAuthority('Admin', 'Manager', 'User')")
+    public ResponseEntity<Map<String, Object>> getEditionPermissions() {
+        log.info("Getting edition permissions for group management");
+
+        Map<String, Object> permissions = new HashMap<>();
+
+        boolean isValid = licenseService.isLicenseValid();
+        String edition = licenseService.getCurrentEdition();
+        long daysRemaining = licenseService.getDaysRemaining();
+
+        // Default to ED1 if no license
+        if (edition == null) {
+            edition = "ED1";
+        }
+
+        permissions.put("isLicenseValid", isValid);
+        permissions.put("edition", edition);
+        permissions.put("editionName", getEditionName(edition));
+        permissions.put("daysRemaining", daysRemaining);
+
+        // Feature permissions
+        permissions.put("canCreateGroups", "ED2".equalsIgnoreCase(edition) && isValid);
+        permissions.put("canEditGroups", isValid); // Both editions can edit
+        permissions.put("canEditGroupDetails", "ED2".equalsIgnoreCase(edition) && isValid); // ✅ NEW: Only ED2 can edit name/description
+        permissions.put("canDeleteGroups", isValid); // Both can delete (with restrictions)
+
+        // ED1 restrictions
+        if ("ED1".equalsIgnoreCase(edition)) {
+            permissions.put("message", "You are using Essential Edition. Upgrade to Professional Edition to create custom groups and edit group names/descriptions.");
+            permissions.put("defaultGroupsOnly", true);
+            permissions.put("defaultGroups", java.util.Arrays.asList(
+                    "Design", "Manufacturing", "Quality", "Support"
+            ));
+        } else {
+            permissions.put("message", "You are using Professional Edition with full group management.");
+            permissions.put("defaultGroupsOnly", false);
+        }
+
+        log.info("Edition permissions: {}", permissions);
+
+        return ResponseEntity.ok(permissions);
+    }
+
+    /**
+     * Helper method to get edition display name
+     */
+    private String getEditionName(String editionCode) {
+        if ("ED1".equalsIgnoreCase(editionCode)) {
+            return "Essential Edition";
+        } else if ("ED2".equalsIgnoreCase(editionCode)) {
+            return "Professional Edition";
+        }
+        return "Unknown Edition";
+    }
+
 
     /**
      * Get all groups
@@ -101,6 +159,38 @@ public class AccessGroupApiController {
             @RequestBody GroupRequestDTO requestDTO) {
         log.info("REST request to update group : {}", id);
         try {
+            // ✅ NEW: Check edition permissions for name/description changes
+            String edition = licenseService.getCurrentEdition();
+            boolean isValid = licenseService.isLicenseValid();
+
+            if (edition == null) {
+                edition = "ED1";
+            }
+
+            // ED1 users cannot change group name or description
+            if ("ED1".equalsIgnoreCase(edition) && isValid) {
+                // Get existing group to compare
+                GroupResponseDTO existingGroup = groupService.getGroupById(id);
+
+                // Check if name or description changed
+                boolean nameChanged = !existingGroup.getGroupName().equals(requestDTO.getGroupName());
+                boolean descriptionChanged = false;
+
+                String existingDesc = existingGroup.getDescription() != null ? existingGroup.getDescription() : "";
+                String newDesc = requestDTO.getDescription() != null ? requestDTO.getDescription() : "";
+                descriptionChanged = !existingDesc.equals(newDesc);
+
+                if (nameChanged || descriptionChanged) {
+                    log.warn("ED1 user attempted to change group name or description. Group ID: {}", id);
+                    Map<String, String> error = new HashMap<>();
+                    error.put("message", "Editing group name and description requires Professional Edition (ED2). " +
+                            "You can still modify documents and users in this group.");
+                    error.put("edition", edition);
+                    error.put("requiredEdition", "ED2");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+                }
+            }
+
             GroupResponseDTO updatedGroup = groupService.updateGroup(id, requestDTO);
             return ResponseEntity.ok(updatedGroup);
         } catch (RuntimeException e) {

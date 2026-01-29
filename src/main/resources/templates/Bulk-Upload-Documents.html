@@ -396,13 +396,8 @@
                         <li>🚀 <strong>Priority Support</strong> - Fast response time</li>
                         <li>✓ <strong>All ED1 Features</strong> - Plus everything else</li>
                     </ul>
+                    <a href="/license-activation" class="alert-link ms-2">Upgrade to Professional Edition</a>
 
-                    <div class="edition-action-buttons">
-                        <button class="edition-back-btn" onclick="goBackToDocuments()">
-                            <i class="bi bi-arrow-left"></i>
-                            Back to Documents
-                        </button>
-                    </div>
 
                     <p class="edition-contact-note">
                         💡 Contact your administrator to upgrade to ED2 Professional Edition
@@ -569,11 +564,11 @@
                                         <thead>
                                         <tr>
                                             <th style="min-width:180px;">Document Name</th>
-                                            <th style="min-width:150px;">Title</th>
-                                            <th style="min-width:120px;">Product Code</th>
+                                            <th style="min-width:150px;">Title <span class="wizard-btn-danger">*</span></th>
+                                            <th style="min-width:120px;">Product Code <span class="wizard-btn-danger">*</span></th>
                                             <th style="min-width:100px;">Edition</th>
                                             <th style="min-width:120px;">Publish Month</th>
-                                            <th style="min-width:100px;">Publish Year</th>
+                                            <th style="min-width:100px;">Publish Year <span class="wizard-btn-danger">*</span></th>
                                             <th style="min-width:100px;">No of Pages</th>
                                             <th style="min-width:160px;">Notes</th>
                                             <th style="min-width:180px;">Tags (multi)</th>
@@ -794,15 +789,12 @@
 
 <script src="/js/bootstrap.bundle.min.js"></script>
 <div th:replace="~{common/navbar :: navbar-js}"></div>
-<!-- paste the JS block I gave in the previous message here -->
-
-
 <script>
+
     // =====================================================================
    // BULK UPLOAD DOCUMENTS - JAVASCRIPT CODE
    // =====================================================================
    // This is the complete JavaScript section for Bulk-Upload-Documents.html
-   // Place this code inside <script> tags at the end of the HTML file
    // =====================================================================
 
        // ===================== GLOBAL VARIABLES =====================
@@ -2557,7 +2549,5 @@
     }
 
 </script>
-
-
 </body>
 </html>

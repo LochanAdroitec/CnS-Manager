@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/classifications")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
+//@CrossOrigin(origins = "http://localhost:8080", allowCredentials = "true")
 public class ClassificationController {
 
     private final ClassificationService classificationService;

@@ -9,7 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import codesAndStandards.springboot.userApp.service.LicenseService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +25,7 @@ public class GroupService {
     private final codesAndStandards.springboot.userApp.repository.AccessControlLogicRepository accessControlLogicRepository;
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
+    private final LicenseService licenseService;
 
     /**
      * Get all groups with counts
@@ -58,7 +59,13 @@ public class GroupService {
     @Transactional
     public GroupResponseDTO createGroup(GroupRequestDTO requestDTO) {
         log.info("Creating new group: {}", requestDTO.getGroupName());
-
+        // ✅ CHECK EDITION BEFORE ALLOWING GROUP CREATION
+        if (!canCreateGroups()) {
+            throw new IllegalStateException(
+                    "Group creation is not allowed in Essential Edition (ED1). " +
+                            "Please upgrade to Professional Edition (ED2) to create custom groups."
+            );
+        }
         // Validate group name
         if (requestDTO.getGroupName() == null || requestDTO.getGroupName().trim().isEmpty()) {
             throw new IllegalArgumentException("Group name cannot be empty");
@@ -457,5 +464,61 @@ public class GroupService {
 //                    .orElseThrow(() -> new RuntimeException("Current user not found"));
         }
         throw new RuntimeException("User not authenticated");
+    }
+    /**
+     * Check if user can create new groups
+     * @return true if ED2 (Professional), false if ED1 (Essential)
+     */
+    private boolean canCreateGroups() {
+        if (!licenseService.isLicenseValid()) {
+            return false; // No valid license, no group creation
+        }
+
+        String edition = licenseService.getCurrentEdition();
+        return "ED2".equalsIgnoreCase(edition);
+    }
+
+    /**
+     * Check if user can delete a specific group
+     * @param groupId ID of the group to delete
+     * @return true if allowed, false if it's a protected default group
+     */
+    private boolean canDeleteGroup(Long groupId) {
+        if (!licenseService.isLicenseValid()) {
+            return false;
+        }
+
+        String edition = licenseService.getCurrentEdition();
+
+        // ED2 can delete any group
+        if ("ED2".equalsIgnoreCase(edition)) {
+            return true;
+        }
+
+        // ED1 cannot delete default groups
+        if ("ED1".equalsIgnoreCase(edition)) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(() -> new RuntimeException("Group not found"));
+
+            String groupName = group.getGroupName();
+
+            // Default groups that cannot be deleted in ED1
+            return !isDefaultGroup(groupName);
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if a group name is a default group
+     */
+    private boolean isDefaultGroup(String groupName) {
+        if (groupName == null) return false;
+
+        String normalized = groupName.trim().toLowerCase();
+        return normalized.equals("design") ||
+                normalized.equals("manufacturing") ||
+                normalized.equals("quality") ||
+                normalized.equals("support");
     }
 }

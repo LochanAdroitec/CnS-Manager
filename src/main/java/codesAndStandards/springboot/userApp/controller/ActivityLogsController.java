@@ -6,6 +6,7 @@ import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.ActivityLogService;
 import codesAndStandards.springboot.userApp.service.UserService;
+import codesAndStandards.springboot.userApp.service.LicenseService; // ADD THIS
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-//@RequestMapping("/activity-logs")
 @PreAuthorize("hasAnyAuthority('Admin','Manager','Viewer')")
 public class ActivityLogsController {
 
@@ -35,6 +34,9 @@ public class ActivityLogsController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private LicenseService licenseService; // ADD THIS
+
     /**
      * View all activity logs
      */
@@ -46,9 +48,8 @@ public class ActivityLogsController {
         // Get user details for each log
         Map<Long, User> userMap = new HashMap<>();
         for (ActivityLog log : logs) {
-            if (log.getUser() != null) { // ✅ Safe check
+            if (log.getUser() != null) {
                 Long userId = log.getUser().getId();
-
                 if (!userMap.containsKey(userId)) {
                     User user = userRepository.findById(userId).orElse(null);
                     userMap.put(userId, user);
@@ -61,9 +62,15 @@ public class ActivityLogsController {
         Long countSuccessLogs = activityLogService.countSuccessLogs();
         Long countFailedLogs = activityLogService.countFailedLogs();
 
-        // Count download logs (both successful and failed)
-        long countDownloadLogs = logs.stream()     .filter(log -> "DOCUMENT_DOWNLOAD".equals(log.getAction()))     .count();
+        // Count download logs
+        long countDownloadLogs = logs.stream()
+                .filter(log -> "DOCUMENT_DOWNLOAD".equals(log.getAction()))
+                .count();
 
+        // ✅ ADD LICENSE CHECK
+        String currentEdition = licenseService.getCurrentEdition();
+        boolean isProfessionalEdition = "ED2".equalsIgnoreCase(currentEdition);
+        boolean hasValidLicense = licenseService.isLicenseValid();
 
         model.addAttribute("logs", logs);
         model.addAttribute("userMap", userMap);
@@ -73,6 +80,11 @@ public class ActivityLogsController {
         model.addAttribute("countFailedLogs", countFailedLogs);
         model.addAttribute("countDownloadLogs", countDownloadLogs);
 
+        // ✅ ADD LICENSE ATTRIBUTES
+        model.addAttribute("currentEdition", currentEdition != null ? currentEdition : "No License");
+        model.addAttribute("isProfessionalEdition", isProfessionalEdition);
+        model.addAttribute("hasValidLicense", hasValidLicense);
+
         return "activity-logs";
     }
 
@@ -80,27 +92,26 @@ public class ActivityLogsController {
     @ResponseBody
     public ResponseEntity<?> getUserDetails(@PathVariable Long userId) {
         try {
-            System.out.println("API called - Fetching user with ID: " + userId); // Debug log
+            System.out.println("API called - Fetching user with ID: " + userId);
 
             UserDto userDTO = userService.findUserById(userId);
 
             if (userDTO == null) {
-                System.out.println("User not found with ID: " + userId); // Debug log
+                System.out.println("User not found with ID: " + userId);
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "User not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
             }
 
-            System.out.println("User found: " + userDTO.getUsername()); // Debug log
+            System.out.println("User found: " + userDTO.getUsername());
             return ResponseEntity.ok(userDTO);
 
         } catch (Exception e) {
-            System.err.println("Error fetching user: " + e.getMessage()); // Debug log
+            System.err.println("Error fetching user: " + e.getMessage());
             e.printStackTrace();
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "Error fetching user details: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
-
 }

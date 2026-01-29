@@ -23,4 +23,13 @@ public interface DocumentService {
     List<DocumentDto> findDocumentsAccessibleByUser(Long userId);
 
     String getGroupNamesForDocument(Long documentId);
+    /**
+     * ⭐ NEW - Check if user has access to document
+     */
+    boolean hasUserAccessToDocument(Long userId, Long documentId);
+    /**
+     * ⭐ NEW - Get list of accessible document IDs for a user
+     * This uses the SAME logic as the document library
+     */
+    List<Long> getAccessibleDocumentIds(Long userId);
 }

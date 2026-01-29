@@ -37,6 +37,106 @@ public class DocumentApiController {
     private LicenseService licenseService;
 
     /**
+     * ⭐ NEW ENDPOINT - Check if current user has access to a document
+     * GET /api/documents/{id}/check-access
+     * Returns: { "hasAccess": true/false, "message": "..." }
+     */
+    /**
+     * ⭐ ENHANCED - Check if current user has access to a document
+     * GET /api/documents/{id}/check-access
+     * Returns detailed access information for better debugging
+     */
+    /**
+     * ⭐ UPDATED - Check if current user has access to a document
+     * GET /api/documents/{id}/check-access
+     * Uses the SAME access logic as the document library
+     */
+    @GetMapping("/{id}/check-access")
+    @PreAuthorize("hasAnyAuthority('Admin', 'Manager', 'User')")
+    public ResponseEntity<Map<String, Object>> checkDocumentAccess(@PathVariable Long id) {
+        log.info("=== BOOKMARK ACCESS CHECK (Using Document Library Logic) ===");
+        log.info("Document ID: {}", id);
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // ✅ LICENSE CHECK
+            if (!licenseService.isLicenseValid()) {
+                log.warn("❌ License validation failed");
+                response.put("hasAccess", false);
+                response.put("message", "License expired or not found");
+                response.put("reason", "LICENSE_EXPIRED");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            // Get current user info
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            Long userId = userService.getLoggedInUserId();
+
+            log.info("User: {} (ID: {})", username, userId);
+
+            // Check if user is Admin
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .anyMatch(auth -> auth.getAuthority().equals("Admin"));
+
+            // ✅ ADMIN ALWAYS HAS ACCESS
+            if (isAdmin) {
+                log.info("✅ Admin access granted");
+                response.put("hasAccess", true);
+                response.put("message", "Admin access granted");
+                response.put("role", "Admin");
+                return ResponseEntity.ok(response);
+            }
+
+            // ✅ FOR NON-ADMIN USERS - Use document library access logic
+            log.info("Checking access using document library logic...");
+
+            // Get all accessible document IDs (same as document library)
+            List<Long> accessibleDocIds = documentService.getAccessibleDocumentIds(userId);
+            log.info("User {} has access to {} documents in library", userId, accessibleDocIds.size());
+
+            // Check if this specific document is accessible
+            boolean hasAccess = accessibleDocIds.contains(id);
+
+            if (hasAccess) {
+                log.info("✅ Access GRANTED - Document {} is in user's accessible documents", id);
+                response.put("hasAccess", true);
+                response.put("message", "Access granted - document is in your library");
+                response.put("totalAccessibleDocs", accessibleDocIds.size());
+                return ResponseEntity.ok(response);
+            } else {
+                log.warn("❌ Access DENIED - Document {} is NOT in user's accessible documents", id);
+
+                // Check if document exists at all
+                try {
+                    documentService.findDocumentById(id);
+                    // Document exists but user doesn't have access
+                    response.put("hasAccess", false);
+                    response.put("message", "You don't have permission to view this document. " +
+                            "Your access may have been removed by an administrator.");
+                    response.put("reason", "NOT_IN_DOCUMENT_LIBRARY");
+                } catch (Exception e) {
+                    // Document doesn't exist
+                    response.put("hasAccess", false);
+                    response.put("message", "Document not found or has been deleted.");
+                    response.put("reason", "DOCUMENT_NOT_FOUND");
+                }
+
+                response.put("totalAccessibleDocs", accessibleDocIds.size());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Error checking document access for document {}", id, e);
+            response.put("hasAccess", false);
+            response.put("message", "Error checking access: " + e.getMessage());
+            response.put("reason", "ERROR");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /**
      * Get all documents for access control selection
      * GET /api/documents
      * ✅ WITH LICENSE VALIDATION
@@ -385,4 +485,5 @@ public class DocumentApiController {
             this.message = message;
         }
     }
+
 }

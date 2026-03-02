@@ -6,10 +6,12 @@ import codesAndStandards.springboot.userApp.repository.DocumentRepository;
 import codesAndStandards.springboot.userApp.repository.StoredProcedureRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.repository.AccessControlLogicRepository;
+import codesAndStandards.springboot.userApp.service.ApplicationSettingsService;
 import codesAndStandards.springboot.userApp.service.DocumentService;
 import codesAndStandards.springboot.userApp.service.GroupService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,8 @@ public class DocumentServiceImpl implements DocumentService {
     private final StoredProcedureRepository storedProcedureRepository;
     private final GroupService groupService;
     private final AccessControlLogicRepository accessControlLogicRepository;
+    @Autowired
+    private ApplicationSettingsService settingsService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -50,6 +54,7 @@ public class DocumentServiceImpl implements DocumentService {
         this.accessControlLogicRepository = accessControlLogicRepository;
     }
 
+
     // ✅ UPDATED: Added groupIds parameter
     @Override
     @Transactional
@@ -59,17 +64,41 @@ public class DocumentServiceImpl implements DocumentService {
             throw new RuntimeException("Please select a file to upload");
         }
 
-        if (!"application/pdf".equals(file.getContentType())) {
-            throw new RuntimeException("Only PDF files are allowed");
+        // ⭐ NEW: Get max file size from settings
+        Integer maxFileSizeMB = settingsService.getMaxFileSizeMB();
+        long maxSizeBytes = maxFileSizeMB * 1024L * 1024L;
+
+        // ⭐ NEW: Check file size against settings
+        if (file.getSize() > maxSizeBytes) {
+            throw new RuntimeException(String.format("File size (%dMB) exceeds maximum allowed size of %dMB",
+                    file.getSize() / (1024 * 1024), maxFileSizeMB));
         }
+
+        // ⭐ EXISTING VARIABLES - Don't redeclare!
+        String originalFileName = file.getOriginalFilename();
+        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+        // ⭐ NEW: Extract extension for validation (without the dot)
+        String extensionForValidation = fileExtension.substring(1).toUpperCase(); // Remove dot, convert to uppercase
+
+        // ⭐ NEW: Check if format is allowed
+        if (!settingsService.isFormatAllowed(extensionForValidation)) {
+            throw new RuntimeException(String.format("File format '%s' is not allowed. Allowed formats: %s",
+                    extensionForValidation, String.join(", ", settingsService.getAllowedFormats())));
+        }
+
+        // REMOVE THIS OLD CHECK (commented out or delete):
+        // if (!"application/pdf".equals(file.getContentType())) {
+        //     throw new RuntimeException("Only PDF files are allowed");
+        // }
 
         File uploadDirectory = new File(uploadDir);
         if (!uploadDirectory.exists()) {
             uploadDirectory.mkdirs();
         }
 
-        String originalFileName = file.getOriginalFilename();
-        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+//        String originalFileName = file.getOriginalFilename();
+//        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
         String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
         Path filePath = Paths.get(uploadDir, uniqueFileName);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -153,17 +182,43 @@ public class DocumentServiceImpl implements DocumentService {
         // Handle file if provided
         String filePathStr = null;
         if (file != null && !file.isEmpty()) {
-            if (!"application/pdf".equals(file.getContentType())) {
-                throw new RuntimeException("Only PDF files are allowed");
+
+            // ⭐ NEW: Get max file size from settings
+            Integer maxFileSizeMB = settingsService.getMaxFileSizeMB();
+            long maxSizeBytes = maxFileSizeMB * 1024L * 1024L;
+
+            // ⭐ NEW: Check file size against settings
+            if (file.getSize() > maxSizeBytes) {
+                throw new RuntimeException(String.format("File size (%dMB) exceeds maximum allowed size of %dMB",
+                        file.getSize() / (1024 * 1024), maxFileSizeMB));
             }
+
+            // ⭐ EXISTING VARIABLES - Don't redeclare!
+            String originalFileName = file.getOriginalFilename();
+            String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+            // ⭐ NEW: Extract extension for validation (without the dot)
+            String extensionForValidation = fileExtension.substring(1).toUpperCase(); // Remove dot, convert to uppercase
+
+            // ⭐ NEW: Check if format is allowed
+            if (!settingsService.isFormatAllowed(extensionForValidation)) {
+                throw new RuntimeException(String.format("File format '%s' is not allowed. Allowed formats: %s",
+                        extensionForValidation, String.join(", ", settingsService.getAllowedFormats())));
+            }
+
+            // ⭐ REMOVE THIS OLD CHECK (commented out or delete):
+            // if (!"application/pdf".equals(file.getContentType())) {
+            //     throw new RuntimeException("Only PDF files are allowed");
+            // }
+
 
             File uploadDirectory = new File(uploadDir);
             if (!uploadDirectory.exists()) {
                 uploadDirectory.mkdirs();
             }
 
-            String originalFileName = file.getOriginalFilename();
-            String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+//            String originalFileName = file.getOriginalFilename();
+//            String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
             String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
             Path filePath = Paths.get(uploadDir, uniqueFileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -393,6 +448,7 @@ public class DocumentServiceImpl implements DocumentService {
             return new ArrayList<>();
         }
     }
+
     /**
      * ⭐ NEW METHOD - Check if a user has access to a specific document
      * - Admins always have access (checked in controller)

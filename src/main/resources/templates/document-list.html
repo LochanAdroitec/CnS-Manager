@@ -1167,7 +1167,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4" style="position: relative;">
             <div>
-                <h2 class="mb-1"><i class="bi bi-folder"></i> Document Library</h2>
+                <h2 class="mb-1"><i class="bi bi-collection"></i> Document Library</h2>
                 <p class="mb-0 text-muted">Browse and search through available documents</p>
             </div>
             <div class="view-toggle">
@@ -1576,7 +1576,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title" style="font-size: 18px; font-weight: 600; color: #1a2332;">Download PDF</h5>
+                <h5 class="modal-title" style="font-size: 18px; font-weight: 600; color: #1a2332;">Download Document</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center pt-4 pb-4">
@@ -1699,8 +1699,33 @@
             }
         });
     }
+    /**
+     * Load watermark settings for download modal display
+     */
+    async function loadWatermarkSettingsForModal() {
+        try {
+            const response = await fetch('/api/settings/watermark');
+            if (!response.ok) {
+                console.warn('Could not load watermark settings');
+                return;
+            }
 
-    const itemsPerPage = 12;
+            const settings = await response.json();
+            watermarkEnabled = settings.watermarkEnabled || false;
+            watermarkOpacity = settings.watermarkOpacity || 30;
+            watermarkPosition = settings.watermarkPosition || 'Diagonal';
+
+            console.log('✅ Watermark settings loaded for modal:', settings);
+        } catch (error) {
+            console.error('Error loading watermark settings:', error);
+        }
+    }
+
+    // ⭐ WATERMARK SETTINGS
+    let watermarkEnabled = true;
+    let watermarkOpacity = 30;
+    let watermarkPosition = 'Diagonal';
+    const itemsPerPage = 7;
     let currentPage = 1;
     let allItems = [];
     let filteredItems = [];
@@ -1730,6 +1755,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
+        loadWatermarkSettings();
         formatAllDates();
 
         if (currentView === 'grid') {
@@ -2076,6 +2102,86 @@
         }
     }
 
+
+    /**
+ * Load watermark settings from backend
+ */
+async function loadWatermarkSettings() {
+    try {
+        const response = await fetch('/api/settings/watermark');
+        if (!response.ok) {
+            console.warn('Could not load watermark settings, using defaults');
+            return;
+        }
+
+        const settings = await response.json();
+
+        watermarkEnabled = settings.watermarkEnabled || false;
+        watermarkOpacity = settings.watermarkOpacity || 30;
+        watermarkPosition = settings.watermarkPosition || 'Diagonal';
+
+        console.log('✅ Watermark settings loaded:', {
+            enabled: watermarkEnabled,
+            opacity: watermarkOpacity,
+            position: watermarkPosition,
+        });
+
+        // Update download modals if already rendered
+        updateDownloadModals();
+
+    } catch (error) {
+        console.error('Error loading watermark settings:', error);
+        watermarkEnabled = true;
+        watermarkOpacity = 30;
+        watermarkPosition = 'Diagonal';
+    }
+}
+
+/**
+ * Update download modal content based on watermark settings
+ */
+function updateDownloadModals() {
+    const downloadModal = document.getElementById('downloadModal');
+    if (!downloadModal) return;
+
+    const modalBody = downloadModal.querySelector('.modal-body');
+
+    if (watermarkEnabled) {
+        modalBody.innerHTML = `
+            <div class="download-icon mb-3">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="bi bi-shield-check" style="font-size: 40px; color: white;"></i>
+                </div>
+            </div>
+            <h5 class="mb-3" style="font-size: 18px; font-weight: 600; color: #1a2332;">Watermarked Download</h5>
+            <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.6;">
+                This PDF will be downloaded with watermarks for security purposes.
+            </p>
+            <p class="mt-2 mb-0" style="font-size: 12px; color: #6b7a99;">
+                Settings: ${watermarkOpacity}% opacity, ${watermarkPosition} position
+            </p>
+            <p class="mt-2 mb-0" style="font-size: 13px; color: #6b7a99;">
+                Document: <strong id="downloadDocTitle"></strong>
+            </p>
+        `;
+    } else {
+        modalBody.innerHTML = `
+            <div class="download-icon mb-3">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="bi bi-download" style="font-size: 40px; color: white;"></i>
+                </div>
+            </div>
+            <h5 class="mb-3" style="font-size: 18px; font-weight: 600; color: #1a2332;">Download PDF</h5>
+            <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.6;">
+                This document will be downloaded without watermarks.
+            </p>
+            <p class="mt-2 mb-0" style="font-size: 13px; color: #6b7a99;">
+                Document: <strong id="downloadDocTitle"></strong>
+            </p>
+        `;
+    }
+}
+
     function sortTable(column) {
         if (currentView !== 'list') return;
 
@@ -2256,42 +2362,72 @@
         deleteModal.show();
     }
 
-    function showDownloadModal(element) {
-        const docId = element.getAttribute('data-doc-id');
-        const docTitle = element.getAttribute('data-doc-title');
+async function showDownloadModal(element) {
+    const docId = element.getAttribute('data-doc-id');
+    const docTitle = element.getAttribute('data-doc-title');
 
-        document.getElementById('downloadDocTitle').textContent = docTitle;
-
-        const downloadUrl = `/documents/download/${docId}`;
-        const confirmDownloadBtn = document.getElementById('confirmDownloadBtn');
-        confirmDownloadBtn.setAttribute('href', downloadUrl);
-
-        confirmDownloadBtn.replaceWith(confirmDownloadBtn.cloneNode(true));
-        const newDownloadBtn = document.getElementById('confirmDownloadBtn');
-
-        newDownloadBtn.addEventListener('click', function(event) {
-            event.preventDefault();
-
-            const fileUrl = this.getAttribute('href');
-            if (fileUrl && fileUrl !== '#') {
-                const link = document.createElement('a');
-                link.href = fileUrl;
-                link.download = '';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-
-            const downloadModalEl = document.getElementById('downloadModal');
-            const downloadModal = bootstrap.Modal.getInstance(downloadModalEl);
-            if (downloadModal) {
-                downloadModal.hide();
-            }
-        });
-
-        const downloadModal = new bootstrap.Modal(document.getElementById('downloadModal'));
-        downloadModal.show();
+    // Fetch watermark settings for display
+    let watermarkSettings = { enabled: false, opacity: 30, position: 'Diagonal', fontSize: 100 };
+    try {
+        const response = await fetch('/api/settings/watermark');
+        if (response.ok) {
+            const settings = await response.json();
+            watermarkSettings = {
+                enabled: settings.watermarkEnabled || false,
+                opacity: settings.watermarkOpacity || 30,
+                position: settings.watermarkPosition || 'Diagonal',
+                fontSize: settings.watermarkFontSize || 100
+            };
+        }
+    } catch (error) {
+        console.error('Error loading watermark settings:', error);
     }
+
+    // Update modal content based on watermark settings
+    const downloadModal = document.getElementById('downloadModal');
+    const modalBody = downloadModal.querySelector('.modal-body');
+
+    if (watermarkSettings.enabled) {
+        modalBody.innerHTML = `
+            <div class="download-icon mb-3">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="bi bi-shield-check" style="font-size: 40px; color: white;"></i>
+                </div>
+            </div>
+            <h5 class="mb-3" style="font-size: 18px; font-weight: 600; color: #1a2332;">Watermarked Download</h5>
+            <p class="text-muted mb-2" style="font-size: 14px; line-height: 1.6;">
+                This PDF will be downloaded with watermarks for security purposes.
+            </p>
+            <p class="mt-2 mb-0" style="font-size: 13px; color: #6b7a99;">
+                Document: <strong id="downloadDocTitle">${docTitle}</strong>
+            </p>
+        `;
+    } else {
+        modalBody.innerHTML = `
+            <div class="download-icon mb-3">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="bi bi-download" style="font-size: 40px; color: white;"></i>
+                </div>
+            </div>
+            <h5 class="mb-3" style="font-size: 18px; font-weight: 600; color: #1a2332;">Download PDF</h5>
+            <p class="text-muted mb-0" style="font-size: 14px; line-height: 1.6;">
+                This document will be downloaded without watermarks.
+            </p>
+            <p class="mt-2 mb-0" style="font-size: 13px; color: #6b7a99;">
+                Document: <strong id="downloadDocTitle">${docTitle}</strong>
+            </p>
+        `;
+    }
+
+    const downloadUrl = `/documents/download/${docId}`;
+    const confirmDownloadBtn = document.getElementById('confirmDownloadBtn');
+    if (confirmDownloadBtn) {
+        confirmDownloadBtn.setAttribute('href', downloadUrl);
+    }
+
+    const downloadModalInstance = new bootstrap.Modal(document.getElementById('downloadModal'));
+    downloadModalInstance.show();
+}
 </script>
 
 </body>

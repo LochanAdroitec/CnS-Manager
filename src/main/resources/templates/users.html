@@ -20,6 +20,9 @@
             padding: 0;
             padding-top: 70px;
         }
+        .main-content {
+    position: relative;
+}
 
         /* ==================== STATISTICS CARDS ==================== */
         .stat-card {
@@ -39,8 +42,8 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.1);
         }
         .stat-card.active {
-            border: 2px solid #1E78D7;
-            box-shadow: 0 0 12px rgba(30,120,215,0.4);
+            border: 2px solid #1e3a5f;
+            box-shadow: 0 0 12px rgba(30, 58, 95, 0.4);
         }
         .stat-card.active::after {
             content: '✓';
@@ -112,40 +115,38 @@
         }
 
         /* ==================== MODAL OVERLAY ==================== */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 9998;
-        }
-        .modal-overlay.active {
-            display: block;
-        }
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+}
+.modal-overlay.active {
+    display: block;
+}
 
         /* ==================== USER DETAILS MODAL ==================== */
         .user-details-modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            width: 90%;
-            max-width: 500px;
-            z-index: 9999;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .user-details-modal.active {
-            display: block;
-        }
+    display: none;
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 9999;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+    transition: all 0.3s ease; /* Smooth transition when sidebar toggles */
+}
+.user-details-modal.active {
+    display: block;
+}
         .modal-header-custom {
             display: flex;
             justify-content: space-between;
@@ -422,14 +423,14 @@
         <!-- ==================== STATISTICS CARDS ==================== -->
         <div class="row mb-4">
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row active" style="background-color: #1e3a5f"
+                <div class="stat-card d-flex flex-row active" style="background-color: #0A3D91"
                      data-filter="all" onclick="filterByStatCard(this)">
                     <div class="stat-label d-flex justify-content-center">All Users</div>
                     <div class="stat-number" th:text="${totalUsers}">5</div>
                 </div>
             </div>
             <div class="col-md-2">
-                <div class="stat-card d-flex flex-row" style="background-color: #0A3D91"
+                <div class="stat-card d-flex flex-row" style="background-color: #03539e"
                      data-filter="Admin" onclick="filterByStatCard(this)">
                     <div class="stat-label d-flex justify-content-center">Admins</div>
                     <div class="stat-number" th:text="${adminCount}">1</div>
@@ -502,8 +503,8 @@
                         class="clickable-row">
                         <td>
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3"
-                                     style="width: 40px; height: 40px; font-weight: bold;">
+                                <div class="rounded-circle text-white d-flex align-items-center justify-content-center me-3"
+                                     style="width: 40px; height: 40px; font-weight: bold; background: #1e3a5f;">
                                     <span th:text="${(user.firstName != null and user.firstName != '' and user.lastName != null and user.lastName != '') ?
                                         (#strings.substring(user.firstName, 0, 1) + #strings.substring(user.lastName, 0, 1)) :
                                         '??'}">JD</span>
@@ -619,7 +620,8 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password" required>
+                            <input type="password" class="form-control" name="password" id="addPassword" required>
+                            <div id="addPasswordPolicyError" class="invalid-feedback" style="display: none;"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Role <span class="text-danger">*</span></label>
@@ -713,6 +715,7 @@
                             <label class="form-label">New Password</label>
                             <input type="password" class="form-control" id="editPassword" name="password">
                             <small class="text-muted">Leave blank to keep current</small>
+                            <div id="editPasswordPolicyError" class="invalid-feedback" style="display: none;"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Role <span class="text-danger">*</span></label>
@@ -803,7 +806,48 @@
     let editEmailCheckTimeout = null;
     let originalEmail = '';
     let allGroups = [];
+    // ==================== CENTER MODAL TO MAIN CONTENT ====================
+    function centerModalToMainContent() {
+        const modal = document.getElementById('userDetailsModal');
+        const mainContent = document.querySelector('.main-content');
 
+        if (!modal || !mainContent) return;
+
+        // Get main-content dimensions and position
+        const mainRect = mainContent.getBoundingClientRect();
+
+        // Calculate center position relative to main-content
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
+
+        // Center horizontally within main-content
+        const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+
+        // Center vertically within viewport (but considering navbar)
+        const top = window.innerHeight / 2 - modalHeight / 2;
+
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.transform = 'none'; // Remove transform since we're using absolute positioning
+    }
+    function closeUserModal() {
+    const modal = document.getElementById('userDetailsModal');
+    const overlay = document.getElementById('modalOverlay');
+
+    if (modal) {
+        modal.classList.remove('active');
+        // Reset inline styles
+        modal.style.left = '';
+        modal.style.top = '';
+        modal.style.transform = '';
+    }
+
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+
+    console.log('✅ User modal closed');
+}
     // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
         fetchGroups();
@@ -976,6 +1020,7 @@
             });
         }
 
+
         const editUserForm = document.getElementById('editForm');
         if (editUserForm) {
             editUserForm.addEventListener('submit', function(e) {
@@ -998,7 +1043,29 @@
             });
         }
 
+
         formatAllDates();
+        // ✅ ADD THIS: Re-center modal when window resizes or sidebar toggles
+        window.addEventListener('resize', function() {
+            const modal = document.getElementById('userDetailsModal');
+            if (modal && modal.classList.contains('active')) {
+                centerModalToMainContent();
+            }
+        });
+
+        // ✅ ADD THIS: Listen for sidebar toggle events
+        const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                // Wait for sidebar animation to complete
+                setTimeout(() => {
+                    const modal = document.getElementById('userDetailsModal');
+                    if (modal && modal.classList.contains('active')) {
+                        centerModalToMainContent();
+                    }
+                }, 350); // Match Bootstrap's offcanvas transition duration
+            });
+        }
     });
 
     // ==================== GROUPS FUNCTIONALITY ====================
@@ -1397,6 +1464,11 @@
         modal.classList.add('active');
         overlay.classList.add('active');
 
+        // ✅ Center modal after showing it
+        setTimeout(() => {
+            centerModalToMainContent();
+        }, 10);
+
         content.innerHTML = '<div class="text-center py-4"><div class="loading-spinner"></div><p class="mt-2">Loading user details...</p></div>';
 
         fetch(contextPath + `apis/users/${userId}`)
@@ -1421,54 +1493,54 @@
                     });
                 }
 
-                    let roleName = user.roleName || 'N/A';
-    // ✅ ADD THIS: Format groups for display
-    let groupsHtml = '<span class="text-muted">No groups assigned</span>';
-    if (user.groups && user.groups.length > 0) {
-        groupsHtml = user.groups.map(group =>
-            `<span class="badge rounded-pill" style="background-color: #d1fae5; color: #065f46; margin-right: 4px; margin-bottom: 4px; padding: 6px 12px; font-size: 11px;">${group.groupName}</span>`
-        ).join('');
-    }
+                let roleName = user.roleName || 'N/A';
+                let groupsHtml = '<span class="text-muted">No groups assigned</span>';
+                if (user.groups && user.groups.length > 0) {
+                    groupsHtml = user.groups.map(group =>
+                        `<span class="badge rounded-pill" style="background-color: #d1fae5; color: #065f46; margin-right: 4px; margin-bottom: 4px; padding: 6px 12px; font-size: 11px;">${group.groupName}</span>`
+                    ).join('');
+                }
 
-    content.innerHTML = `
-<!--        <div class="user-detail-row">-->
-<!--            <div class="user-detail-label">User ID:</div>-->
-<!--            <div class="user-detail-value">${user.id || 'N/A'}</div>-->
-<!--        </div>-->
-        <div class="user-detail-row">
-            <div class="user-detail-label">First Name:</div>
-            <div class="user-detail-value">${user.firstName || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Last Name:</div>
-            <div class="user-detail-value">${user.lastName || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Username:</div>
-            <div class="user-detail-value">${user.username || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Email:</div>
-            <div class="user-detail-value">${user.email || 'N/A'}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Role:</div>
-            <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
-        </div>
-        <div class="user-detail-row">
-             <div class="user-detail-label">Groups:</div>
-             <div class="user-detail-value">${groupsHtml}</div>
-        </div>
-        <div class="user-detail-row">
-            <div class="user-detail-label">Created At:</div>
-            <div class="user-detail-value">${createdDate}</div>
-        </div>
-        <div class="user-detail-row" style="border-bottom: none;">
-            <div class="user-detail-label">Created By:</div>
-            <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
-        </div>
-    `;
-})
+                content.innerHTML = `
+            <div class="user-detail-row">
+                <div class="user-detail-label">First Name:</div>
+                <div class="user-detail-value">${user.firstName || 'N/A'}</div>
+            </div>
+            <div class="user-detail-row">
+                <div class="user-detail-label">Last Name:</div>
+                <div class="user-detail-value">${user.lastName || 'N/A'}</div>
+            </div>
+            <div class="user-detail-row">
+                <div class="user-detail-label">Username:</div>
+                <div class="user-detail-value">${user.username || 'N/A'}</div>
+            </div>
+            <div class="user-detail-row">
+                <div class="user-detail-label">Email:</div>
+                <div class="user-detail-value">${user.email || 'N/A'}</div>
+            </div>
+            <div class="user-detail-row">
+                <div class="user-detail-label">Role:</div>
+                <div class="user-detail-value"><span class="role-pill">${roleName}</span></div>
+            </div>
+            <div class="user-detail-row">
+                 <div class="user-detail-label">Groups:</div>
+                 <div class="user-detail-value">${groupsHtml}</div>
+            </div>
+            <div class="user-detail-row">
+                <div class="user-detail-label">Created At:</div>
+                <div class="user-detail-value">${createdDate}</div>
+            </div>
+            <div class="user-detail-row" style="border-bottom: none;">
+                <div class="user-detail-label">Created By:</div>
+                <div class="user-detail-value">${user.createdByUsername || 'System'}</div>
+            </div>
+        `;
+
+                // ✅ Re-center after content loads (height may change)
+                setTimeout(() => {
+                    centerModalToMainContent();
+                }, 10);
+            })
             .catch(error => {
                 content.innerHTML = `
                     <div class="alert alert-danger">
@@ -1476,12 +1548,12 @@
                         Failed to load user details. ${error.message}
                     </div>
                 `;
-            });
-    }
 
-    function closeUserModal() {
-        document.getElementById('userDetailsModal').classList.remove('active');
-        document.getElementById('modalOverlay').classList.remove('active');
+                // ✅ Re-center after error message loads
+                setTimeout(() => {
+                    centerModalToMainContent();
+                }, 10);
+            });
     }
 
     // ==================== TABLE FILTERING ====================
@@ -1685,6 +1757,147 @@
             });
         }, 5000);
     });
+    // ==================== PASSWORD POLICY VALIDATION FOR ADD USER ====================
+let passwordPolicyCache = null;
+
+async function fetchPasswordPolicy() {
+    if (passwordPolicyCache !== null) {
+        return passwordPolicyCache;
+    }
+    try {
+        const response = await fetch(contextPath + 'api/settings/password-policy');
+        if (response.ok) {
+            passwordPolicyCache = await response.json();
+            return passwordPolicyCache;
+        }
+    } catch (error) {
+        console.error('Error fetching password policy:', error);
+    }
+    return null;
+}
+
+function validatePasswordPolicy(password, policy) {
+    if (!policy || !policy.enforcePasswordPolicy) {
+        return { valid: true, errors: [] };
+    }
+    const errors = [];
+    if (policy.minPasswordLength && password.length < policy.minPasswordLength) {
+        errors.push(`Must be at least ${policy.minPasswordLength} characters`);
+    }
+    if (policy.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push('Must contain uppercase letter');
+    }
+    if (policy.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push('Must contain lowercase letter');
+    }
+    if (policy.requireNumber && !/[0-9]/.test(password)) {
+        errors.push('Must contain number');
+    }
+    if (policy.requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(password)) {
+        errors.push('Must contain special character');
+    }
+    return { valid: errors.length === 0, errors: errors };
+}
+
+function showPasswordErrors(errors) {
+    const input = document.getElementById('addPassword');
+    const errorDiv = document.getElementById('addPasswordPolicyError');
+    if (errors.length > 0) {
+        input.classList.add('is-invalid');
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = errors.join(', ');
+    } else {
+        input.classList.remove('is-invalid');
+        errorDiv.style.display = 'none';
+    }
+}
+
+// Add listener for real-time validation
+document.getElementById('addPassword')?.addEventListener('input', async function() {
+    const password = this.value;
+    if (password.length === 0) {
+        showPasswordErrors([]);
+        return;
+    }
+    const policy = await fetchPasswordPolicy();
+    if (policy) {
+        const result = validatePasswordPolicy(password, policy);
+        showPasswordErrors(result.errors);
+    }
+});
+
+// Validate on form submit
+document.getElementById('addUserForm')?.addEventListener('submit', async function(e) {
+    const passwordInput = document.getElementById('addPassword');
+    const policy = await fetchPasswordPolicy();
+    if (policy && policy.enforcePasswordPolicy) {
+        const result = validatePasswordPolicy(passwordInput.value, policy);
+        if (!result.valid) {
+            e.preventDefault();
+            showPasswordErrors(result.errors);
+            alert('Please fix password policy errors');
+            return false;
+        }
+    }
+});
+
+// Clear on modal close
+document.getElementById('addUserModal')?.addEventListener('hidden.bs.modal', function() {
+    document.getElementById('addPassword').classList.remove('is-invalid');
+    document.getElementById('addPasswordPolicyError').style.display = 'none';
+});
+
+
+
+    // Real-time validation for Edit User password
+document.getElementById('editPassword')?.addEventListener('input', async function() {
+    const password = this.value;
+    if (password.length === 0) {
+        this.classList.remove('is-invalid');
+        document.getElementById('editPasswordPolicyError').style.display = 'none';
+        return;
+    }
+    const policy = await fetchPasswordPolicy();
+    if (policy) {
+        const result = validatePasswordPolicy(password, policy);
+        const errorDiv = document.getElementById('editPasswordPolicyError');
+        if (result.errors.length > 0) {
+            this.classList.add('is-invalid');
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = result.errors.join(', ');
+        } else {
+            this.classList.remove('is-invalid');
+            errorDiv.style.display = 'none';
+        }
+    }
+});
+
+// Validate on Edit User form submit
+document.getElementById('editForm')?.addEventListener('submit', async function(e) {
+    const passwordInput = document.getElementById('editPassword');
+    if (passwordInput.value.trim().length === 0) {
+        return; // Allow empty password (keep current)
+    }
+    const policy = await fetchPasswordPolicy();
+    if (policy && policy.enforcePasswordPolicy) {
+        const result = validatePasswordPolicy(passwordInput.value, policy);
+        if (!result.valid) {
+            e.preventDefault();
+            passwordInput.classList.add('is-invalid');
+            document.getElementById('editPasswordPolicyError').style.display = 'block';
+            document.getElementById('editPasswordPolicyError').textContent = result.errors.join(', ');
+            alert('Please fix password policy errors');
+            return false;
+        }
+    }
+});
+
+// Clear on Edit modal close
+document.getElementById('editUserModal')?.addEventListener('hidden.bs.modal', function() {
+    document.getElementById('editPassword')?.classList.remove('is-invalid');
+    const errorDiv = document.getElementById('editPasswordPolicyError');
+    if (errorDiv) errorDiv.style.display = 'none';
+});
 </script>
 </body>
 </html>

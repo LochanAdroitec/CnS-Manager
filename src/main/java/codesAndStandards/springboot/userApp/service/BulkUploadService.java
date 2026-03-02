@@ -60,8 +60,12 @@ public class BulkUploadService {
     @Autowired
     private ClassificationRepository classificationRepository;
 
+    // ====== CHANGE 2 + 4: Inject ApplicationSettingsService to read maxTagsPerDocument ======
+    @Autowired
+    private ApplicationSettingsService settingsService;
+
     @Value("${file.network-base-path:}")
-    private String networkBasePath; // e.g., \\172.16.20.241\DEV-FileServer\USERDATA
+    private String networkBasePath;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -132,12 +136,26 @@ public class BulkUploadService {
     }
 
     /**
-     * Generate Excel template from uploaded PDF files
-     * FEATURES 3, 4, 5: Add month dropdown, page numbers, and second sheet
+     * Generate Excel template from uploaded PDF files.
+     *
+     * CHANGE 2: Mandatory column headers now have " *" suffix.
+     * CHANGE 4: Tags column header includes max-tags info from settings.
      */
     public ByteArrayOutputStream generateExcelTemplate(MultipartFile[] pdfFiles) throws Exception {
         // Extract PDF filenames
         Set<String> pdfFilenames = extractPdfFilenames(pdfFiles);
+
+        // ====== CHANGE 4: Read maxTagsPerDocument from settings ======
+        int maxTagsPerDoc = 10; // safe default
+        try {
+            Integer settingValue = settingsService.getMaxTagsPerDocument();
+            if (settingValue != null && settingValue > 0) {
+                maxTagsPerDoc = settingValue;
+            }
+        } catch (Exception e) {
+            logger.warn("Could not read maxTagsPerDocument from settings, using default=10: {}", e.getMessage());
+        }
+        final int maxTagsForTemplate = maxTagsPerDoc;
 
         // Create Excel workbook
         Workbook workbook = new XSSFWorkbook();
@@ -145,46 +163,117 @@ public class BulkUploadService {
         // ============= SHEET 1: DOCUMENT METADATA =============
         Sheet sheet = workbook.createSheet("Documents");
 
-        // Create header style
-        CellStyle headerStyle = workbook.createCellStyle();
-        Font headerFont = workbook.createFont();
-        headerFont.setBold(true);
-        headerFont.setFontHeightInPoints((short) 12);
-        headerFont.setColor(IndexedColors.WHITE.getIndex());
-        headerStyle.setFont(headerFont);
-        headerStyle.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
-        headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        headerStyle.setBorderBottom(BorderStyle.THIN);
-        headerStyle.setBorderTop(BorderStyle.THIN);
-        headerStyle.setBorderLeft(BorderStyle.THIN);
-        headerStyle.setBorderRight(BorderStyle.THIN);
+        // ====== Header styles ======
+        CellStyle headerStyleRequired = workbook.createCellStyle();
+        Font headerFontRequired = workbook.createFont();
+        headerFontRequired.setBold(true);
+        headerFontRequired.setFontHeightInPoints((short) 12);
+        headerFontRequired.setColor(IndexedColors.WHITE.getIndex());
+        headerStyleRequired.setFont(headerFontRequired);
+        headerStyleRequired.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+        headerStyleRequired.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyleRequired.setBorderBottom(BorderStyle.THIN);
+        headerStyleRequired.setBorderTop(BorderStyle.THIN);
+        headerStyleRequired.setBorderLeft(BorderStyle.THIN);
+        headerStyleRequired.setBorderRight(BorderStyle.THIN);
+        headerStyleRequired.setAlignment(HorizontalAlignment.CENTER);
+        headerStyleRequired.setVerticalAlignment(VerticalAlignment.CENTER);
 
-        // Create header row
-        Row headerRow = sheet.createRow(0);
-        String[] columns = {
-                "Filename", "Title", "Product Code", "Edition",
-                "Publish Month", "Publish Year", "No of Pages", "Notes",
-                "Tags (comma-separated)", "Classifications (comma-separated)"
+        // Optional header style — slightly different background so user can visually distinguish
+        CellStyle headerStyleOptional = workbook.createCellStyle();
+        Font headerFontOptional = workbook.createFont();
+        headerFontOptional.setBold(true);
+        headerFontOptional.setFontHeightInPoints((short) 11);
+        headerFontOptional.setColor(IndexedColors.WHITE.getIndex());
+        headerStyleOptional.setFont(headerFontOptional);
+        headerStyleOptional.setFillForegroundColor(IndexedColors.GREY_50_PERCENT.getIndex()); // darker grey for optional
+        headerStyleOptional.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        headerStyleOptional.setBorderBottom(BorderStyle.THIN);
+        headerStyleOptional.setBorderTop(BorderStyle.THIN);
+        headerStyleOptional.setBorderLeft(BorderStyle.THIN);
+        headerStyleOptional.setBorderRight(BorderStyle.THIN);
+        headerStyleOptional.setAlignment(HorizontalAlignment.CENTER);
+        headerStyleOptional.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        // ====== CHANGE 2: Headers with * on mandatory fields ======
+        // CHANGE 4: Tags column includes max-tags info
+        String tagsHeader = "Tags (comma-separated, max " + maxTagsForTemplate + ")";
+
+        // Column index → [header text, isRequired]
+        Object[][] columnDefs = {
+                {"Filename *",            true},   // 0 — REQUIRED
+                {"Title *",               true},   // 1 — REQUIRED
+                {"Product Code *",        true},   // 2 — REQUIRED
+                {"Edition",               false},  // 3 — optional
+                {"Publish Month",         false},  // 4 — optional
+                {"Publish Year *",        true},   // 5 — REQUIRED
+                {"No of Pages",           false},  // 6 — optional
+                {"Notes",                 false},  // 7 — optional
+                {tagsHeader,              false},  // 8 — optional
+                {"Classifications (comma-separated)", false} // 9 — optional
         };
 
-        for (int i = 0; i < columns.length; i++) {
-            Cell cell = headerRow.createCell(i);
-            cell.setCellValue(columns[i]);
-            cell.setCellStyle(headerStyle);
+        Row headerRow = sheet.createRow(0);
+        headerRow.setHeightInPoints(22); // slightly taller for readability
 
-            // Auto-size columns
-            if (i == 0) {
-                sheet.setColumnWidth(i, 40 * 256); // Filename column wider
-            } else if (i == 1) {
-                sheet.setColumnWidth(i, 50 * 256); // Title column wider
-            } else if (i == 7) {
-                sheet.setColumnWidth(i, 40 * 256); // Notes column wider
+        for (int i = 0; i < columnDefs.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue((String) columnDefs[i][0]);
+            boolean required = (Boolean) columnDefs[i][1];
+            cell.setCellStyle(required ? headerStyleRequired : headerStyleOptional);
+
+            // Column widths
+            if (i == 0 || i == 1) {
+                sheet.setColumnWidth(i, 45 * 256);
+            } else if (i == 7 || i == 8 || i == 9) {
+                sheet.setColumnWidth(i, 38 * 256);
             } else {
-                sheet.setColumnWidth(i, 20 * 256);
+                sheet.setColumnWidth(i, 22 * 256);
             }
         }
 
-        // FEATURE 3: Create dropdown for Publish Month column
+        // ====== CHANGE 2: Add a legend row below the header explaining * = required ======
+        Row legendRow = sheet.createRow(1);
+        CellStyle legendStyle = workbook.createCellStyle();
+        Font legendFont = workbook.createFont();
+        legendFont.setItalic(true);
+        legendFont.setColor(IndexedColors.DARK_RED.getIndex());
+        legendFont.setFontHeightInPoints((short) 10);
+        legendStyle.setFont(legendFont);
+        legendStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+        legendStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        Cell legendCell = legendRow.createCell(0);
+        legendCell.setCellValue("* = Required field   |   Dark blue = Required   |   Grey = Optional   |   Tags must be comma-separated (e.g. tag1,tag2,tag3)   |   Max " + maxTagsForTemplate + " tags per document");
+        legendCell.setCellStyle(legendStyle);
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, columnDefs.length - 1));
+
+        // CHANGE 3 / CHANGE 4: Add example row at row index 2 (after legend)
+        Row exampleRow = sheet.createRow(2);
+        CellStyle exampleStyle = workbook.createCellStyle();
+        Font exampleFont = workbook.createFont();
+        exampleFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
+        exampleFont.setItalic(true);
+        exampleStyle.setFont(exampleFont);
+
+        String[] exampleData = {
+                "document1.pdf",                   // Filename *
+                "Product Manual v2.1",             // Title *
+                "PM-001",                          // Product Code *
+                "2.1",                             // Edition
+                "06",                              // Publish Month
+                "2024",                            // Publish Year *
+                "150",                             // No of Pages
+                "Updated version",                 // Notes
+                "manual,technical,v2",             // Tags — comma-separated example (CHANGE 3 note)
+                "Engineering,Safety"               // Classifications — comma-separated example
+        };
+        for (int i = 0; i < exampleData.length; i++) {
+            Cell cell = exampleRow.createCell(i);
+            cell.setCellValue(exampleData[i]);
+            cell.setCellStyle(exampleStyle);
+        }
+
+        // ====== Dropdown for Publish Month column (column 4), starting from data row 3 ======
         DataValidationHelper validationHelper = sheet.getDataValidationHelper();
         DataValidationConstraint monthConstraint = validationHelper.createExplicitListConstraint(
                 new String[]{
@@ -193,34 +282,31 @@ public class BulkUploadService {
                         "09 (Sep)", "10 (Oct)", "11 (Nov)", "12 (Dec)"
                 }
         );
-
-        // Apply dropdown to Publish Month column (column index 4) for rows 1-1000
-        CellRangeAddressList monthRange = new CellRangeAddressList(1, 1000, 4, 4);
+        // Apply dropdown from row 3 (index) onward (rows 0=header, 1=legend, 2=example, 3+=data)
+        CellRangeAddressList monthRange = new CellRangeAddressList(3, 1003, 4, 4);
         DataValidation monthValidation = validationHelper.createValidation(monthConstraint, monthRange);
         monthValidation.setShowErrorBox(true);
         sheet.addValidationData(monthValidation);
 
-        // Create data rows with filenames
-        int rowNum = 1;
+        // ====== Create data rows from row index 3 ======
+        int rowNum = 3;
         List<String> sortedFilenames = new ArrayList<>(pdfFilenames);
         Collections.sort(sortedFilenames);
 
-        // FEATURE 4: Create file map to detect page numbers
         Map<String, MultipartFile> fileMap = createFileMap(pdfFiles);
 
         for (String filename : sortedFilenames) {
             Row row = sheet.createRow(rowNum++);
 
             // Column 0: Filename (pre-filled)
-            Cell filenameCell = row.createCell(0);
-            filenameCell.setCellValue(filename);
+            row.createCell(0).setCellValue(filename);
 
             // Columns 1-5: Empty (Title, Product Code, Edition, Publish Month, Publish Year)
             for (int i = 1; i <= 5; i++) {
                 row.createCell(i).setCellValue("");
             }
 
-            // Column 6: FEATURE 4 - Auto-detect page count
+            // Column 6: Auto-detect page count
             Cell pageCell = row.createCell(6);
             try {
                 MultipartFile file = fileMap.get(filename);
@@ -246,23 +332,20 @@ public class BulkUploadService {
         }
 
         // ============= SHEET 2: REFERENCE DATA =============
-        // FEATURE 5: Create second sheet with existing tags and classifications
         Sheet referenceSheet = workbook.createSheet("Reference Data");
 
-        // Create header style for reference sheet
         Row refHeaderRow = referenceSheet.createRow(0);
         Cell tagsHeaderCell = refHeaderRow.createCell(0);
-        tagsHeaderCell.setCellValue("Available Tags");
-        tagsHeaderCell.setCellStyle(headerStyle);
+        tagsHeaderCell.setCellValue("Available Tags (max " + maxTagsForTemplate + " per document)");
+        tagsHeaderCell.setCellStyle(headerStyleRequired);
 
         Cell classHeaderCell = refHeaderRow.createCell(2);
         classHeaderCell.setCellValue("Available Classifications");
-        classHeaderCell.setCellStyle(headerStyle);
+        classHeaderCell.setCellStyle(headerStyleOptional);
 
-        referenceSheet.setColumnWidth(0, 30 * 256);
-        referenceSheet.setColumnWidth(2, 30 * 256);
+        referenceSheet.setColumnWidth(0, 35 * 256);
+        referenceSheet.setColumnWidth(2, 35 * 256);
 
-        // Fetch existing tags and classifications from database
         List<String> existingTags = tagRepository.findAll().stream()
                 .map(Tag::getTagName)
                 .filter(name -> name != null && !name.isEmpty())
@@ -277,7 +360,7 @@ public class BulkUploadService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Add tags to column A (starting from row 1)
+        // Add tags to column A
         int tagRowNum = 1;
         for (String tag : existingTags) {
             Row row = referenceSheet.getRow(tagRowNum);
@@ -286,7 +369,7 @@ public class BulkUploadService {
             tagRowNum++;
         }
 
-        // Add classifications to column C (starting from row 1)
+        // Add classifications to column C
         int classRowNum = 1;
         for (String classification : existingClassifications) {
             Row row = referenceSheet.getRow(classRowNum);
@@ -295,12 +378,12 @@ public class BulkUploadService {
             classRowNum++;
         }
 
-        // Add note at the bottom
+        // Note at bottom of reference sheet
         int noteRowNum = Math.max(tagRowNum, classRowNum) + 2;
         Row noteRow = referenceSheet.createRow(noteRowNum);
         Cell noteCell = noteRow.createCell(0);
-        noteCell.setCellValue("Note: You can add new tags/classifications in the Documents sheet. " +
-                "New entries will be created automatically during upload.");
+        noteCell.setCellValue("Note: Tags and Classifications in the Documents sheet must be comma-separated (e.g. tag1,tag2,tag3). " +
+                "Max " + maxTagsForTemplate + " tags per document. New entries will be created automatically during upload.");
 
         CellStyle noteStyle = workbook.createCellStyle();
         Font noteFont = workbook.createFont();
@@ -308,8 +391,31 @@ public class BulkUploadService {
         noteFont.setColor(IndexedColors.GREY_50_PERCENT.getIndex());
         noteStyle.setFont(noteFont);
         noteCell.setCellStyle(noteStyle);
-
         referenceSheet.addMergedRegion(new CellRangeAddress(noteRowNum, noteRowNum, 0, 2));
+
+        // ====== CHANGE 4: Add separate "Tag Policies" sheet ======
+        Sheet policiesSheet = workbook.createSheet("Tag Policies");
+        Row policiesHeader = policiesSheet.createRow(0);
+        Cell phCell = policiesHeader.createCell(0);
+        phCell.setCellValue("Tag & Upload Policies");
+        phCell.setCellStyle(headerStyleRequired);
+        policiesSheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 1));
+        policiesSheet.setColumnWidth(0, 40 * 256);
+        policiesSheet.setColumnWidth(1, 20 * 256);
+
+        String[][] policies = {
+                {"Max Tags Per Document", String.valueOf(maxTagsForTemplate)},
+                {"Tags Format", "Comma-separated (e.g. tag1,tag2,tag3)"},
+                {"Tags Case", "Lowercase only — tags are auto-converted to lowercase"},
+                {"Classifications Format", "Comma-separated (e.g. Class1,Class2)"},
+                {"Required Fields", "Filename, Title, Product Code, Publish Year"}
+        };
+        int pRow = 1;
+        for (String[] pair : policies) {
+            Row r = policiesSheet.createRow(pRow++);
+            r.createCell(0).setCellValue(pair[0]);
+            r.createCell(1).setCellValue(pair[1]);
+        }
 
         // Write workbook to ByteArrayOutputStream
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -320,10 +426,6 @@ public class BulkUploadService {
     }
 
 
-    /**
-     * Validate bulk upload files
-     * UPDATED: Now accepts selfValidationJson parameter for edited metadata
-     */
     /* =====================================================
        =============== BULK VALIDATION =====================
        ===================================================== */
@@ -335,27 +437,22 @@ public class BulkUploadService {
 
         BulkUploadValidationResult result = new BulkUploadValidationResult();
 
-        // 1️⃣ Load metadata
         List<DocumentMetadata> metadataList =
                 (selfValidationJson != null && !selfValidationJson.isEmpty())
                         ? parseJsonToMetadataList(selfValidationJson)
                         : parseExcelFile(excelFile);
 
-        // 2️⃣ Normalize PDF filenames
         Set<String> pdfFilenames = extractPdfFilenames(pdfFiles)
                 .stream()
                 .map(this::normalizeFilename)
                 .collect(Collectors.toSet());
 
-        // 3️⃣ Track invalid documents (LOCAL, SAFE)
         Set<String> invalidDocuments = new HashSet<>();
 
-        // 4️⃣ Validate documents
         for (DocumentMetadata metadata : metadataList) {
             validateSingleDocument(metadata, pdfFilenames, result, invalidDocuments);
         }
 
-        // 5️⃣ Extra PDFs → WARNINGS
         Set<String> metadataFilenames = metadataList.stream()
                 .map(m -> normalizeFilename(m.getFilename()))
                 .collect(Collectors.toSet());
@@ -367,7 +464,6 @@ public class BulkUploadService {
             }
         }
 
-        // 6️⃣ Final counts
         int total = metadataList.size();
         int invalid = invalidDocuments.size();
         int valid = total - invalid;
@@ -377,9 +473,7 @@ public class BulkUploadService {
 
         logger.info(
                 "Validation summary → Total={}, Valid={}, Invalid={}, Errors={}, Warnings={}",
-                total,
-                valid,
-                invalid,
+                total, valid, invalid,
                 result.getErrors() != null ? result.getErrors().size() : 0,
                 result.getWarnings() != null ? result.getWarnings().size() : 0
         );
@@ -389,7 +483,6 @@ public class BulkUploadService {
 
     /**
      * Process bulk upload
-     * UPDATED: Now accepts selfValidationJson and uploadOnlyValid parameters
      */
     @Transactional
     public BulkUploadResult processBulkUpload(
@@ -410,7 +503,7 @@ public class BulkUploadService {
                     validateBulkUpload(pdfFiles, excelFile, selfValidationJson);
 
             Set<String> invalidFiles = validation.getErrors().stream()
-                    .map(e -> e.toString())
+                    .map(Object::toString)
                     .filter(s -> s.contains("'"))
                     .map(s -> s.substring(s.indexOf("'") + 1, s.lastIndexOf("'")))
                     .map(this::normalizeFilename)
@@ -439,7 +532,8 @@ public class BulkUploadService {
     }
 
     /**
-     * FIXED: Parse JSON to metadata with proper month handling
+     * Parse JSON to metadata list with proper month handling.
+     * CHANGE 3: Tags from JSON are split by comma then normalized individually.
      */
     private List<DocumentMetadata> parseJsonToMetadataList(String jsonString) throws Exception {
         try {
@@ -447,8 +541,7 @@ public class BulkUploadService {
 
             List<Map<String, Object>> jsonList = objectMapper.readValue(
                     jsonString,
-                    new TypeReference<List<Map<String, Object>>>() {
-                    }
+                    new TypeReference<List<Map<String, Object>>>() {}
             );
 
             List<DocumentMetadata> metadataList = new ArrayList<>();
@@ -456,34 +549,25 @@ public class BulkUploadService {
             for (Map<String, Object> jsonObj : jsonList) {
                 DocumentMetadata metadata = new DocumentMetadata();
 
-                // Extract fields from JSON
                 metadata.setFilename(getStringValue(jsonObj, "fileName"));
                 metadata.setTitle(getStringValue(jsonObj, "title"));
                 metadata.setProductCode(getStringValue(jsonObj, "productCode"));
                 metadata.setEdition(getStringValue(jsonObj, "edition"));
 
-                // FIXED: Handle publishMonth properly
                 String publishMonth = getStringValue(jsonObj, "publishMonth");
                 if (publishMonth != null && !publishMonth.trim().isEmpty()) {
                     publishMonth = publishMonth.trim();
-
-                    // If format is "01 (Jan)", extract just "01"
                     if (publishMonth.contains("(")) {
                         publishMonth = publishMonth.substring(0, publishMonth.indexOf("(")).trim();
                     }
-
-                    // Ensure it's always 2 digits
                     if (publishMonth.length() == 1) {
                         publishMonth = "0" + publishMonth;
                     }
-
                     logger.debug("Parsed publishMonth from JSON: '{}'", publishMonth);
                 }
                 metadata.setPublishMonth(publishMonth);
-
                 metadata.setPublishYear(getStringValue(jsonObj, "publishYear"));
 
-                // Handle noOfPages
                 Object noOfPagesObj = jsonObj.get("noOfPages");
                 if (noOfPagesObj != null) {
                     if (noOfPagesObj instanceof Number) {
@@ -502,45 +586,53 @@ public class BulkUploadService {
 
                 metadata.setNotes(getStringValue(jsonObj, "notes"));
 
-                // Handle tags array with normalization
+                // ====== CHANGE 3: Tags from JSON — split by comma, trim each, then normalize ======
                 Object tagsObj = jsonObj.get("tags");
                 if (tagsObj instanceof List) {
                     List<?> tagsList = (List<?>) tagsObj;
                     String tagsString = tagsList.stream()
                             .map(Object::toString)
-                            .map(this::normalizeTag)
+                            .map(String::trim)           // trim whitespace around each tag first
                             .filter(tag -> !tag.isEmpty())
+                            .map(this::normalizeTag)     // then normalize (lowercase, no spaces)
                             .collect(Collectors.joining(","));
                     metadata.setTags(tagsString);
                 } else if (tagsObj instanceof String) {
+                    // ====== CHANGE 3: String form — split by comma, trim each part, then normalize ======
                     String tagsValue = (String) tagsObj;
                     String normalizedTags = Arrays.stream(tagsValue.split(","))
-                            .map(this::normalizeTag)
+                            .map(String::trim)           // trim whitespace before normalizing
                             .filter(tag -> !tag.isEmpty())
+                            .map(this::normalizeTag)
                             .collect(Collectors.joining(","));
                     metadata.setTags(normalizedTags);
                 }
 
-                // Handle classifications array
+                // ====== CHANGE 3: Classifications from JSON — split by comma, trim each ======
                 Object classificationsObj = jsonObj.get("classifications");
                 if (classificationsObj instanceof List) {
                     List<?> classificationsList = (List<?>) classificationsObj;
                     String classificationsString = classificationsList.stream()
                             .map(Object::toString)
+                            .map(String::trim)           // trim whitespace
+                            .filter(c -> !c.isEmpty())
                             .collect(Collectors.joining(","));
                     metadata.setClassifications(classificationsString);
                 } else if (classificationsObj instanceof String) {
-                    metadata.setClassifications((String) classificationsObj);
+                    // ====== CHANGE 3: String form — split by comma, trim each part ======
+                    String classValue = (String) classificationsObj;
+                    String normalizedClass = Arrays.stream(classValue.split(","))
+                            .map(String::trim)
+                            .filter(c -> !c.isEmpty())
+                            .collect(Collectors.joining(","));
+                    metadata.setClassifications(normalizedClass);
                 }
 
                 metadataList.add(metadata);
 
                 logger.debug("Parsed metadata from JSON: filename={}, title={}, publishMonth={}, tags={}, classifications={}",
-                        metadata.getFilename(),
-                        metadata.getTitle(),
-                        metadata.getPublishMonth(),
-                        metadata.getTags(),
-                        metadata.getClassifications());
+                        metadata.getFilename(), metadata.getTitle(), metadata.getPublishMonth(),
+                        metadata.getTags(), metadata.getClassifications());
             }
 
             logger.info("Parsed {} documents from JSON metadata", metadataList.size());
@@ -552,20 +644,15 @@ public class BulkUploadService {
         }
     }
 
-    /**
-     * Helper method to safely extract string values from JSON map
-     */
     private String getStringValue(Map<String, Object> map, String key) {
         Object value = map.get(key);
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         return value.toString().trim();
     }
 
     /**
-     * Parse Excel file and extract metadata
-     * FIXED: Properly handle month parsing from dropdown format
+     * Parse Excel file and extract metadata.
+     * CHANGE 3: Tags and classifications are properly split by comma then trimmed.
      */
     private List<DocumentMetadata> parseExcelFile(MultipartFile excelFile) throws Exception {
         List<DocumentMetadata> metadataList = new ArrayList<>();
@@ -575,35 +662,32 @@ public class BulkUploadService {
 
             Sheet sheet = workbook.getSheetAt(0);
 
-            // Skip header row
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            // Skip header row (row 0), legend row (row 1), and example row (row 2) — data starts at row 3
+            // Also support old templates that only have a single header row (row 0 = header, row 1 = data)
+            int startRow = detectDataStartRow(sheet);
+            logger.info("Excel data starts at row index: {}", startRow);
+
+            for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
                 DocumentMetadata metadata = new DocumentMetadata();
 
-                // Parse each column
                 metadata.setFilename(getCellValueAsString(row.getCell(0)));
                 metadata.setTitle(getCellValueAsString(row.getCell(1)));
                 metadata.setProductCode(getCellValueAsString(row.getCell(2)));
                 metadata.setEdition(getCellValueAsString(row.getCell(3)));
 
-                // FIXED: Parse month from dropdown (handle multiple formats)
+                // Parse month from dropdown (handle multiple formats)
                 String publishMonth = getCellValueAsString(row.getCell(4));
                 if (publishMonth != null && !publishMonth.trim().isEmpty()) {
-                    // Handle format "01 (Jan)" or "01" or "1"
                     publishMonth = publishMonth.trim();
-
-                    // If format is "01 (Jan)", extract just "01"
                     if (publishMonth.contains("(")) {
                         publishMonth = publishMonth.substring(0, publishMonth.indexOf("(")).trim();
                     }
-
-                    // Ensure it's always 2 digits (convert "1" to "01")
                     if (publishMonth.length() == 1) {
                         publishMonth = "0" + publishMonth;
                     }
-
                     logger.debug("Parsed publish month: '{}'", publishMonth);
                 }
                 metadata.setPublishMonth(publishMonth);
@@ -612,27 +696,36 @@ public class BulkUploadService {
                 metadata.setNoOfPages(getCellValueAsInteger(row.getCell(6)));
                 metadata.setNotes(getCellValueAsString(row.getCell(7)));
 
-                // Parse and normalize tags
+                // ====== CHANGE 3: Parse tags — split by comma, trim each part, then normalize ======
                 String tagsValue = getCellValueAsString(row.getCell(8));
                 if (tagsValue != null && !tagsValue.isEmpty()) {
                     String normalizedTags = Arrays.stream(tagsValue.split(","))
-                            .map(tag -> normalizeTag(tag))
+                            .map(String::trim)           // trim whitespace BEFORE normalizing
                             .filter(tag -> !tag.isEmpty())
+                            .map(this::normalizeTag)     // then normalize (lowercase, collapse spaces)
                             .collect(Collectors.joining(","));
                     metadata.setTags(normalizedTags);
                 } else {
                     metadata.setTags("");
                 }
 
-                metadata.setClassifications(getCellValueAsString(row.getCell(9)));
+                // ====== CHANGE 3: Parse classifications — split by comma, trim each part ======
+                String classValue = getCellValueAsString(row.getCell(9));
+                if (classValue != null && !classValue.isEmpty()) {
+                    String normalizedClass = Arrays.stream(classValue.split(","))
+                            .map(String::trim)
+                            .filter(c -> !c.isEmpty())
+                            .collect(Collectors.joining(","));
+                    metadata.setClassifications(normalizedClass);
+                } else {
+                    metadata.setClassifications(getCellValueAsString(row.getCell(9)));
+                }
 
                 // Only add if filename is present
                 if (metadata.getFilename() != null && !metadata.getFilename().isEmpty()) {
                     metadataList.add(metadata);
-
-                    // Log the parsed metadata for debugging
-                    logger.debug("Parsed metadata: filename={}, publishMonth={}",
-                            metadata.getFilename(), metadata.getPublishMonth());
+                    logger.debug("Parsed metadata: filename={}, publishMonth={}, tags={}",
+                            metadata.getFilename(), metadata.getPublishMonth(), metadata.getTags());
                 }
             }
         }
@@ -642,7 +735,29 @@ public class BulkUploadService {
     }
 
     /**
-     * FEATURE 6: Normalize tag - remove all spaces and convert to lowercase
+     * Detect which row data actually starts at.
+     * New templates have legend row (row 1) and example row (row 2) → data starts at row 3.
+     * Old templates have no legend → data starts at row 1.
+     */
+    private int detectDataStartRow(Sheet sheet) {
+        // Check if row 1 looks like a legend (non-empty string starting with "*")
+        Row row1 = sheet.getRow(1);
+        if (row1 != null) {
+            Cell cell = row1.getCell(0);
+            if (cell != null && cell.getCellType() == CellType.STRING) {
+                String val = cell.getStringCellValue();
+                if (val != null && (val.startsWith("*") || val.contains("= Required"))) {
+                    // New template with legend and example rows
+                    return 3;
+                }
+            }
+        }
+        // Old template or unknown — skip only header
+        return 1;
+    }
+
+    /**
+     * Normalize tag — remove all spaces and convert to lowercase.
      */
     private String normalizeTag(String tag) {
         if (tag == null || tag.trim().isEmpty()) {
@@ -652,8 +767,8 @@ public class BulkUploadService {
     }
 
     /**
-     * Extract PDF filenames from uploaded files (including ZIP extraction)
-     * CRITICAL FIX: Handle folder uploads where originalFilename includes path
+     * Extract PDF filenames from uploaded files (including ZIP extraction).
+     * Handles folder uploads where originalFilename includes path.
      */
     private Set<String> extractPdfFilenames(MultipartFile[] files) throws IOException {
         Set<String> filenames = new HashSet<>();
@@ -662,12 +777,10 @@ public class BulkUploadService {
             String originalFilename = file.getOriginalFilename();
 
             if (originalFilename != null && originalFilename.toLowerCase().endsWith(".zip")) {
-                // Extract filenames from ZIP
                 try (ZipInputStream zis = new ZipInputStream(file.getInputStream())) {
                     ZipEntry entry;
                     while ((entry = zis.getNextEntry()) != null) {
                         if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".pdf")) {
-                            // Get just the filename without path
                             String filename = normalizeFilename(entry.getName());
                             filenames.add(filename);
                             logger.debug("Extracted from ZIP: {}", filename);
@@ -676,8 +789,6 @@ public class BulkUploadService {
                     }
                 }
             } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")) {
-                // CRITICAL FIX: Extract just the filename from path (handles folder uploads)
-                // Example: "normal/dilligent.pdf" -> "dilligent.pdf"
                 String justFilename = normalizeFilename(originalFilename);
                 filenames.add(justFilename.trim().toLowerCase());
                 logger.debug("Extracted filename: {} (from: {})", justFilename, originalFilename);
@@ -689,8 +800,7 @@ public class BulkUploadService {
     }
 
     /**
-     * Create map of filename to MultipartFile (handles ZIP extraction)
-     * CRITICAL FIX: Handle folder uploads where originalFilename includes path
+     * Create map of filename to MultipartFile (handles ZIP extraction).
      */
     private Map<String, MultipartFile> createFileMap(MultipartFile[] files) throws IOException {
         Map<String, MultipartFile> fileMap = new HashMap<>();
@@ -699,11 +809,8 @@ public class BulkUploadService {
             String originalFilename = file.getOriginalFilename();
 
             if (originalFilename != null && originalFilename.toLowerCase().endsWith(".zip")) {
-                // Extract and store files from ZIP
                 extractZipFiles(file, fileMap);
             } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".pdf")) {
-                // CRITICAL FIX: Use just the filename as key (without folder path)
-                // Example: "normal/dilligent.pdf" -> key is "dilligent.pdf"
                 String justFilename = normalizeFilename(originalFilename);
                 fileMap.put(justFilename, file);
                 logger.debug("Added to fileMap: {} -> {}", justFilename, originalFilename);
@@ -714,9 +821,6 @@ public class BulkUploadService {
         return fileMap;
     }
 
-    /**
-     * Extract PDF files from ZIP and add to file map
-     */
     private void extractZipFiles(MultipartFile zipFile, Map<String, MultipartFile> fileMap) throws IOException {
         Path tempDir = Files.createTempDirectory("bulk-upload-");
 
@@ -727,8 +831,6 @@ public class BulkUploadService {
                     String filename = normalizeFilename(entry.getName());
                     Path tempFile = tempDir.resolve(filename);
                     Files.copy(zis, tempFile, StandardCopyOption.REPLACE_EXISTING);
-
-                    // Create a wrapper MultipartFile for the extracted file
                     ExtractedMultipartFile extractedFile = new ExtractedMultipartFile(tempFile.toFile(), filename);
                     fileMap.put(filename, extractedFile);
                 }
@@ -737,61 +839,42 @@ public class BulkUploadService {
         }
     }
 
-    /**
-     * Validate metadata fields
-     */
     private void validateMetadata(DocumentMetadata metadata, BulkUploadValidationResult result) {
         if (metadata.getTitle() == null || metadata.getTitle().trim().isEmpty()) {
             result.addError("Missing Title", "Document '" + metadata.getFilename() + "' is missing title");
         }
-
         if (metadata.getProductCode() == null || metadata.getProductCode().trim().isEmpty()) {
             result.addError("Missing Product Code", "Document '" + metadata.getFilename() + "' is missing product code");
         }
-
         if (metadata.getPublishYear() == null || metadata.getPublishYear().trim().isEmpty()) {
             result.addError("Missing Publish Year", "Document '" + metadata.getFilename() + "' is missing publish year");
         }
-
         if (metadata.getNoOfPages() == null || metadata.getNoOfPages() <= 0) {
             result.addWarning("Invalid Page Count", "Document '" + metadata.getFilename() + "' has invalid or missing page count");
         }
     }
 
-    /**
-     * Upload a single document with metadata
-     */
     @Transactional
     private void uploadDocument(MultipartFile file, DocumentMetadata metadata) throws Exception {
-        // Get currently logged-in user
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             throw new Exception("User not authenticated");
         }
 
-        // 1. CREATE USER-SPECIFIC DIRECTORY
         String username = currentUser.getUsername();
         Path userUploadPath = Paths.get(uploadDir, username);
-
-        // Ensure user folder exists
         if (!Files.exists(userUploadPath)) {
             Files.createDirectories(userUploadPath);
         }
 
-        // 2. SAVE FILE WITH TIMESTAMP
-        String savedName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        String originalFileName = new File(file.getOriginalFilename()).getName();
+        String fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        String uniqueFileName = UUID.randomUUID().toString() + fileExtension;
+        Path filePath = Paths.get(uploadDir, uniqueFileName);
+        Files.createDirectories(filePath.getParent());
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        String networkPath = filePath.toString();
 
-//        String networkPath = "C:/Users/Imp user 006/Documents/CNS_documents/" + savedName;
-        // Use application.properties path
-        Path savedPath = Paths.get(uploadDir, savedName);
-//        Path savedPath = Paths.get(networkPath);
-        Files.createDirectories(savedPath.getParent());
-
-        Files.copy(file.getInputStream(), savedPath, StandardCopyOption.REPLACE_EXISTING);
-        // DEFINE networkPath HERE ✅
-        String networkPath = savedPath.toString();
-
-        // 3. AUTO-DETECT PAGE COUNT IF NOT PROVIDED
         Integer pageCount = metadata.getNoOfPages();
         if (pageCount == null || pageCount == 0) {
             try {
@@ -803,24 +886,16 @@ public class BulkUploadService {
             }
         }
 
-        // 4. CREATE DOCUMENT ENTITY
         Document document = new Document();
         document.setTitle(metadata.getTitle());
         document.setProductCode(metadata.getProductCode());
         document.setEdition(metadata.getEdition());
         document.setNoOfPages(pageCount);
         document.setNotes(metadata.getNotes());
-
-        // Set file path (network path)
         document.setFilePath(networkPath);
-
-        // Set upload metadata
         document.setUploadedAt(LocalDateTime.now());
-
-        // SET UPLOADER
         document.setUploadedBy(currentUser);
 
-        // 5. SET PUBLISH DATE
         if (metadata.getPublishYear() != null && !metadata.getPublishYear().isEmpty()) {
             String year = metadata.getPublishYear();
             String month = metadata.getPublishMonth();
@@ -831,16 +906,13 @@ public class BulkUploadService {
             }
         }
 
-        // 6. SAVE DOCUMENT FIRST (to get ID for relationships)
         document = documentRepository.save(document);
 
-        // 7. HANDLE TAGS (after document is saved)
         if (metadata.getTags() != null && !metadata.getTags().isEmpty()) {
             Set<Tag> tags = new HashSet<>();
             for (String tagStr : metadata.getTags().split(",")) {
                 String tagName = tagStr.trim().toLowerCase();
                 if (tagName.isEmpty()) continue;
-
                 Tag tag = tagRepository.findByTagName(tagName)
                         .orElseGet(() -> {
                             Tag newTag = new Tag();
@@ -855,13 +927,11 @@ public class BulkUploadService {
             logger.info("Added {} tags to document: {}", tags.size(), file.getOriginalFilename());
         }
 
-        // 8. HANDLE CLASSIFICATIONS (after document is saved)
         if (metadata.getClassifications() != null && !metadata.getClassifications().isEmpty()) {
             Set<Classification> classifications = new HashSet<>();
             for (String classStr : metadata.getClassifications().split(",")) {
                 String className = classStr.trim();
                 if (className.isEmpty()) continue;
-
                 Classification classification = classificationRepository.findByClassificationName(className)
                         .orElseGet(() -> {
                             Classification newClass = new Classification();
@@ -876,27 +946,16 @@ public class BulkUploadService {
             logger.info("Added {} classifications to document: {}", classifications.size(), file.getOriginalFilename());
         }
 
-        // 9. SAVE DOCUMENT AGAIN with tags and classifications
         documentRepository.save(document);
         logger.info("Document saved successfully: {}", file.getOriginalFilename());
     }
 
-    /**
-     * Get currently authenticated user
-     */
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        String username = authentication.getName();
-        return userRepository.findByUsername(username);
+        if (authentication == null || !authentication.isAuthenticated()) return null;
+        return userRepository.findByUsername(authentication.getName());
     }
 
-    /**
-     * Detect page count from PDF file
-     */
     private Integer detectPageCount(MultipartFile file) throws IOException {
         try (InputStream inputStream = file.getInputStream();
              PDDocument document = PDDocument.load(inputStream)) {
@@ -906,12 +965,8 @@ public class BulkUploadService {
         }
     }
 
-    /**
-     * Get cell value as string
-     */
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return null;
-
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue().trim();
@@ -919,10 +974,8 @@ public class BulkUploadService {
                 if (DateUtil.isCellDateFormatted(cell)) {
                     return cell.getDateCellValue().toString();
                 } else {
-                    // Check if it's a whole number
                     double numValue = cell.getNumericCellValue();
                     if (numValue == Math.floor(numValue)) {
-                        // It's a whole number, return as integer string
                         return String.valueOf((int) numValue);
                     } else {
                         return String.valueOf(numValue);
@@ -943,12 +996,8 @@ public class BulkUploadService {
         }
     }
 
-    /**
-     * Get cell value as integer
-     */
     private Integer getCellValueAsInteger(Cell cell) {
         if (cell == null) return null;
-
         try {
             if (cell.getCellType() == CellType.NUMERIC) {
                 return (int) cell.getNumericCellValue();

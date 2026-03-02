@@ -70,28 +70,6 @@
             color: var(--text-primary);
             margin: 0;
         }
-
-        .breadcrumb {
-            font-size: 14px;
-            margin: 0;
-            padding: 0;
-            background: transparent;
-        }
-
-        .breadcrumb-item a {
-            color: var(--primary-color);
-            text-decoration: none;
-            transition: color var(--transition-speed);
-        }
-
-        .breadcrumb-item a:hover {
-            color: var(--primary-dark);
-        }
-
-        .breadcrumb-item.active {
-            color: var(--text-secondary);
-        }
-
         .view-toggle {
             display: flex;
             gap: 8px;
@@ -713,31 +691,30 @@
     <!-- Main Content -->
     <div class="main-content flex-grow-1 p-4">
         <!-- Page Header -->
-        <div class="page-header-section">
-            <div class="header-top">
-                <div>
-                    <h2 class="mb-1 page-title"><i class="bi bi-bookmark"></i> My Bookmarks</h2>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            <li class="breadcrumb-item">
-                                <a th:href="@{/documents}" class="text-decoration-none">
-                                    <i class="bi bi-house me-1"></i> Home
-                                </a>
-                            </li>
-                            <li class="breadcrumb-item active">My Bookmarks</li>
-                        </ol>
-                    </nav>
-                </div>
-                <div class="view-toggle">
-                    <button class="view-btn active" id="gridViewBtn" onclick="toggleView('grid')">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                    </button>
-                    <button class="view-btn" id="listViewBtn" onclick="toggleView('list')">
-                        <i class="bi bi-list-ul"></i>
-                    </button>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-bookmark"></i> My Bookmarks</h2>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a th:href="@{/documents}" class="text-decoration-none">
+                                <i class="bi bi-house me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">My Bookmarks</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="view-toggle">
+                <button class="view-btn active" id="gridViewBtn" onclick="toggleView('grid')">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+                <button class="view-btn" id="listViewBtn" onclick="toggleView('list')">
+                    <i class="bi bi-list-ul"></i>
+                </button>
             </div>
         </div>
+
 
         <!-- Alert Messages -->
         <div id="alertContainer" class="mt-2"></div>

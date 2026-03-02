@@ -119,14 +119,14 @@ public class SecurityConfig {
                         .permitAll()
                 );
 
-        // Optional: Session management (currently commented out)
-        // http.sessionManagement(session -> session
-        //         .sessionConcurrency(concurrency -> concurrency
-        //                 .maximumSessions(1)
-        //                 .maxSessionsPreventsLogin(true)
-        //                 .expiredUrl("/login?expired")
-        //         )
-        // );
+        // ✅ SESSION MANAGEMENT - Dynamic timeout from database + concurrent session control
+        http.sessionManagement(session -> session
+                .sessionFixation().migrateSession()  // Prevent session fixation attacks
+                .invalidSessionUrl("/login?expired")  // Redirect when session is invalid
+                .maximumSessions(1)  // Allow only 1 session per user
+                .maxSessionsPreventsLogin(false)  // New login kicks out old session
+                .expiredUrl("/login?expired")  // Redirect when session expires
+        );
 
         return http.build();
     }

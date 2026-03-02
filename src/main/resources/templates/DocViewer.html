@@ -410,7 +410,7 @@
         /* ==================== EMPTY STATE TEXT STYLING ==================== */
         .empty-state-text {
             font-size: 13px;
-            color: #6b7280;
+            color: #ffffff;
             font-style: italic;
         }
 
@@ -1003,7 +1003,7 @@
 
 <div class="loading-spinner" id="loadingSpinner">
     <div class="spinner"></div>
-    <span>Loading document...</span>
+    <span>Initializing document viewer...</span>
 </div>
 
 <div class="zoom-indicator" id="zoomIndicator">100%</div>
@@ -1097,6 +1097,10 @@
     // ==================== GLOBAL STATE ====================
     let isCurrentlyBookmarked = false;
     let isDarkMode = true;
+    let watermarkEnabled = true;
+    let watermarkOpacity = 30;
+    let watermarkPosition = 'Diagonal';
+
     let isPresentMode = false;
     let zoomTimeout = null;
     let pendingZoom = null;
@@ -1119,6 +1123,7 @@
     // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
         loadThemePreference();
+        loadWatermarkSettings();
 
         if (window.documentInfo) {
             updateDocumentInfo(window.documentInfo);
@@ -1463,6 +1468,41 @@
         }
         setupLazyLoading();
     }
+    // ==================== WATERMARK SETTINGS ====================
+    /**
+     * Load watermark settings from backend
+     */
+   async function loadWatermarkSettings() {
+    try {
+        const response = await fetch('/api/settings/watermark');
+        if (!response.ok) {
+            console.warn('Could not load watermark settings, using defaults');
+            return;
+        }
+
+        const settings = await response.json();
+
+        watermarkEnabled = settings.watermarkEnabled || false;
+        watermarkOpacity = settings.watermarkOpacity || 30;
+        watermarkPosition = settings.watermarkPosition || 'Diagonal';
+
+
+        console.log('✅ Watermark settings loaded:', {
+            enabled: watermarkEnabled,
+            opacity: watermarkOpacity,
+            position: watermarkPosition,
+
+        });
+
+    } catch (error) {
+        console.error('Error loading watermark settings:', error);
+        // Use defaults if fetch fails
+        watermarkEnabled = true;
+        watermarkOpacity = 30;
+        watermarkPosition = 'Diagonal';
+
+    }
+}
 
     // ==================== PAGE RENDERING ====================
     async function renderPage(pageNum) {
@@ -1505,34 +1545,34 @@
         }
     }
 
-    function addWatermark(ctx, canvas) {
-        if (!ctx || !canvas) return;
+  function addWatermark(ctx, canvas) {
+    if (!ctx || !canvas) return;
 
-        const watermarkText = window.username || 'User';
-        const fontSize = 48;
-        const opacity = 0.1;
-        const gapX = 300;
-        const gapY = 200;
+    const watermarkText = window.username || 'User';
+    const fontSize = 50;
+    const opacity = 0.3;
+    const gapX = 300;
+    const gapY = 200;
 
-        ctx.save();
-        ctx.globalAlpha = opacity;
-        ctx.font = fontSize + 'px Arial';
-        ctx.fillStyle = '#FF0000';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.font = fontSize + 'px Arial';
+    ctx.fillStyle = '#FF0000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(-Math.PI / 4);
-        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(-Math.PI / 4);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-        for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
-            for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
-                ctx.fillText(watermarkText, x, y);
-            }
+    for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
+        for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
+            ctx.fillText(watermarkText, x, y);
         }
-
-        ctx.restore();
     }
+
+    ctx.restore();
+}
 
     async function reRenderAllPages() {
         const pagesToRerender = Array.from(renderedPages.keys());
@@ -2107,11 +2147,67 @@
             showNotification("Network error", "error");
         }
     }
+    // ==================== WATERMARK SETTINGS (FOR DOWNLOAD MODAL ONLY) ====================
+/**
+ * Load watermark settings to display in download modal
+ */
+async function loadWatermarkSettingsForModal() {
+    try {
+        const response = await fetch('/api/settings/watermark');
+        if (!response.ok) {
+            console.warn('Could not load watermark settings');
+            return;
+        }
+
+        const settings = await response.json();
+
+        // These variables are LOCAL to this function for download modal display only
+        const watermarkEnabled = settings.watermarkEnabled || false;
+        const watermarkOpacity = settings.watermarkOpacity || 30;
+        const watermarkPosition = settings.watermarkPosition || 'Diagonal';
+        const watermarkFontSize = settings.watermarkFontSize || 100; // ⭐ KEEP THIS for download modal
+
+        console.log('✅ Watermark settings loaded for download modal:', settings);
+
+        // Return the settings so they can be used in showDownloadModal
+        return { watermarkEnabled, watermarkOpacity, watermarkPosition, watermarkFontSize };
+    } catch (error) {
+        console.error('Error loading watermark settings:', error);
+        return { watermarkEnabled: true, watermarkOpacity: 30, watermarkPosition: 'Diagonal', watermarkFontSize: 100 };
+    }
+}
 
     // ==================== DOWNLOAD FUNCTIONS ====================
-    function showDownloadModal() {
-        document.getElementById('downloadModal').classList.add('active');
+ async function showDownloadModal() {
+    // Load current watermark settings for modal display only
+    const settings = await loadWatermarkSettingsForModal();
+
+    const modal = document.getElementById('downloadModal');
+    const modalBody = modal.querySelector('.modal-body');
+
+    if (settings.watermarkEnabled) {
+        // Show watermark info with font size
+        modalBody.innerHTML = `
+            <div class="modal-icon">
+                <i class="bi bi-shield-fill-check"></i>
+            </div>
+            <h3 class="modal-title-large">Watermarked Download</h3>
+            <p class="modal-text">This PDF will be downloaded with watermarks for security purposes.</p>
+        `;
+    } else {
+        // Show no watermark info
+        modalBody.innerHTML = `
+            <div class="modal-icon" style="background: #10b981;">
+                <i class="bi bi-download"></i>
+            </div>
+            <h3 class="modal-title-large">Download PDF</h3>
+            <p class="modal-text">This document will be downloaded without watermarks.</p>
+        `;
     }
+
+    modal.classList.add('active');
+}
+
 
     function closeDownloadModal() {
         document.getElementById('downloadModal').classList.remove('active');

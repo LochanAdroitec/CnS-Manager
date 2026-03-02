@@ -6,6 +6,19 @@
 <body>
 <!-- Top Navbar Fragment -->
 <nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f; height: 70px; z-index: 1050;">
+    <!--
+        ✅ KEY FIX: This inline script runs BEFORE the browser paints anything.
+        It applies the collapsed class immediately so there is zero visual flash
+        when navigating between pages. No DOMContentLoaded needed here.
+    -->
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebarState') === 'collapsed') {
+                document.documentElement.setAttribute('data-sidebar', 'collapsed');
+            }
+        })();
+    </script>
+
     <div class="container-fluid d-flex align-items-center">
         <!-- Left side: Toggle + Logo -->
         <div class="d-flex align-items-center">
@@ -21,13 +34,13 @@
         </div>
 
         <!-- Center: Title -->
-        <span class="navbar-brand mb-0 h1 mx-auto">
-            <i class="bi bi-book"></i> Codes & Standards Manager
+        <span class="navbar-brand mb-0 h1 mx-auto" style="font-size:25px;">
+            <i class="bi bi-book"></i> Document Manager
         </span>
 
         <!-- Right side: Profile dropdown -->
         <div class="dropdown">
-            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center" type="button"
+            <button class="btn btn-outline-light d-flex align-items-center" type="button"
                     id="profileDropdown" data-bs-toggle="dropdown">
                 <div class="rounded-circle bg-light text-dark d-flex align-items-center justify-content-center me-2"
                      style="width: 35px; height: 35px; font-weight: bold;">
@@ -51,38 +64,64 @@
 
 <!-- JavaScript for Sidebar Toggle -->
 <script th:fragment="navbar-js">
+    // ✅ Apply sidebar state instantly (before DOMContentLoaded) to prevent flash
+    (function() {
+        const state = localStorage.getItem('sidebarState');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.querySelector('.main-content');
+        if (state === 'collapsed' && sidebar) {
+            sidebar.classList.add('collapsed');
+            if (mainContent) mainContent.classList.add('expanded');
+        }
+    })();
+
     document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('toggleBtn');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.querySelector('.main-content');
 
-        // Load saved state from localStorage
-        const sidebarState = localStorage.getItem('sidebarState');
-        if (sidebarState === 'collapsed') {
-            sidebar?.classList.add('collapsed');
-            mainContent?.classList.add('expanded');
+        // ✅ Disable transitions temporarily on load so the initial state
+        //    snaps in immediately with no sliding animation
+        if (sidebar) {
+            sidebar.style.transition = 'none';
+            if (mainContent) mainContent.style.transition = 'none';
+
+            // Re-enable transitions after first paint
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    sidebar.style.transition = '';
+                    if (mainContent) mainContent.style.transition = '';
+                });
+            });
         }
 
         // Toggle sidebar on button click
         toggleBtn?.addEventListener('click', function() {
             if (sidebar) {
-                sidebar.classList.toggle('collapsed');
-                mainContent?.classList.toggle('expanded');
+                const isCollapsed = sidebar.classList.contains('collapsed');
 
-                // Save state to localStorage
-                if (sidebar.classList.contains('collapsed')) {
-                    localStorage.setItem('sidebarState', 'collapsed');
-                } else {
+                if (isCollapsed) {
+                    // OPEN the sidebar
+                    sidebar.classList.remove('collapsed');
+                    mainContent?.classList.remove('expanded');
+                    document.documentElement.removeAttribute('data-sidebar');
                     localStorage.setItem('sidebarState', 'expanded');
+                } else {
+                    // CLOSE the sidebar
+                    sidebar.classList.add('collapsed');
+                    mainContent?.classList.add('expanded');
+                    document.documentElement.setAttribute('data-sidebar', 'collapsed');
+                    localStorage.setItem('sidebarState', 'collapsed');
                 }
             }
         });
 
-        // Set active link based on current page
+        // ✅ Set active link based on current URL path
         const currentPath = window.location.pathname;
         const navLinks = document.querySelectorAll('#sidebar .nav-link');
         navLinks.forEach(link => {
-            if (link.getAttribute('href') === currentPath) {
+            const href = link.getAttribute('href');
+            if (href && (href === currentPath || currentPath.startsWith(href + '/'))) {
                 link.classList.add('active');
             }
         });

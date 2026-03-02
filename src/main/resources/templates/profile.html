@@ -77,7 +77,7 @@
             font-weight: 600;
         }
         .btn-change-password {
-            background-color: #1594AD;
+            background-color: #1e3a5f;
             border: none;
             color: white;
             padding: 10px 25px;
@@ -88,7 +88,7 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(21, 148, 173, 0.4);
             color: white;
-            background-color: #117a8f;
+            background-color: #1e3a5f;
         }
         .role-admin {
           background-color: #0A3D91 !important;
@@ -106,7 +106,7 @@
           padding:10px;
         }
         .btn-change-password {
-            background-color: #2d6ec4 !important;
+            background-color: #1e3a5f !important;
             border: none;
             color: white !important;
             padding: 10px 25px;
@@ -119,7 +119,7 @@
         }
 
         .btn-change-password:hover {
-            background-color: #245aa2 !important; /* darker shade for hover */
+            background-color: #1e3a5f !important; /* darker shade for hover */
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(45, 110, 196, 0.4);
             color: white !important;
@@ -274,7 +274,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" th:action="@{/profile/update}">
-                <div class="modal-header" style="background-color:#1594AD;color: white;">
+                <div class="modal-header" style="background-color:#1e3a5f;color: white;">
                     <h5 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -308,8 +308,17 @@
 
                     <div class="mb-3">
                         <label for="newPassword" class="form-label">New Password</label>
-                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
-                        <small class="text-muted">Minimum 1 characters</small>
+                        <input type="password"
+                               class="form-control"
+                               id="newPassword"
+                               name="newPassword"
+                               required>
+                        <!-- Real-time validation error (JavaScript) -->
+                        <div id="newPasswordPolicyError" class="invalid-feedback" style="display: none;"></div>
+                        <!-- Backend validation error (Thymeleaf) -->
+                        <div class="invalid-feedback" th:if="${passwordError == 'policy'}">
+                            <span th:text="${error}">Password policy error</span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -362,7 +371,7 @@
     });
     document.addEventListener("DOMContentLoaded", function () {
         /* If backend sends an error flag, open modal automatically */
-        if ("[[${passwordError}]]" === "current" || "[[${passwordError}]]" === "mismatch") {
+        if ("[[${passwordError}]]" === "current" || "[[${passwordError}]]" === "mismatch" || "[[${passwordError}]]" === "policy") {
             var myModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
             myModal.show();
         }
@@ -400,6 +409,109 @@
             }, 5000); // 5 seconds
         });
     });
+// ==================== PASSWORD POLICY REAL-TIME VALIDATION FOR PROFILE ====================
+let profilePasswordPolicyCache = null;
+
+async function fetchProfilePasswordPolicy() {
+    if (profilePasswordPolicyCache !== null) {
+        return profilePasswordPolicyCache;
+    }
+    try {
+        const response = await fetch('/api/settings/password-policy');
+        if (response.ok) {
+            profilePasswordPolicyCache = await response.json();
+            console.log('✅ Password policy loaded for profile:', profilePasswordPolicyCache);
+            return profilePasswordPolicyCache;
+        }
+    } catch (error) {
+        console.error('❌ Error fetching password policy:', error);
+    }
+    return null;
+}
+
+function validateProfilePasswordPolicy(password, policy) {
+    if (!policy || !policy.enforcePasswordPolicy) {
+        return { valid: true, errors: [] };
+    }
+    const errors = [];
+    if (policy.minPasswordLength && password.length < policy.minPasswordLength) {
+        errors.push(`Must be at least ${policy.minPasswordLength} characters`);
+    }
+    if (policy.requireUppercase && !/[A-Z]/.test(password)) {
+        errors.push('Must contain uppercase letter');
+    }
+    if (policy.requireLowercase && !/[a-z]/.test(password)) {
+        errors.push('Must contain lowercase letter');
+    }
+    if (policy.requireNumber && !/[0-9]/.test(password)) {
+        errors.push('Must contain number');
+    }
+    if (policy.requireSpecialChar && !/[!@#$%^&*()_+\-=\[\]{}|;':",./<>?]/.test(password)) {
+        errors.push('Must contain special character');
+    }
+    return { valid: errors.length === 0, errors: errors };
+}
+
+function showProfilePasswordErrors(errors) {
+    const input = document.getElementById('newPassword');
+    const errorDiv = document.getElementById('newPasswordPolicyError');
+    if (errors.length > 0) {
+        input.classList.add('is-invalid');
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = errors.join(', ');
+    } else {
+        input.classList.remove('is-invalid');
+        errorDiv.style.display = 'none';
+    }
+}
+
+// Real-time validation as user types
+document.getElementById('newPassword')?.addEventListener('input', async function() {
+    const password = this.value;
+    if (password.length === 0) {
+        showProfilePasswordErrors([]);
+        return;
+    }
+    const policy = await fetchProfilePasswordPolicy();
+    if (policy) {
+        const result = validateProfilePasswordPolicy(password, policy);
+        showProfilePasswordErrors(result.errors);
+    }
+});
+
+// Validate on form submit
+const profileForm = document.querySelector('#changePasswordModal form');
+if (profileForm) {
+    profileForm.addEventListener('submit', async function(e) {
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // Check password match first
+        if (newPassword !== confirmPassword) {
+            e.preventDefault();
+            alert('New passwords do not match!');
+            return false;
+        }
+
+        // Check password policy
+        const policy = await fetchProfilePasswordPolicy();
+        if (policy && policy.enforcePasswordPolicy) {
+            const result = validateProfilePasswordPolicy(newPassword, policy);
+            if (!result.valid) {
+                e.preventDefault();
+                showProfilePasswordErrors(result.errors);
+                alert('Please fix password policy errors');
+                return false;
+            }
+        }
+    });
+}
+
+// Clear errors when modal closes
+document.getElementById('changePasswordModal')?.addEventListener('hidden.bs.modal', function() {
+    document.getElementById('newPassword').classList.remove('is-invalid');
+    document.getElementById('newPasswordPolicyError').style.display = 'none';
+});
 </script>
 </body>
 </html>

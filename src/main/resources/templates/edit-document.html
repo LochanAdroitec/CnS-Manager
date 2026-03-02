@@ -1264,6 +1264,8 @@
     const documentId = /*[[${document.id}]]*/ 0;
     let isPasswordProtected = false;
     let classificationSelectionLocked = false;
+    let maxTagsPerDocument = 10; // Default value
+    let maxTagsExceeded = false;
 
 async function checkClassificationEditAccess() {
     try {
@@ -1322,6 +1324,7 @@ function applyEssentialClassificationLock() {
 
         populateYearDropdown();
         initializeData();
+        await fetchMaxTagsPerDocument();
         // 🔐 Restrict ONLY classification editing for ED1
         await checkClassificationEditAccess();
 
@@ -1424,13 +1427,20 @@ function applyEssentialClassificationLock() {
                     checkbox.checked = false;
                     this.classList.remove('selected');
                     selectedTags = selectedTags.filter(t => t !== tagName);
-                } else {
-                    checkbox.checked = true;
-                    this.classList.add('selected');
-                    if (!selectedTags.includes(tagName)) {
-                        selectedTags.push(tagName);
-                    }
+                 } else {
+                // ⭐ CHECK MAX TAGS LIMIT BEFORE ADDING
+                if (selectedTags.length >= maxTagsPerDocument) {
+                    showTagError(`<i class="bi bi-exclamation-triangle"></i> Maximum ${maxTagsPerDocument} tags allowed per document`);
+                    blinkItem(this);
+                    return;
                 }
+
+                checkbox.checked = true;
+                this.classList.add('selected');
+                if (!selectedTags.includes(tagName)) {
+                    selectedTags.push(tagName);
+                }
+            }
                 renderSelectedTags();
                 formChanged = true;
             });
@@ -1683,6 +1693,11 @@ function applyEssentialClassificationLock() {
             showTagError('<i class="bi bi-exclamation-circle"></i> Spaces are not allowed in tag names');
             return;
         }
+        // ⭐ CHECK MAX TAGS LIMIT
+        if (selectedTags.length >= maxTagsPerDocument) {
+            showTagError(`<i class="bi bi-exclamation-triangle"></i> Maximum ${maxTagsPerDocument} tags allowed per document. Remove some tags before adding new ones.`);
+            return;
+        }
 
         tagName = tagName.toLowerCase();
 
@@ -1735,6 +1750,69 @@ function applyEssentialClassificationLock() {
         newTagInput.value = '';
         formChanged = true;
     }
+
+
+    // ============== FETCH MAX TAGS SETTING ==============
+async function fetchMaxTagsPerDocument() {
+    try {
+        const response = await fetch('/api/settings/max-tags-per-document');
+        const data = await response.json();
+        maxTagsPerDocument = data.maxTagsPerDocument || 10;
+        console.log('Max tags per document:', maxTagsPerDocument);
+
+        // Check if current document already exceeds limit
+        if (selectedTags.length > maxTagsPerDocument) {
+            maxTagsExceeded = true;
+            showMaxTagsWarning();
+        }
+    } catch (error) {
+        console.error('Error fetching max tags setting:', error);
+        maxTagsPerDocument = 10; // Fallback
+    }
+}
+
+function showMaxTagsWarning() {
+    const tagsSection = document.querySelector('.form-section');
+    const existingWarning = document.getElementById('maxTagsWarning');
+
+    if (existingWarning) {
+        existingWarning.remove();
+    }
+
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'maxTagsWarning';
+    warningDiv.style.cssText = `
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: fadeIn 0.3s;
+    `;
+    warningDiv.innerHTML = `
+        <i class="bi bi-exclamation-triangle-fill" style="color: #856404; font-size: 20px;"></i>
+        <div style="flex: 1;">
+            <strong style="color: #856404;">Tag Limit Exceeded</strong>
+            <p style="margin: 5px 0 0; color: #664d03; font-size: 14px;">
+                This document currently has <strong>${selectedTags.length} tags</strong>,
+                which exceeds the maximum limit of <strong>${maxTagsPerDocument} tags</strong>.
+                You cannot add more tags. Please remove some tags before adding new ones.
+            </p>
+        </div>
+    `;
+
+    // Insert after the "Tags (Optional)" section title
+    const tagsSection2 = document.querySelector('.form-section');
+    if (tagsSection2) {
+        const firstChild = tagsSection2.firstChild;
+        if (firstChild) {
+            tagsSection2.insertBefore(warningDiv, firstChild.nextSibling);
+        }
+    }
+}
 
     function createNewSelectionItem(name, type) {
         const item = document.createElement('div');
@@ -1813,6 +1891,25 @@ function applyEssentialClassificationLock() {
         }
 
         document.getElementById('tagNamesField').value = selectedTags.join(',');
+        // ⭐ ADD THIS SECTION
+        // Update warning if needed
+        if (selectedTags.length > maxTagsPerDocument) {
+            if (!document.getElementById('maxTagsWarning')) {
+                showMaxTagsWarning();
+            } else {
+                // Update count in existing warning
+                const warning = document.getElementById('maxTagsWarning');
+                const countText = warning.querySelector('strong');
+                if (countText) {
+                    countText.textContent = `${selectedTags.length} tags`;
+                }
+            }
+        } else {
+            const warning = document.getElementById('maxTagsWarning');
+            if (warning) {
+                warning.remove();
+            }
+        }
     }
 
     function removeSelectedTag(tagName) {

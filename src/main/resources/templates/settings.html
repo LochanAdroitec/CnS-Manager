@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Settings - Codes & Standards</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/bootstrap-icons/bootstrap-icons.css">
+    <th:block th:replace="~{common/sidebar :: sidebar-styles}"></th:block>
+    <style>
+        body { background-color: #f4f6f9; margin: 0; padding: 0; padding-top: 70px; }
+        .main-content { position: relative; }
+        .settings-container { display: flex; gap: 0; min-height: calc(100vh - 100px); }
+        .settings-sidebar { width: 280px; background: white; border-right: 1px solid #e0e6ed; padding: 0; flex-shrink: 0; margin: 30px; border-radius: 10px; }
+        .settings-sidebar-header { padding: 20px; border-bottom: 1px solid #e0e6ed; }
+        .settings-sidebar-header h5 { margin: 0; font-weight: 600; color: #2d3748; font-size: 1.1rem; }
+        .settings-menu { padding: 15px 0; }
+        .settings-menu-item { display: flex; align-items: center; padding: 12px 20px; color: #1e3a5f; text-decoration: none; transition: all 0.2s; cursor: pointer; border-left: 3px solid transparent; }
+        .settings-menu-item:hover { background-color: #f7fafc; color: #1e3a5f; }
+        .settings-menu-item.active { background-color: #eef2ff; color: #1e3a5f; border-left-color: #1e3a5f; font-weight: 600; }
+        .settings-menu-item i { width: 24px; margin-right: 12px; font-size: 1.1rem; }
+        .settings-menu-item-text { flex: 1; }
+        .settings-menu-item-desc { font-size: 0.75rem; color: #9ca3af; margin-top: 2px; }
+        .settings-content { flex: 1; padding: 30px; background-color: #f4f6f9; overflow-y: auto; position: relative; }
+        .settings-card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .settings-header { display: flex; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #e9eef5; }
+        .settings-icon { width: 50px; height: 50px; background: #1e3a5f; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+        .settings-icon i { font-size: 24px; color: white; }
+        .settings-title { font-size: 1.5rem; font-weight: 600; color: #2d3748; margin: 0; }
+        .settings-subtitle { font-size: 0.9rem; color: #718096; margin: 0; }
+        .form-label { font-weight: 600; color: #4a5568; margin-bottom: 8px; }
+        .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102,126,234,0.25); }
+        .form-control:read-only { background-color: #f7fafc; color: #718096; cursor: not-allowed; }
+        .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 10px; }
+        .checkbox-item { display: flex; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; transition: all 0.2s; cursor: pointer; }
+        .checkbox-item:hover { border-color: #667eea; background-color: #f7fafc; }
+        .checkbox-item input[type="checkbox"] { width: 18px; height: 18px; margin-right: 10px; cursor: pointer; }
+        .checkbox-item label { margin: 0; cursor: pointer; font-weight: 500; color: #2d3748; }
+        .btn-save { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); border: none; padding: 12px 30px; font-weight: 600; }
+        .btn-save:hover { background: linear-gradient(135deg,#5568d3 0%,#6a3f8f 100%); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .helper-text { font-size: 0.875rem; color: #718096; margin-top: 5px; }
+        .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); z-index: 10; justify-content: center; align-items: center; }
+        .loading-overlay.active { display: flex; }
+        .loading-spinner { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .form-switch .form-check-input { width: 3em; height: 1.5em; background-color: #d1d5db; border: none; cursor: pointer; }
+        .form-switch .form-check-input:checked { background-color: #667eea; border-color: #667eea; }
+        .form-switch .form-check-input:focus { border-color: #667eea; box-shadow: 0 0 0 0.25rem rgba(102,126,234,0.25); }
+
+        /* ==================== WATERMARK STYLES ==================== */
+        .watermark-toggle-card { background: linear-gradient(135deg,#f6f8fb 0%,#ffffff 100%); border: 2px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 24px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .watermark-toggle-card:hover { border-color: #667eea; box-shadow: 0 4px 16px rgba(102,126,234,0.12); }
+        .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; flex-shrink: 0; background: #1e3a5f; }
+        .watermark-info-badge { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #1e40af; display: inline-flex; align-items: center; margin-top: 12px; }
+        .watermark-option-card { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px; height: 100%; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .watermark-option-card:hover { border-color: #c7d2fe; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .option-header { display: flex; align-items: center; margin-bottom: 20px; gap: 12px; }
+        .option-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; flex-shrink: 0; background: #1e3a5f; }
+        .opacity-input-wrapper { position: relative; margin-bottom: 16px; }
+        .opacity-input { font-size: 28px; font-weight: 700; text-align: center; border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; color: #667eea; transition: all 0.3s ease; -moz-appearance: textfield; }
+        .opacity-input::-webkit-outer-spin-button, .opacity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .opacity-input:focus { border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); }
+        .opacity-unit { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 20px; font-weight: 600; color: #9ca3af; pointer-events: none; }
+        .opacity-slider { width: 100%; height: 8px; border-radius: 4px; background: linear-gradient(to right,rgba(102,126,234,0.1) 0%,rgba(102,126,234,0.5) 50%,rgba(102,126,234,1) 100%); outline: none; -webkit-appearance: none; }
+        .opacity-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #667eea; cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.4); }
+        .position-select { font-size: 15px; font-weight: 500; border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; color: #1f2937; transition: all 0.3s ease; margin-bottom: 16px; }
+        .preview-box { width: 100%; height: 120px; background: linear-gradient(135deg,#f3f4f6 0%,#e5e7eb 100%); border: 2px dashed #cbd5e1; border-radius: 12px; position: relative; overflow: hidden; }
+        .preview-watermark { position: absolute; color: rgba(220,38,38,0.3); font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; }
+        .preview-watermark.diagonal { top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-45deg); }
+        .preview-watermark.topleft { top: 10px; left: 10px; }
+        .preview-watermark.topright { top: 10px; right: 10px; }
+        .preview-watermark.bottomleft { bottom: 10px; left: 10px; }
+        .preview-watermark.bottomright { bottom: 10px; right: 10px; }
+        .preview-watermark.center { top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+        /* ==================== FONT SIZE DROPDOWN ==================== */
+        .font-size-select { font-size: 22px; font-weight: 700; text-align: center; border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px 16px; color: #667eea; transition: all 0.3s ease; width: 100%; cursor: pointer; background-color: #fff; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+        .font-size-select:focus { border-color: #667eea; box-shadow: 0 0 0 4px rgba(102,126,234,0.1); outline: none; }
+        .font-size-select option { font-size: 15px; font-weight: 500; color: #1f2937; }
+
+        /* ==================== LIVE WATERMARK PREVIEW PANEL ==================== */
+        .wm-preview-panel {
+            margin-top: 28px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+            border: 2px solid #c7d2fe;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.10);
+        }
+        .wm-preview-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .wm-preview-panel-header .preview-icon {
+            width: 38px; height: 38px; background: #1e3a5f; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px; flex-shrink: 0;
+        }
+        .wm-preview-panel-header h6 {
+            margin: 0; font-weight: 700; font-size: 15px; color: #1e3a5f;
+        }
+        .wm-preview-panel-header p {
+            margin: 2px 0 0; font-size: 12px; color: #6b7280;
+        }
+        .wm-pages-container {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .wm-page-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .wm-page-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        /* Portrait page: A4 ratio 1:1.414 */
+        .wm-page-portrait {
+            width: 160px;
+            height: 226px;
+            background: #ffffff;
+            border: 1.5px solid #d1d5db;
+            border-radius: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 2px 2px 0 #e5e7eb;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .wm-page-portrait:hover {
+            box-shadow: 0 8px 32px rgba(220,38,38,0.25), 2px 2px 0 #e5e7eb;
+            transform: scale(1.04);
+        }
+        /* Landscape page: A4 ratio inverted */
+        .wm-page-landscape {
+            width: 226px;
+            height: 160px;
+            background: #ffffff;
+            border: 1.5px solid #d1d5db;
+            border-radius: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12), 2px 2px 0 #e5e7eb;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .wm-page-landscape:hover {
+            box-shadow: 0 8px 32px rgba(220,38,38,0.25), 2px 2px 0 #e5e7eb;
+            transform: scale(1.04);
+        }
+        /* Fake document lines */
+        .wm-page-lines {
+            position: absolute;
+            inset: 0;
+            padding: 16px 14px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            pointer-events: none;
+        }
+        .wm-page-lines .line {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+        }
+        .wm-page-lines .line.short { width: 55%; }
+        .wm-page-lines .line.title { height: 7px; width: 80%; background: #d1d5db; margin-bottom: 4px; }
+        /* Watermark text overlay */
+        .wm-text-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .wm-text {
+            color: rgba(220,38,38,0.35);
+            font-weight: 800;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            line-height: 1.2;
+            user-select: none;
+        }
+        /* Position variants */
+        .wm-text-overlay.pos-topleft    { align-items: flex-start; justify-content: flex-start; padding: 8px; }
+        .wm-text-overlay.pos-topright   { align-items: flex-start; justify-content: flex-end;   padding: 8px; }
+        .wm-text-overlay.pos-bottomleft { align-items: flex-end;   justify-content: flex-start; padding: 8px; }
+        .wm-text-overlay.pos-bottomright{ align-items: flex-end;   justify-content: flex-end;   padding: 8px; }
+        .wm-text-overlay.pos-center     { align-items: center;     justify-content: center; }
+        .wm-text-overlay.pos-diagonal   { align-items: center;     justify-content: center; }
+        .wm-text-overlay.pos-diagonal .wm-text { transform: rotate(-45deg); }
+
+        /* Expand hint below pages */
+        .wm-expand-hint {
+            font-size: 10px;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .watermark-info-box { background: linear-gradient(135deg,#fef3c7 0%,#fde68a 100%); border: 2px solid #fbbf24; border-radius: 16px; padding: 20px; display: flex; gap: 16px; margin-top: 24px; }
+        .info-icon { width: 48px; height: 48px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; flex-shrink: 0; }
+        .info-list { list-style: none; padding: 0; margin: 0; }
+        .info-list li { padding: 6px 0 6px 24px; position: relative; font-size: 14px; color: #78350f; line-height: 1.6; }
+        .info-list li:before { content: "✓"; position: absolute; left: 0; color: #f59e0b; font-weight: bold; }
+        .btn-save-modern { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); border: none; padding: 12px 32px; font-weight: 600; border-radius: 10px; box-shadow: 0 4px 12px rgba(102,126,234,0.3); transition: all 0.3s ease; }
+        .btn-reset-modern { background: #f3f4f6; border: 2px solid #e5e7eb; color: #6b7280; padding: 12px 32px; font-weight: 600; border-radius: 10px; transition: all 0.3s ease; }
+        #watermarkConfigSection { transition: all 0.3s ease; overflow: hidden; }
+        #watermarkConfigSection.hidden { max-height: 0; opacity: 0; margin-top: 0; }
+        #passwordPolicyOptions { transition: all 0.3s ease; }
+        #logRetentionSection { transition: all 0.3s ease; }
+        .bulk-item:hover { background: #f8fafc !important; }
+
+        /* ==================== FULLSCREEN MODAL STYLES ==================== */
+        #wmFullscreenModal .modal-dialog {
+            max-width: 90vw;
+        }
+        #wmFullscreenModal .modal-content {
+            border-radius: 16px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+        }
+        #wmFullscreenModal .modal-body {
+            background: #d1d5db;
+            min-height: 70vh;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        .wm-fs-page {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.25), 4px 4px 0 #9ca3af;
+            position: relative;
+            overflow: hidden;
+            transition: width 0.35s ease, height 0.35s ease;
+        }
+        .wm-fs-lines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .wm-fs-watermark-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .wm-fs-watermark-text {
+            font-weight: 800;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            line-height: 1.25;
+            user-select: none;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        /* Orientation toggle button */
+        .wm-orientation-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .wm-orientation-btn:hover {
+            background: rgba(255,255,255,0.28);
+        }
+    </style>
+</head>
+<body>
+<div th:replace="~{common/navbar :: navbar}"></div>
+<div class="d-flex">
+    <div th:replace="~{common/sidebar :: sidebar}"></div>
+    <div class="main-content flex-grow-1 p-0">
+        <div class="settings-container">
+
+            <!-- ==================== SETTINGS SIDEBAR ==================== -->
+            <div class="settings-sidebar">
+                <div class="settings-sidebar-header">
+                    <h5><i class="bi bi-gear me-2"></i>Settings</h5>
+                </div>
+                <div class="settings-menu">
+                    <a href="#" class="settings-menu-item active" data-section="repository">
+                        <i class="bi bi-folder"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Repository</div>
+                            <div class="settings-menu-item-desc">Configure document storage and file size</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="metadata">
+                        <i class="bi bi-database"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Metadata Schema</div>
+                            <div class="settings-menu-item-desc">Define metadata fields and validation rules</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="tags">
+                        <i class="bi bi-tags"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Tag Policies</div>
+                            <div class="settings-menu-item-desc">Configure tag management and restrictions</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="watermark">
+                        <i class="bi bi-water"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Watermark Settings</div>
+                            <div class="settings-menu-item-desc">Configure document watermarking options</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="security">
+                        <i class="bi bi-shield-lock"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Security & Access</div>
+                            <div class="settings-menu-item-desc">Configure access controls and Password permissions</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="logging">
+                        <i class="bi bi-activity"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Activity Logging</div>
+                            <div class="settings-menu-item-desc">Configure logging and retention policies</div>
+                        </div>
+                    </a>
+                    <a href="#" class="settings-menu-item" data-section="bulkdelete">
+                        <i class="bi bi-trash3"></i>
+                        <div class="settings-menu-item-text">
+                            <div>Bulk Delete</div>
+                            <div class="settings-menu-item-desc">Delete multiple users (or) documents at once</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ==================== SETTINGS CONTENT ==================== -->
+            <div class="settings-content">
+                <div id="alertContainer"></div>
+                <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+
+                <!-- ==================== REPOSITORY ==================== -->
+                <div class="settings-card" id="repositorySection">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-folder"></i></div>
+                        <div>
+                            <h3 class="settings-title">Repository</h3>
+                            <p class="settings-subtitle">Configure document storage and file paths</p>
+                        </div>
+                    </div>
+                    <form id="repositorySettingsForm">
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-folder2-open me-2"></i>Repository Path</label>
+                            <input type="text" class="form-control" id="repositoryPath" readonly placeholder="Loading...">
+                            <div class="helper-text"><i class="bi bi-info-circle me-1"></i>Absolute path where documents are stored</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label" for="maxFileSizeMb"><i class="bi bi-file-earmark-arrow-up me-2"></i>Maximum File Size (MB)</label>
+                            <input type="number" class="form-control" id="maxFileSizeMb" min="1" max="1000" required placeholder="50">
+                            <div class="helper-text"><i class="bi bi-info-circle me-1"></i>Maximum upload size per document (1-1000 MB)</div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-file-earmark-check me-2"></i>Allowed File Formats</label>
+                            <div class="checkbox-grid">
+                                <div class="checkbox-item"><input type="checkbox" id="format_pdf" value="PDF" class="format-checkbox"><label for="format_pdf">.pdf</label></div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadSettings()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== METADATA SCHEMA ==================== -->
+                <div class="settings-card" id="metadataSection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-database"></i></div>
+                        <div>
+                            <h3 class="settings-title">Metadata Schema</h3>
+                            <p class="settings-subtitle">Define which metadata fields are required for document uploads</p>
+                        </div>
+                    </div>
+                    <form id="metadataSchemaForm">
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div><label class="form-label mb-1"><i class="bi bi-upc-scan me-2"></i><strong>Product Code</strong></label><p class="helper-text mb-0">Unique identifier for the product</p></div>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="required_product_code" style="width:50px;height:25px;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div><label class="form-label mb-1"><i class="bi bi-bookmark me-2"></i><strong>Edition</strong></label><p class="helper-text mb-0">Version or edition number</p></div>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="required_edition" style="width:50px;height:25px;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div><label class="form-label mb-1"><i class="bi bi-calendar-event me-2"></i><strong>Publication Date</strong></label><p class="helper-text mb-0">When the document was published</p></div>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="required_publication_date" style="width:50px;height:25px;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div><label class="form-label mb-1"><i class="bi bi-file-text me-2"></i><strong>Document Title</strong></label><p class="helper-text mb-0">Descriptive title for the document</p></div>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="required_title" style="width:50px;height:25px;"></div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                <div><label class="form-label mb-1"><i class="bi bi-align-start me-2"></i><strong>Description / Notes</strong></label><p class="helper-text mb-0">Additional details about the document</p></div>
+                                <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="required_description" style="width:50px;height:25px;"></div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadMetadataSchema()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== TAG POLICIES ==================== -->
+                <div class="settings-card" id="tagPoliciesSection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-tags"></i></div>
+                        <div>
+                            <h3 class="settings-title">Tag Policies</h3>
+                            <p class="settings-subtitle">Configure tag management and restrictions</p>
+                        </div>
+                    </div>
+                    <form id="tagPoliciesForm">
+                        <div class="mb-4">
+                            <label for="maxTagsPerDocument" class="form-label"><i class="bi bi-hash me-2"></i><strong>Maximum Tags per Document</strong></label>
+                            <input type="number" class="form-control" id="maxTagsPerDocument" min="1" max="50" value="10" style="max-width:200px;">
+                            <p class="helper-text mb-0 mt-2"><i class="bi bi-info-circle me-1"></i>Maximum number of tags per document (1-50)</p>
+                        </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadTagPolicies()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== WATERMARK SETTINGS ==================== -->
+                <div class="settings-card" id="watermarkSection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-water"></i></div>
+                        <div>
+                            <h3 class="settings-title">Watermark Settings</h3>
+                            <p class="settings-subtitle">Configure document watermarking options</p>
+                        </div>
+                    </div>
+                    <form id="watermarkSettingsForm">
+
+                        <!-- Enable Toggle -->
+                        <div class="watermark-toggle-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+                                        <div class="ms-3">
+                                            <h5 class="mb-1" style="font-weight:600;color:#1f2937;">Enable Watermark</h5>
+                                            <p class="mb-0 text-muted" style="font-size:14px;">Add watermark to downloaded documents</p>
+                                        </div>
+                                    </div>
+                                    <div class="watermark-info-badge"><i class="bi bi-info-circle me-2"></i>Watermark includes username and date</div>
+                                </div>
+                                <div class="form-check form-switch ms-4" style="transform:scale(1.5);">
+                                    <input class="form-check-input" type="checkbox" id="watermarkEnabled" style="cursor:pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Config Section (opacity, position, font size) -->
+                        <div id="watermarkConfigSection">
+                            <div class="row g-4">
+
+                                <!-- Opacity -->
+                                <div class="col-md-4">
+                                    <div class="watermark-option-card">
+                                        <div class="option-header justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <div class="option-icon"><i class="bi bi-droplet-half"></i></div>
+                                                <div class="ms-2">
+                                                    <h6 class="mb-0" style="font-weight:600;">
+                                                        Opacity
+                                                        <span id="opacityValue" style="color:#667eea;font-weight:700;">30%</span>
+                                                    </h6>
+                                                    <p class="mb-0 text-muted" style="font-size:13px;">Transparency level</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="opacity-range-wrapper">
+                                            <input type="range" class="form-range opacity-slider" id="watermarkOpacityRange" min="0" max="100" value="30">
+                                            <div class="d-flex justify-content-between text-muted" style="font-size:11px;margin-top:5px;">
+                                                <span>Transparent</span>
+                                                <span>Opaque</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Position -->
+                                <div class="col-md-4">
+                                    <div class="watermark-option-card">
+                                        <div class="option-header">
+                                            <div class="option-icon"><i class="bi bi-pin-angle"></i></div>
+                                            <div><h6 class="mb-0" style="font-weight:600;">Position</h6><p class="mb-0 text-muted" style="font-size:13px;">Watermark placement</p></div>
+                                        </div>
+                                        <select class="form-select position-select" id="watermarkPosition">
+                                            <option value="Diagonal">↘️ Diagonal (Center)</option>
+                                            <option value="TopLeft">↖️ Top Left</option>
+                                            <option value="TopRight">↗️ Top Right</option>
+                                            <option value="BottomLeft">↙️ Bottom Left</option>
+                                            <option value="BottomRight">↘️ Bottom Right</option>
+                                            <option value="Center">➡️ Center (Horizontal)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Font Size — DROPDOWN -->
+                                <div class="col-md-4">
+                                    <div class="watermark-option-card">
+                                        <div class="option-header">
+                                            <div class="option-icon"><i class="bi bi-fonts"></i></div>
+                                            <div><h6 class="mb-0" style="font-weight:600;">Font Size</h6><p class="mb-0 text-muted" style="font-size:13px;">Watermark text size (pt)</p></div>
+                                        </div>
+                                        <select class="font-size-select" id="watermarkFontSize">
+                                            <option value="12">12</option>
+                                            <option value="14">14</option>
+                                            <option value="16">16</option>
+                                            <option value="18">18</option>
+                                            <option value="20">20</option>
+                                            <option value="22">22</option>
+                                            <option value="24">24</option>
+                                            <option value="28">28</option>
+                                            <option value="36">36</option>
+                                            <option value="48">48</option>
+                                            <option value="72">72</option>
+                                        </select>
+                                        <p class="helper-text mt-2 mb-0" style="font-size:12px;"><i class="bi bi-info-circle me-1"></i>Point size applied to watermark text</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ==================== LIVE WATERMARK PREVIEW PANEL ==================== -->
+                            <div class="wm-preview-panel" id="wmLivePreview">
+                                <div class="wm-preview-panel-header">
+                                    <div class="preview-icon"><i class="bi bi-eye"></i></div>
+                                    <div>
+                                        <h6>Live Preview</h6>
+                                        <p>Click on a page to see a fullscreen preview of how the watermark will appear</p>
+                                    </div>
+                                </div>
+                                <div class="wm-pages-container">
+
+                                    <!-- Portrait page -->
+                                    <div class="wm-page-wrapper">
+                                        <span class="wm-page-label">
+                                            <i class="bi bi-file-earmark me-1"></i>Portrait
+                                            <i class="bi bi-fullscreen ms-1" style="font-size:9px;opacity:0.6;"></i>
+                                        </span>
+                                        <div class="wm-page-portrait" id="previewPagePortrait"
+                                             onclick="openWmFullscreen('portrait')"
+                                             title="Click to preview fullscreen">
+                                            <!-- Document lines -->
+                                            <div class="wm-page-lines">
+                                                <div class="line title"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line"></div>
+                                            </div>
+                                            <!-- Watermark overlay -->
+                                            <div class="wm-text-overlay pos-diagonal" id="wmOverlayPortrait">
+                                                <span class="wm-text" id="wmTextPortrait">Username<br>DD/MM/YYYY</span>
+                                            </div>
+                                        </div>
+                                        <span class="wm-expand-hint">
+                                            <i class="bi bi-arrows-fullscreen"></i>Click to expand
+                                        </span>
+                                    </div>
+
+                                    <!-- Landscape page -->
+                                    <div class="wm-page-wrapper">
+                                        <span class="wm-page-label">
+                                            <i class="bi bi-file-earmark me-1" style="transform:rotate(90deg);display:inline-block;"></i>Landscape
+                                            <i class="bi bi-fullscreen ms-1" style="font-size:9px;opacity:0.6;"></i>
+                                        </span>
+                                        <div class="wm-page-landscape" id="previewPageLandscape"
+                                             onclick="openWmFullscreen('landscape')"
+                                             title="Click to preview fullscreen">
+                                            <!-- Document lines -->
+                                            <div class="wm-page-lines">
+                                                <div class="line title"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                                <div class="line"></div>
+                                                <div class="line"></div>
+                                                <div class="line short"></div>
+                                            </div>
+                                            <!-- Watermark overlay -->
+                                            <div class="wm-text-overlay pos-diagonal" id="wmOverlayLandscape">
+                                                <span class="wm-text" id="wmTextLandscape">Username<br>DD/MM/YYYY</span>
+                                            </div>
+                                        </div>
+                                        <span class="wm-expand-hint">
+                                            <i class="bi bi-arrows-fullscreen"></i>Click to expand
+                                        </span>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- END LIVE PREVIEW PANEL -->
+
+                        </div><!-- end watermarkConfigSection -->
+
+                        <!-- How Watermarks Work info box -->
+                        <div class="watermark-info-box">
+                            <div class="info-icon"><i class="bi bi-lightbulb-fill"></i></div>
+                            <div class="info-content">
+                                <h6 class="mb-2" style="font-weight:600;">How Watermarks Work</h6>
+                                <ul class="info-list">
+                                    <li>Applied automatically when users download documents</li>
+                                    <li>Includes username and download timestamp</li>
+                                    <li>Changes only affect new downloads</li>
+                                    <li>Helps track document distribution</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save-modern" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary btn-reset-modern" onclick="loadWatermarkSettings()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== SECURITY & ACCESS ==================== -->
+                <div class="settings-card" id="securitySection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-shield-lock"></i></div>
+                        <div>
+                            <h3 class="settings-title">Security & Access</h3>
+                            <p class="settings-subtitle">Configure access controls and permissions</p>
+                        </div>
+                    </div>
+                    <form id="securitySettingsForm">
+                        <div class="mb-4 p-3 border rounded">
+                            <label class="form-label fw-bold"><i class="bi bi-clock me-2"></i>Session Timeout (hours)</label>
+                            <input type="number" class="form-control" id="sessionTimeoutHours" min="1" max="72" value="8" style="max-width:150px;">
+                            <p class="helper-text mt-2"><i class="bi bi-info-circle me-1"></i>Auto logout users after this many inactive hours (1-72)</p>
+                        </div>
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <label class="form-label fw-bold mb-1"><i class="bi bi-key me-2"></i>Enforce Password Policy</label>
+                                    <p class="helper-text mb-0">Require strong passwords for all users</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="enforcePasswordPolicy"
+                                           style="width:50px;height:25px;" onchange="togglePasswordPolicyOptions()">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="passwordPolicyOptions" style="display:none;">
+                            <div class="p-3 border rounded mb-4" style="background:#f8fafc;border-left:4px solid #667eea !important;">
+                                <h6 class="fw-bold mb-3" style="color:#667eea;"><i class="bi bi-list-check me-2"></i>Password Requirements</h6>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Minimum Password Length</label>
+                                    <input type="number" class="form-control" id="minPasswordLength" min="4" max="32" value="8" style="max-width:120px;">
+                                </div>
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                            <label class="form-label mb-0"><i class="bi bi-type-bold me-2 text-primary"></i>Require Uppercase</label>
+                                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" id="requireUppercase" style="width:40px;height:20px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                            <label class="form-label mb-0"><i class="bi bi-type me-2 text-success"></i>Require Lowercase</label>
+                                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" id="requireLowercase" style="width:40px;height:20px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                            <label class="form-label mb-0"><i class="bi bi-123 me-2 text-warning"></i>Require Number</label>
+                                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" id="requireNumber" style="width:40px;height:20px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center justify-content-between p-2 border rounded bg-white">
+                                            <label class="form-label mb-0"><i class="bi bi-asterisk me-2 text-danger"></i>Require Special Character</label>
+                                            <div class="form-check form-switch mb-0"><input class="form-check-input" type="checkbox" id="requireSpecialChar" style="width:40px;height:20px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadSecuritySettings()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== ACTIVITY LOGGING ==================== -->
+                <div class="settings-card" id="loggingSection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon"><i class="bi bi-activity"></i></div>
+                        <div>
+                            <h3 class="settings-title">Activity Logging</h3>
+                            <p class="settings-subtitle">Configure logging and retention policies</p>
+                        </div>
+                    </div>
+                    <form id="loggingSettingsForm">
+                        <div class="mb-3 p-3 border rounded">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <label class="form-label fw-bold mb-1"><i class="bi bi-journal-check me-2"></i>Enable Activity Logging</label>
+                                    <p class="helper-text mb-0">Track user actions and system events</p>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="activityLoggingEnabled"
+                                           style="width:50px;height:25px;" onchange="toggleLogRetention()">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="logRetentionSection" style="display:none;">
+                            <div class="mb-4 p-3 border rounded" style="background:#f8fafc;border-left:4px solid #667eea !important;">
+                                <label class="form-label fw-bold"><i class="bi bi-calendar-range me-2"></i>Log Retention (days)</label>
+                                <input type="number" class="form-control" id="logRetentionDays" min="10" max="3650" value="90" style="max-width:150px;">
+                                <p class="helper-text mt-2"><i class="bi bi-info-circle me-1"></i>Logs older than this will be automatically deleted (<strong>minimum 10 days</strong>, max 3650 days)</p>
+                            </div>
+                        </div>
+                        <div class="alert alert-info d-flex align-items-start" role="alert">
+                            <i class="bi bi-lightbulb me-3" style="font-size:1.5rem;"></i>
+                            <div><strong>Note:</strong> Disabling activity logging will stop recording new user actions. Existing logs will be preserved.</div>
+                        </div>
+                        <div class="d-flex gap-3 mt-4">
+                            <button type="submit" class="btn btn-save" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
+                            <button type="button" class="btn btn-secondary" onclick="loadLoggingSettings()"><i class="bi bi-arrow-clockwise me-2"></i>Reset</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ==================== BULK DELETE ==================== -->
+                <div class="settings-card" id="bulkdeleteSection" style="display:none;">
+                    <div class="settings-header">
+                        <div class="settings-icon" style="background:#dc2626;"><i class="bi bi-trash3"></i></div>
+                        <div>
+                            <h3 class="settings-title">Bulk Delete</h3>
+                            <p class="settings-subtitle">Delete multiple users or documents at once</p>
+                        </div>
+                    </div>
+                    <div class="alert d-flex align-items-center mb-4" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;">
+                        <i class="bi bi-exclamation-triangle-fill me-3" style="font-size:1.5rem;color:#f59e0b;"></i>
+                        <div>
+                            <strong style="color:#92400e;">Warning</strong>
+                            <p class="mb-0" style="color:#92400e;font-size:14px;">Bulk delete operations are irreversible. Please exercise caution when using this feature.</p>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold mb-1">Select Data Type to Delete</h6>
+                    <p class="helper-text mb-3">Choose whether you want to delete users or documents in bulk</p>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-4 border rounded-3 h-100" style="border:2px solid #e5e7eb !important;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-people" style="font-size:1.8rem;color:#374151;"></i>
+                                    <h6 class="fw-bold ms-2 mb-0">Delete Users</h6>
+                                </div>
+                                <p class="text-muted" style="font-size:14px;">Remove multiple user accounts from the system at once.</p>
+                                <button type="button" class="btn w-100 mt-2 fw-bold" style="background:#dc2626;color:white;border-radius:8px;" onclick="openBulkDeleteModal('users')">
+                                    <i class="bi bi-trash3 me-2"></i>Delete Users
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 border rounded-3 h-100" style="border:2px solid #e5e7eb !important;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <i class="bi bi-file-earmark-x" style="font-size:1.8rem;color:#374151;"></i>
+                                    <h6 class="fw-bold ms-2 mb-0">Delete Documents</h6>
+                                </div>
+                                <p class="text-muted" style="font-size:14px;">Remove multiple documents from the library at once.</p>
+                                <button type="button" class="btn w-100 mt-2 fw-bold" style="background:#dc2626;color:white;border-radius:8px;" onclick="openBulkDeleteModal('documents')">
+                                    <i class="bi bi-trash3 me-2"></i>Delete Documents
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border rounded" style="background:#f9fafb;">
+                        <h6 class="fw-bold mb-2">Additional Information</h6>
+                        <ul class="mb-0" style="font-size:14px;color:#4b5563;">
+                            <li>Only administrators can perform bulk delete operations</li>
+                            <li>All bulk delete actions are logged in the activity log</li>
+                            <li>You will be able to review and select specific items before deletion</li>
+                            <li>A password confirmation dialog will be shown before any deletion occurs</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div><!-- end settings-content -->
+        </div><!-- end settings-container -->
+    </div>
+</div>
+
+<!-- ==================== WATERMARK FULLSCREEN PREVIEW MODAL ==================== -->
+<div class="modal fade" id="wmFullscreenModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:90vw;">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+
+            <!-- Header -->
+            <div class="modal-header" style="background:#1e3a5f;color:white;padding:16px 24px;border:none;">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                    <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-eye" style="font-size:20px;"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-0 fw-bold" id="wmFullscreenTitle" style="font-size:16px;">Watermark Preview</h5>
+                        <p class="mb-0" id="wmFullscreenSubtitle" style="font-size:12px;opacity:0.75;">Portrait page — A4 format (210 × 297 mm)</p>
+                    </div>
+                    <div class="ms-auto d-flex align-items-center gap-2">
+                        <button type="button" class="wm-orientation-btn" id="wmToggleOrientationBtn" onclick="wmToggleOrientation()">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span id="wmToggleBtnText">Switch to Landscape</span>
+                        </button>
+                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" style="opacity:0.8;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Body — document page display area -->
+            <div class="modal-body" style="background:#d1d5db;min-height:68vh;display:flex;align-items:center;justify-content:center;padding:40px;">
+                <div id="wmFullscreenPageWrapper" style="position:relative;display:inline-block;">
+                    <div class="wm-fs-page" id="wmFullscreenPage">
+                        <!-- Dynamic document lines injected by JS -->
+                        <div class="wm-fs-lines" id="wmFullscreenLines"></div>
+                        <!-- Watermark overlay -->
+                        <div class="wm-fs-watermark-overlay" id="wmFullscreenOverlay">
+                            <span class="wm-fs-watermark-text" id="wmFullscreenText">Username<br>DD/MM/YYYY</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="modal-footer" style="background:#f9fafb;padding:14px 24px;border-top:1px solid #e5e7eb;">
+                <div class="d-flex align-items-center gap-3 w-100">
+                    <div style="width:32px;height:32px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-info-circle" style="color:#dc2626;font-size:15px;"></i>
+                    </div>
+                    <span style="font-size:13px;color:#6b7280;">
+                        This is a live preview — adjusting <strong>opacity</strong>, <strong>position</strong> or <strong>font size</strong> is reflected here in real time.
+                    </span>
+                    <button type="button" class="btn btn-sm ms-auto fw-bold" data-bs-dismiss="modal"
+                            style="background:#1e3a5f;color:white;border-radius:8px;padding:8px 22px;">
+                        <i class="bi bi-x-circle me-1"></i>Close
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================== CONFIRMATION MODAL ==================== -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm File Size Reduction</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage"></p>
+                <p class="text-muted mb-0"><small>Existing files will remain accessible, but new uploads cannot exceed the new limit.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" onclick="confirmSave()"><i class="bi bi-check-circle me-2"></i>Continue Anyway</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== PASSWORD VERIFY MODAL ==================== -->
+<div class="modal fade" id="passwordVerifyModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1e3a5f;color:white;">
+                <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i>Admin Authentication Required</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Please enter your password to confirm this bulk delete operation.</p>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Your Password</label>
+                    <input type="password" class="form-control" id="adminPasswordInput" placeholder="Enter your password">
+                    <div id="passwordError" class="text-danger mt-1" style="display:none;font-size:14px;">
+                        <i class="bi bi-exclamation-circle me-1"></i>Incorrect password. Please try again.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn fw-bold" id="verifyPasswordBtn" style="background:#1e3a5f;color:white;" onclick="verifyPasswordAndProceed()">
+                    <i class="bi bi-unlock me-2"></i>Verify & Continue
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BULK DELETE SELECTION MODAL ==================== -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#1e3a5f;color:white;">
+                <h5 class="modal-title" id="bulkDeleteModalTitle"><i class="bi bi-people me-2"></i>Select Items to Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="max-height:500px;overflow-y:auto;">
+                <div class="alert d-flex align-items-center mb-3" style="background:#fff7ed;border:1px solid #fed7aa;">
+                    <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f59e0b;"></i>
+                    <span id="bulkDeleteWarningText" style="color:#92400e;font-size:14px;">Warning: This action cannot be undone.</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAllItems" onchange="toggleSelectAll()">
+                        <label class="form-check-label fw-bold" for="selectAllItems">Select All</label>
+                    </div>
+                    <span class="badge" style="background:#1e3a5f;font-size:13px;" id="selectedCountBadge">0 selected</span>
+                </div>
+                <div id="bulkDeleteItemsList"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn fw-bold" id="confirmBulkDeleteBtn" style="background:#dc2626;color:white;" onclick="executeBulkDelete()" disabled>
+                    <i class="bi bi-trash3 me-2"></i>
+                    <span id="deleteButtonText">Delete Selected (0)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== BULK DELETE FINAL CONFIRM MODAL ==================== -->
+<div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Final Confirmation</h5>
+            </div>
+            <div class="modal-body">
+                <p id="finalConfirmText" class="fw-bold"></p>
+                <p class="text-muted">This action is permanent and cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger fw-bold" onclick="confirmAndDelete()">
+                    <i class="bi bi-trash3 me-2"></i>Yes, Delete Permanently
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/bootstrap.bundle.min.js"></script>
+<div th:replace="~{common/navbar :: navbar-js}"></div>
+<script th:inline="javascript">var contextPath = /*[[@{/}]]*/ '/';</script>
+
+<script>
+    // ==================== GLOBAL VARIABLES ====================
+    let pendingUpdate = null;
+    let confirmationModal = null;
+    let passwordModal = null;
+    let bulkDeleteModal = null;
+    let bulkDeleteConfirmModal = null;
+    let bulkDeleteType = null;
+    let selectedItems = new Set();
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        confirmationModal   = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        passwordModal       = new bootstrap.Modal(document.getElementById('passwordVerifyModal'));
+        bulkDeleteModal     = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
+        bulkDeleteConfirmModal = new bootstrap.Modal(document.getElementById('bulkDeleteConfirmModal'));
+
+        loadSettings();
+        initializeTagPolicies();
+        initializeWatermarkSettings();
+
+        document.getElementById('repositorySettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault(); saveSettings();
+        });
+
+        document.getElementById('metadataSchemaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const settings = {
+                productCode:     document.getElementById('required_product_code').checked,
+                edition:         document.getElementById('required_edition').checked,
+                publicationDate: document.getElementById('required_publication_date').checked,
+                title:           document.getElementById('required_title').checked,
+                description:     document.getElementById('required_description').checked
+            };
+            showLoading(true);
+            fetch(contextPath + 'api/settings/metadata', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(settings)
+            }).then(r => r.json()).then(data => {
+                if (data.success) { showAlert('success', 'Metadata schema updated successfully!'); loadMetadataSchema(); }
+                else throw new Error(data.error);
+                showLoading(false);
+            }).catch(err => { showAlert('danger', 'Failed to save: ' + err.message); showLoading(false); });
+        });
+
+        document.getElementById('securitySettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const payload = {
+                sessionTimeoutHours:   parseInt(document.getElementById('sessionTimeoutHours').value),
+                enforcePasswordPolicy: document.getElementById('enforcePasswordPolicy').checked,
+                minPasswordLength:     parseInt(document.getElementById('minPasswordLength').value),
+                requireUppercase:      document.getElementById('requireUppercase').checked,
+                requireLowercase:      document.getElementById('requireLowercase').checked,
+                requireNumber:         document.getElementById('requireNumber').checked,
+                requireSpecialChar:    document.getElementById('requireSpecialChar').checked
+            };
+            showLoading(true);
+            fetch(contextPath + 'api/settings/security', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                if (data.success) { showAlert('success', 'Security settings saved successfully!'); loadSecuritySettings(); }
+                else throw new Error(data.error);
+                showLoading(false);
+            }).catch(err => { showAlert('danger', 'Failed to save: ' + err.message); showLoading(false); });
+        });
+
+        document.getElementById('loggingSettingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const enabled      = document.getElementById('activityLoggingEnabled').checked;
+            const retentionInput = document.getElementById('logRetentionDays');
+            const retentionVal = parseInt(retentionInput.value);
+            if (enabled && (isNaN(retentionVal) || retentionVal < 10)) {
+                showAlert('danger', 'Log retention must be at least 10 days.');
+                retentionInput.value = 10;
+                return;
+            }
+            const payload = {
+                activityLoggingEnabled: enabled,
+                logRetentionDays: enabled ? retentionVal : null
+            };
+            showLoading(true);
+            fetch(contextPath + 'api/settings/logging', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            }).then(r => r.json()).then(data => {
+                if (data.success) { showAlert('success', 'Activity logging settings saved!'); loadLoggingSettings(); }
+                else throw new Error(data.error);
+                showLoading(false);
+            }).catch(err => { showAlert('danger', 'Failed to save: ' + err.message); showLoading(false); });
+        });
+
+        document.querySelectorAll('.settings-menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection(this.getAttribute('data-section'));
+            });
+        });
+    });
+
+    // ==================== SECTION SWITCHING ====================
+    function switchSection(section) {
+        document.querySelectorAll('.settings-menu-item').forEach(i => i.classList.remove('active'));
+        document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        document.querySelectorAll('.settings-card').forEach(c => c.style.display = 'none');
+        const sectionMap = {
+            'repository': { id: 'repositorySection',  load: loadSettings },
+            'metadata':   { id: 'metadataSection',    load: loadMetadataSchema },
+            'tags':       { id: 'tagPoliciesSection',  load: loadTagPolicies },
+            'watermark':  { id: 'watermarkSection',    load: loadWatermarkSettings },
+            'security':   { id: 'securitySection',     load: loadSecuritySettings },
+            'logging':    { id: 'loggingSection',      load: loadLoggingSettings },
+            'bulkdelete': { id: 'bulkdeleteSection',   load: null }
+        };
+        const s = sectionMap[section];
+        if (s) {
+            document.getElementById(s.id).style.display = 'block';
+            if (s.load) s.load();
+        }
+    }
+
+    // ==================== REPOSITORY ====================
+    function loadSettings() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings').then(r => r.json()).then(settings => {
+            document.getElementById('repositoryPath').value = settings.repositoryPath || '';
+            document.getElementById('maxFileSizeMb').value  = settings.maxFileSizeMb  || 50;
+            const allowedFormats = settings.allowedFiles ? settings.allowedFiles.split(',') : ['PDF'];
+            document.querySelectorAll('.format-checkbox').forEach(cb => cb.checked = false);
+            allowedFormats.forEach(f => {
+                const cb = document.getElementById('format_' + f.toLowerCase());
+                if (cb) cb.checked = true;
+            });
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load settings'); showLoading(false); });
+    }
+
+    function saveSettings() {
+        const maxFileSizeMb   = parseInt(document.getElementById('maxFileSizeMb').value);
+        const selectedFormats = Array.from(document.querySelectorAll('.format-checkbox:checked')).map(cb => cb.value);
+        if (!maxFileSizeMb || maxFileSizeMb < 1 || maxFileSizeMb > 1000) { showAlert('danger', 'Max file size must be between 1 and 1000 MB'); return; }
+        if (selectedFormats.length === 0) { showAlert('danger', 'Please select at least one file format'); return; }
+        showLoading(true);
+        fetch(contextPath + 'api/settings/repository', {
+            method: 'PUT', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ maxFileSizeMb, allowedFiles: selectedFormats.join(',') })
+        }).then(r => r.json().then(data => ({ status: r.status, data }))).then(({ status, data }) => {
+            if (status === 409)      { pendingUpdate = { maxFileSizeMb, allowedFiles: selectedFormats.join(',') }; showConfirmation(data); }
+            else if (status === 200) { showAlert('success', 'Settings saved successfully!'); loadSettings(); }
+            else throw new Error(data.error);
+            showLoading(false);
+        }).catch(err => { showAlert('danger', 'Failed to save: ' + err.message); showLoading(false); });
+    }
+
+    function showConfirmation(data) {
+        document.getElementById('confirmationMessage').textContent = data.message || `${data.affectedFilesCount} file(s) exceed the new limit`;
+        confirmationModal.show();
+    }
+
+    function confirmSave() {
+        if (!pendingUpdate) return;
+        confirmationModal.hide();
+        showLoading(true);
+        fetch(contextPath + 'api/settings/repository/confirm', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pendingUpdate)
+        }).then(r => r.json()).then(data => {
+            if (data.success) { showAlert('success', 'Settings updated!'); loadSettings(); }
+            else throw new Error(data.error);
+            showLoading(false);
+            pendingUpdate = null;
+        }).catch(err => { showAlert('danger', 'Failed: ' + err.message); showLoading(false); pendingUpdate = null; });
+    }
+
+    // ==================== METADATA ====================
+    function loadMetadataSchema() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings/metadata').then(r => r.json()).then(data => {
+            document.getElementById('required_product_code').checked    = data.productCode     || false;
+            document.getElementById('required_edition').checked         = data.edition         || false;
+            document.getElementById('required_publication_date').checked = data.publicationDate || false;
+            document.getElementById('required_title').checked           = data.title           || false;
+            document.getElementById('required_description').checked     = data.description     || false;
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load metadata'); showLoading(false); });
+    }
+
+    // ==================== TAG POLICIES ====================
+    function loadTagPolicies() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings/tag-policies').then(r => r.json()).then(data => {
+            document.getElementById('maxTagsPerDocument').value = data.maxTagsPerDocument || 10;
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load tag policies'); showLoading(false); });
+    }
+
+    function initializeTagPolicies() {
+        const form    = document.getElementById('tagPoliciesForm');
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const max = parseInt(document.getElementById('maxTagsPerDocument').value);
+            if (isNaN(max) || max < 1 || max > 50) { showAlert('danger', 'Max tags must be between 1 and 50'); return; }
+            showLoading(true);
+            fetch(contextPath + 'api/settings/tag-policies', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ maxTagsPerDocument: max })
+            }).then(r => r.json()).then(data => {
+                if (data.success) { showAlert('success', 'Tag policies updated!'); loadTagPolicies(); }
+                else throw new Error(data.error);
+                showLoading(false);
+            }).catch(err => { showAlert('danger', 'Failed: ' + err.message); showLoading(false); });
+        });
+    }
+
+    // ==================== WATERMARK ====================
+    function toggleWatermarkOptions() {
+        const enabled      = document.getElementById('watermarkEnabled').checked;
+        const configSection = document.getElementById('watermarkConfigSection');
+        if (enabled) {
+            configSection.classList.remove('hidden');
+            configSection.style.maxHeight = configSection.scrollHeight + 'px';
+            configSection.style.opacity   = '1';
+        } else {
+            configSection.classList.add('hidden');
+            configSection.style.maxHeight = '0';
+            configSection.style.opacity   = '0';
+        }
+    }
+
+    // ==================== LIVE WATERMARK PREVIEW (small thumbnails) ====================
+    function updateWatermarkPreview() {
+        const opacity  = parseInt(document.getElementById('watermarkOpacityRange').value) || 30;
+        const position = (document.getElementById('watermarkPosition').value || 'Diagonal').toLowerCase();
+        const fontSize = parseInt(document.getElementById('watermarkFontSize').value) || 24;
+
+        // Map opacity 0-100 → alpha, capped for visibility
+        const alpha        = Math.max(0.05, Math.min(1.0, opacity / 100));
+        const previewColor = `rgba(220,38,38,${alpha})`;
+
+        // Scale font for small thumbnail (page ~160px wide; real A4 portrait ~595px)
+        const scale          = 0.27;
+        const previewFontPx  = Math.max(7, Math.round(fontSize * scale * 1.33));
+
+        const posClassMap = {
+            'diagonal':    'pos-diagonal',
+            'topleft':     'pos-topleft',
+            'topright':    'pos-topright',
+            'bottomleft':  'pos-bottomleft',
+            'bottomright': 'pos-bottomright',
+            'center':      'pos-center'
+        };
+        const posClass = posClassMap[position] || 'pos-diagonal';
+
+        ['Portrait', 'Landscape'].forEach(variant => {
+            const overlay = document.getElementById('wmOverlay' + variant);
+            const textEl  = document.getElementById('wmText'    + variant);
+            if (!overlay || !textEl) return;
+            overlay.className       = 'wm-text-overlay ' + posClass;
+            textEl.style.color      = previewColor;
+            textEl.style.fontSize   = previewFontPx + 'px';
+        });
+
+        // If fullscreen modal is open, sync it too
+        const fsModal = document.getElementById('wmFullscreenModal');
+        if (fsModal && fsModal.classList.contains('show')) {
+            renderWmFullscreen();
+        }
+    }
+
+    function syncOpacityControls() {
+        const opacitySlider = document.getElementById('watermarkOpacityRange');
+        const opacityLabel  = document.getElementById('opacityValue');
+
+        if (opacitySlider && opacityLabel) {
+            opacitySlider.addEventListener('input', function () {
+                opacityLabel.textContent = this.value + '%';
+                updateWatermarkPreview();
+            });
+            opacityLabel.textContent = opacitySlider.value + '%';
+        }
+
+        const fontSizeSelect = document.getElementById('watermarkFontSize');
+        if (fontSizeSelect) fontSizeSelect.addEventListener('change', updateWatermarkPreview);
+    }
+
+    function updatePositionPreview() {
+        const pos     = document.getElementById('watermarkPosition').value.toLowerCase();
+        const preview = document.getElementById('positionPreview');
+        if (preview) preview.className = 'preview-watermark ' + pos;
+        updateWatermarkPreview();
+    }
+
+    function loadWatermarkSettings() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings/watermark').then(r => r.json()).then(data => {
+            document.getElementById('watermarkEnabled').checked = data.watermarkEnabled || false;
+
+            const opacity = data.watermarkOpacity || 30;
+            document.getElementById('watermarkOpacityRange').value = opacity;
+            const opacityLabel = document.getElementById('opacityValue');
+            if (opacityLabel) opacityLabel.textContent = opacity + '%';
+
+            // Font size — pick closest dropdown option
+            const fontSize = data.watermarkFontSize || 24;
+            const fsSelect = document.getElementById('watermarkFontSize');
+            const opts     = Array.from(fsSelect.options).map(o => parseInt(o.value));
+            let best = '24', minDiff = Infinity;
+            opts.forEach(v => { const d = Math.abs(v - fontSize); if (d < minDiff) { minDiff = d; best = String(v); } });
+            fsSelect.value = best;
+
+            document.getElementById('watermarkPosition').value = data.watermarkPosition || 'Diagonal';
+            toggleWatermarkOptions();
+            updatePositionPreview();
+            updateWatermarkPreview();
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load watermark settings'); showLoading(false); });
+    }
+
+    function initializeWatermarkSettings() {
+        const form    = document.getElementById('watermarkSettingsForm');
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        syncOpacityControls();
+
+        const toggle = document.getElementById('watermarkEnabled');
+        if (toggle) toggle.addEventListener('change', toggleWatermarkOptions);
+
+        const posSelect = document.getElementById('watermarkPosition');
+        if (posSelect) posSelect.addEventListener('change', updatePositionPreview);
+
+        updateWatermarkPreview();
+
+        newForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const enabled  = document.getElementById('watermarkEnabled').checked;
+            const opacity  = parseInt(document.getElementById('watermarkOpacityRange').value);
+            const position = document.getElementById('watermarkPosition').value;
+            const fontSize = parseInt(document.getElementById('watermarkFontSize').value);
+
+            if (isNaN(opacity) || opacity < 0 || opacity > 100) { showAlert('danger', 'Opacity must be 0-100'); return; }
+            showLoading(true);
+            fetch(contextPath + 'api/settings/watermark', {
+                method: 'PUT', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ watermarkEnabled: enabled, watermarkOpacity: opacity, watermarkPosition: position, watermarkFontSize: fontSize })
+            }).then(r => r.json()).then(data => {
+                if (data.success) { showAlert('success', 'Watermark settings updated!'); loadWatermarkSettings(); }
+                else throw new Error(data.error);
+                showLoading(false);
+            }).catch(err => { showAlert('danger', 'Failed: ' + err.message); showLoading(false); });
+        });
+    }
+
+    // ==================== WATERMARK FULLSCREEN PREVIEW ====================
+    let wmFullscreenOrientation   = 'portrait';
+    let wmFullscreenModalInstance = null;
+
+    function openWmFullscreen(orientation) {
+        wmFullscreenOrientation = orientation;
+        if (!wmFullscreenModalInstance) {
+            wmFullscreenModalInstance = new bootstrap.Modal(document.getElementById('wmFullscreenModal'));
+        }
+        renderWmFullscreen();
+        wmFullscreenModalInstance.show();
+    }
+
+    function wmToggleOrientation() {
+        wmFullscreenOrientation = (wmFullscreenOrientation === 'portrait') ? 'landscape' : 'portrait';
+        renderWmFullscreen();
+    }
+
+    function renderWmFullscreen() {
+        const isPortrait = (wmFullscreenOrientation === 'portrait');
+
+        // ── Header text ──────────────────────────────────────────────────────
+        document.getElementById('wmFullscreenTitle').textContent =
+            (isPortrait ? 'Portrait' : 'Landscape') + ' Page — Watermark Preview';
+        document.getElementById('wmFullscreenSubtitle').textContent = isPortrait
+            ? 'Portrait page — A4 format (210 × 297 mm)'
+            : 'Landscape page — A4 format (297 × 210 mm)';
+        document.getElementById('wmToggleBtnText').textContent = isPortrait
+            ? 'Switch to Landscape'
+            : 'Switch to Portrait';
+
+        // ── Page dimensions ──────────────────────────────────────────────────
+        // Target: fill ~65vh height comfortably. A4 aspect ratio: w/h = 210/297 (portrait).
+        const maxH  = Math.min(window.innerHeight * 0.60, 580);
+        const maxW  = Math.min(window.innerWidth  * 0.78, 860);
+        const ratio = 210 / 297; // portrait width/height ratio
+
+        let pageW, pageH;
+        if (isPortrait) {
+            pageH = maxH;
+            pageW = Math.round(pageH * ratio);
+            if (pageW > maxW) { pageW = maxW; pageH = Math.round(pageW / ratio); }
+        } else {
+            // Landscape: swap dimensions
+            pageW = Math.round(maxH / ratio);
+            pageH = Math.round(pageW * ratio);
+            if (pageW > maxW) { pageW = maxW; pageH = Math.round(pageW * ratio); }
+        }
+
+        const page = document.getElementById('wmFullscreenPage');
+        page.style.width  = pageW + 'px';
+        page.style.height = pageH + 'px';
+
+        // ── Fake document lines ──────────────────────────────────────────────
+        const linesDiv  = document.getElementById('wmFullscreenLines');
+        const lineCount = isPortrait ? 24 : 15;
+        const padTop    = Math.round(pageH * 0.055);
+        const padX      = Math.round(pageW * 0.07);
+        const lineGap   = Math.round((pageH - padTop * 2) / (lineCount + 0.5));
+        let html = '';
+        for (let i = 0; i < lineCount; i++) {
+            const isTitle = (i === 0);
+            const isShort = (i % 3 === 2);
+            const w  = isTitle ? '72%' : isShort ? '48%' : '90%';
+            const h  = isTitle ? '9px' : '4px';
+            const bg = isTitle ? '#c9cfd8' : '#e9ecef';
+            const mb = isTitle ? 6 : 0;
+            html += `<div style="position:absolute;left:${padX}px;top:${padTop + i * lineGap + mb}px;` +
+                    `width:${w};height:${h};background:${bg};border-radius:2px;"></div>`;
+        }
+        linesDiv.innerHTML = html;
+
+        // ── Read current watermark settings ──────────────────────────────────
+        const opacity  = parseInt(document.getElementById('watermarkOpacityRange').value) || 30;
+        const position = (document.getElementById('watermarkPosition').value || 'Diagonal').toLowerCase();
+        const fontSize = parseInt(document.getElementById('watermarkFontSize').value) || 24;
+
+        // Scale font: pt → px, adjusted for preview page size vs real A4
+        const realA4W    = isPortrait ? 595 : 842; // A4 at 72dpi
+        const scaleFactor = pageW / realA4W;
+        const fsPx        = Math.max(10, Math.round(fontSize * scaleFactor * 1.33));
+
+        const alpha = Math.max(0.05, Math.min(1.0, opacity / 100));
+        const color = `rgba(220,38,38,${alpha})`;
+
+        // ── Apply watermark overlay ──────────────────────────────────────────
+        const overlay = document.getElementById('wmFullscreenOverlay');
+        const text    = document.getElementById('wmFullscreenText');
+
+        const pad = `${Math.round(pageH * 0.045)}px ${Math.round(pageW * 0.045)}px`;
+        const posMap = {
+            'diagonal':    { ai: 'center',     jc: 'center',     p: '0',  rot: '-45deg' },
+            'topleft':     { ai: 'flex-start', jc: 'flex-start', p: pad,  rot: '0deg'  },
+            'topright':    { ai: 'flex-start', jc: 'flex-end',   p: pad,  rot: '0deg'  },
+            'bottomleft':  { ai: 'flex-end',   jc: 'flex-start', p: pad,  rot: '0deg'  },
+            'bottomright': { ai: 'flex-end',   jc: 'flex-end',   p: pad,  rot: '0deg'  },
+            'center':      { ai: 'center',     jc: 'center',     p: '0',  rot: '0deg'  }
+        };
+        const ps = posMap[position] || posMap['diagonal'];
+
+        overlay.style.alignItems     = ps.ai;
+        overlay.style.justifyContent = ps.jc;
+        overlay.style.padding        = ps.p;
+        text.style.transform         = `rotate(${ps.rot})`;
+        text.style.color             = color;
+        text.style.fontSize          = fsPx + 'px';
+    }
+
+    // ==================== SECURITY ====================
+    function togglePasswordPolicyOptions() {
+        const enabled = document.getElementById('enforcePasswordPolicy').checked;
+        document.getElementById('passwordPolicyOptions').style.display = enabled ? 'block' : 'none';
+    }
+
+    function loadSecuritySettings() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings/security').then(r => r.json()).then(data => {
+            document.getElementById('sessionTimeoutHours').value  = data.sessionTimeoutHours  || 8;
+            document.getElementById('enforcePasswordPolicy').checked = data.enforcePasswordPolicy || false;
+            document.getElementById('minPasswordLength').value    = data.minPasswordLength    || 8;
+            document.getElementById('requireUppercase').checked   = data.requireUppercase     || false;
+            document.getElementById('requireLowercase').checked   = data.requireLowercase     || false;
+            document.getElementById('requireNumber').checked      = data.requireNumber        || false;
+            document.getElementById('requireSpecialChar').checked = data.requireSpecialChar   || false;
+            togglePasswordPolicyOptions();
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load security settings'); showLoading(false); });
+    }
+
+    // ==================== LOGGING ====================
+    function toggleLogRetention() {
+        const enabled = document.getElementById('activityLoggingEnabled').checked;
+        document.getElementById('logRetentionSection').style.display = enabled ? 'block' : 'none';
+    }
+
+    function loadLoggingSettings() {
+        showLoading(true);
+        fetch(contextPath + 'api/settings/logging').then(r => r.json()).then(data => {
+            document.getElementById('activityLoggingEnabled').checked = data.activityLoggingEnabled || false;
+            const days = Math.max(10, data.logRetentionDays || 90);
+            document.getElementById('logRetentionDays').value = days;
+            toggleLogRetention();
+            showLoading(false);
+        }).catch(() => { showAlert('danger', 'Failed to load logging settings'); showLoading(false); });
+    }
+
+    // ==================== BULK DELETE ====================
+    function openBulkDeleteModal(type) {
+        bulkDeleteType = type;
+        selectedItems  = new Set();
+        document.getElementById('adminPasswordInput').value = '';
+        document.getElementById('passwordError').style.display = 'none';
+        passwordModal.show();
+    }
+
+    function verifyPasswordAndProceed() {
+        const password = document.getElementById('adminPasswordInput').value;
+        if (!password.trim()) {
+            document.getElementById('passwordError').textContent = 'Please enter your password';
+            document.getElementById('passwordError').style.display = 'block';
+            return;
+        }
+        const btn = document.getElementById('verifyPasswordBtn');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Verifying...';
+        btn.disabled  = true;
+        fetch(contextPath + 'api/settings/bulk-delete/verify-password', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ password })
+        }).then(r => r.json()).then(data => {
+            btn.innerHTML = '<i class="bi bi-unlock me-2"></i>Verify & Continue';
+            btn.disabled  = false;
+            if (data.success) { passwordModal.hide(); loadBulkDeleteItems(); }
+            else {
+                document.getElementById('passwordError').textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordError').style.display = 'block';
+            }
+        }).catch(() => {
+            btn.innerHTML = '<i class="bi bi-unlock me-2"></i>Verify & Continue';
+            btn.disabled  = false;
+            document.getElementById('passwordError').textContent = 'Verification failed. Try again.';
+            document.getElementById('passwordError').style.display = 'block';
+        });
+    }
+
+    function loadBulkDeleteItems() {
+        const isUsers = (bulkDeleteType === 'users');
+        document.getElementById('bulkDeleteModalTitle').innerHTML =
+            `<i class="bi bi-${isUsers ? 'people' : 'file-earmark-x'} me-2"></i>Select ${isUsers ? 'Users' : 'Documents'} to Delete`;
+        document.getElementById('bulkDeleteWarningText').textContent =
+            `Warning: This action cannot be undone. Selected ${isUsers ? 'users' : 'documents'} will be permanently deleted.`;
+        document.getElementById('bulkDeleteItemsList').innerHTML =
+            '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
+        document.getElementById('selectAllItems').checked = false;
+        selectedItems = new Set();
+        updateSelectedCount();
+        const endpoint = isUsers ? 'bulk-delete/users-list' : 'bulk-delete/documents-list';
+        fetch(contextPath + 'api/settings/' + endpoint).then(r => r.json()).then(items => {
+            renderBulkDeleteItems(items);
+            bulkDeleteModal.show();
+        }).catch(() => showAlert('danger', 'Failed to load items'));
+    }
+
+    function renderBulkDeleteItems(items) {
+        const container = document.getElementById('bulkDeleteItemsList');
+        const isUsers   = (bulkDeleteType === 'users');
+        if (!items || items.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-4">No items available to delete</div>';
+            return;
+        }
+        container.innerHTML = items.map(item => {
+            const title    = isUsers ? item.username  : item.title;
+            const subtitle = isUsers ? item.email     : (item.productCode || '');
+            const badge    = isUsers ? item.roleName  : (item.edition     || '');
+            return `<div class="border rounded p-3 mb-2 d-flex align-items-center bulk-item" id="item_${item.id}"
+                        style="cursor:pointer;transition:all 0.2s;" onclick="toggleItemSelection(${item.id})">
+                <input class="form-check-input me-3 item-checkbox" type="checkbox" id="check_${item.id}"
+                       value="${item.id}" onclick="event.stopPropagation();toggleItemSelection(${item.id})"
+                       style="width:18px;height:18px;">
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">${title}</div>
+                    <div class="text-muted" style="font-size:13px;">${subtitle}</div>
+                </div>
+                ${badge ? `<span class="badge ms-2" style="background:#e5e7eb;color:#374151;">${badge}</span>` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function toggleItemSelection(id) {
+        const checkbox = document.getElementById('check_' + id);
+        const itemDiv  = document.getElementById('item_'  + id);
+        if (selectedItems.has(id)) {
+            selectedItems.delete(id);
+            checkbox.checked = false;
+            itemDiv.style.background   = '';
+            itemDiv.style.borderColor  = '';
+        } else {
+            selectedItems.add(id);
+            checkbox.checked = true;
+            itemDiv.style.background   = '#eff6ff';
+            itemDiv.style.borderColor  = '#667eea';
+        }
+        updateSelectedCount();
+    }
+
+    function toggleSelectAll() {
+        const checked = document.getElementById('selectAllItems').checked;
+        document.querySelectorAll('.item-checkbox').forEach(cb => {
+            const id      = parseInt(cb.value);
+            const itemDiv = document.getElementById('item_' + id);
+            if (checked) {
+                selectedItems.add(id); cb.checked = true;
+                if (itemDiv) { itemDiv.style.background = '#eff6ff'; itemDiv.style.borderColor = '#667eea'; }
+            } else {
+                selectedItems.delete(id); cb.checked = false;
+                if (itemDiv) { itemDiv.style.background = ''; itemDiv.style.borderColor = ''; }
+            }
+        });
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const count = selectedItems.size;
+        document.getElementById('selectedCountBadge').textContent = count + ' selected';
+        document.getElementById('deleteButtonText').textContent   = 'Delete Selected (' + count + ')';
+        document.getElementById('confirmBulkDeleteBtn').disabled  = (count === 0);
+    }
+
+    function executeBulkDelete() {
+        if (selectedItems.size === 0) return;
+        const isUsers = (bulkDeleteType === 'users');
+        document.getElementById('finalConfirmText').textContent =
+            `Are you sure you want to permanently delete ${selectedItems.size} ${isUsers ? 'user(s)' : 'document(s)'}?`;
+        bulkDeleteConfirmModal.show();
+    }
+
+    function confirmAndDelete() {
+        bulkDeleteConfirmModal.hide();
+        bulkDeleteModal.hide();
+        const isUsers    = (bulkDeleteType === 'users');
+        const ids        = Array.from(selectedItems);
+        const endpoint   = isUsers ? 'bulk-delete/users'     : 'bulk-delete/documents';
+        const payloadKey = isUsers ? 'userIds'               : 'documentIds';
+        showLoading(true);
+        fetch(contextPath + 'api/settings/' + endpoint, {
+            method: 'DELETE', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ [payloadKey]: ids })
+        }).then(r => r.json()).then(data => {
+            showLoading(false);
+            if (data.success)
+                showAlert('success', `✅ ${data.deletedCount} ${isUsers ? 'user(s)' : 'document(s)'} deleted successfully!`);
+            else throw new Error(data.error);
+            selectedItems = new Set();
+        }).catch(err => { showLoading(false); showAlert('danger', 'Failed to delete: ' + err.message); });
+    }
+
+    // ==================== UTILITIES ====================
+    function showAlert(type, message) {
+        let alertContainer = document.querySelector('.alert-container');
+        if (!alertContainer) {
+            alertContainer = document.createElement('div');
+            alertContainer.className  = 'alert-container';
+            alertContainer.style.cssText = 'position:fixed;top:80px;right:20px;z-index:9999;min-width:300px;';
+            document.body.appendChild(alertContainer);
+        }
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        alertContainer.appendChild(alertDiv);
+        setTimeout(() => { try { bootstrap.Alert.getOrCreateInstance(alertDiv).close(); } catch(e) {} }, 3000);
+    }
+
+    function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) overlay.classList.add('active');
+        else      overlay.classList.remove('active');
+    }
+</script>
+</body>
+</html>

@@ -1008,17 +1008,19 @@
 
                             <div class="form-group">
                                 <label for="title" class="form-label">
-                                    Document Title <span class="required-indicator">*</span>
+                                    Document Title
+                                    <!--                                    <span class="required-indicator">*</span>-->
                                 </label>
-                                <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1" required>
+                                <input type="text" class="form-control" id="title" th:field="*{title}" placeholder="e.g., Product Manual v2.1">
                             </div>
 
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="productCode" class="form-label">
-                                        Product Code <span class="required-indicator">*</span>
+                                        Product Code
+                                        <!--                                        <span class="required-indicator">*</span>-->
                                     </label>
-                                    <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" required>
+                                    <input type="text" class="form-control" id="productCode" th:field="*{productCode}" placeholder="e.g., PM-001" >
                                 </div>
 
                                 <div class="form-group">
@@ -1049,9 +1051,10 @@
 
                                 <div class="form-group">
                                     <label for="publishYear" class="form-label">
-                                        Publication Year <span class="required-indicator">*</span>
+                                        Publication Year
+                                        <!--                                        <span class="required-indicator">*</span>-->
                                     </label>
-                                    <select class="form-control" id="publishYear" required>
+                                    <select class="form-control" id="publishYear" >
                                         <option value="">Select Year</option>
                                     </select>
                                 </div>
@@ -1412,7 +1415,10 @@
     let allExistingClassifications = []; // All available classifications
     let allExistingGroups = []; // All available groups
     let classificationSelectionLocked = false; // ED1 lock
-
+    let maxFileSizeMB = 50; // Default max file size (will be fetched from settings)
+    let allowedFormats = ['PDF'];
+    let metadataSchema = {};
+    let maxTagsPerDocument = 10;
 
 
     async function checkClassificationEditionAccess() {
@@ -1430,6 +1436,174 @@
     } catch (err) {
         console.error('Classification edit license check failed', err);
         // ❌ DO NOT LOCK on error
+    }
+}
+/**
+ * Fetch max file size and allowed formats from settings
+ */
+async function fetchUploadSettings() {
+    try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) {
+            console.warn('Could not fetch settings, using defaults');
+            return;
+        }
+
+        const settings = await response.json();
+
+        if (settings.maxFileSizeMb) {
+            maxFileSizeMB = settings.maxFileSizeMb;
+            console.log('✅ Max file size loaded:', maxFileSizeMB, 'MB');
+        }
+
+        if (settings.allowedFiles) {
+            allowedFormats = settings.allowedFiles.split(',').map(f => f.trim());
+            console.log('✅ Allowed formats loaded:', allowedFormats);
+        }
+
+        updateUploadUIText();
+
+    } catch (error) {
+        console.error('Error fetching upload settings:', error);
+    }
+}
+
+/**
+ * Fetch metadata schema settings and apply to form
+ */
+async function fetchMetadataSchema() {
+    try {
+        const response = await fetch('/api/settings/metadata');
+        if (!response.ok) {
+            console.warn('Could not fetch metadata schema, using defaults');
+            return;
+        }
+
+        metadataSchema = await response.json();
+        console.log('✅ Metadata schema loaded:', metadataSchema);
+
+        applyMetadataSchema();
+
+    } catch (error) {
+        console.error('Error fetching metadata schema:', error);
+    }
+}
+/**
+ * Fetch tag policies from settings
+ */
+async function fetchTagPolicies() {
+    try {
+        const response = await fetch('/api/settings/tag-policies');
+        if (!response.ok) {
+            console.warn('Could not fetch tag policies, using defaults');
+            return;
+        }
+
+        const policies = await response.json();
+
+        if (policies.maxTagsPerDocument) {
+            maxTagsPerDocument = policies.maxTagsPerDocument;
+            console.log('✅ Max tags per document loaded:', maxTagsPerDocument);
+        }
+
+    } catch (error) {
+        console.error('Error fetching tag policies:', error);
+    }
+}
+
+/**
+ * Apply metadata schema to form (show/hide fields, add required indicators)
+ */
+function applyMetadataSchema() {
+    // Product Code
+    const productCodeGroup = document.getElementById('productCode').closest('.form-group');
+    const productCodeLabel = document.querySelector('label[for="productCode"]');
+    if (metadataSchema.productCode) {
+        productCodeGroup.style.display = 'block';
+        document.getElementById('productCode').required = true;
+        if (!productCodeLabel.querySelector('.required-indicator')) {
+            productCodeLabel.innerHTML = 'Product Code <span class="required-indicator">*</span>';
+        }
+    } else {
+        productCodeGroup.style.display = 'none';
+        document.getElementById('productCode').required = false;
+    }
+
+    // Edition
+    const editionGroup = document.getElementById('edition').closest('.form-group');
+    const editionLabel = document.querySelector('label[for="edition"]');
+    if (metadataSchema.edition) {
+        editionGroup.style.display = 'block';
+        document.getElementById('edition').required = true;
+        if (!editionLabel.querySelector('.required-indicator')) {
+            editionLabel.innerHTML = 'Edition <span class="required-indicator">*</span>';
+        }
+    } else {
+        editionGroup.style.display = 'none';
+        document.getElementById('edition').required = false;
+    }
+
+    // Publication Date (Month + Year together)
+    const publishMonthGroup = document.getElementById('publishMonth').closest('.form-group');
+    const publishYearGroup = document.getElementById('publishYear').closest('.form-group');
+    const publishRow = publishMonthGroup.closest('.form-row');
+
+    if (metadataSchema.publicationDate) {
+        publishRow.style.display = 'grid';
+        document.getElementById('publishYear').required = true;
+        const publishYearLabel = document.querySelector('label[for="publishYear"]');
+        if (!publishYearLabel.querySelector('.required-indicator')) {
+            publishYearLabel.innerHTML = 'Publication Year <span class="required-indicator">*</span>';
+        }
+    } else {
+        publishRow.style.display = 'none';
+        document.getElementById('publishYear').required = false;
+        document.getElementById('publishMonth').required = false;
+    }
+
+    // Title
+    const titleGroup = document.getElementById('title').closest('.form-group');
+    const titleLabel = document.querySelector('label[for="title"]');
+    if (metadataSchema.title) {
+        titleGroup.style.display = 'block';
+        document.getElementById('title').required = true;
+        if (!titleLabel.querySelector('.required-indicator')) {
+            titleLabel.innerHTML = 'Document Title <span class="required-indicator">*</span>';
+        }
+    } else {
+        titleGroup.style.display = 'none';
+        document.getElementById('title').required = false;
+    }
+
+    // Description (Notes field)
+    const notesGroup = document.getElementById('notes').closest('.form-group');
+    const notesLabel = document.querySelector('label[for="notes"]');
+    if (metadataSchema.description) {
+        notesGroup.style.display = 'block';
+        document.getElementById('notes').required = true;
+        if (!notesLabel.querySelector('.required-indicator')) {
+            notesLabel.innerHTML = 'Notes / Description <span class="required-indicator">*</span>';
+        }
+    } else {
+        notesGroup.style.display = 'none';
+        document.getElementById('notes').required = false;
+    }
+
+    console.log('✅ Metadata schema applied to form');
+}
+
+/**
+ * Update UI text with current settings
+ */
+function updateUploadUIText() {
+    const dropZoneInfo = document.querySelector('.drop-zone-info:last-of-type');
+    if (dropZoneInfo) {
+        const formatsList = allowedFormats.join(', ');
+        dropZoneInfo.innerHTML = `
+            <i class="bi bi-info-circle"></i>
+            Supported format${allowedFormats.length > 1 ? 's' : ''}: ${formatsList} •
+            Maximum size: ${maxFileSizeMB}MB
+        `;
     }
 }
 
@@ -1472,12 +1646,15 @@ function applyEssentialClassificationLock() {
     /**
      * Initialize the wizard when DOM is loaded
      */
-    document.addEventListener('DOMContentLoaded', async function() {
-        populateYearDropdown();
-        await checkClassificationEditionAccess(); // ✅ now valid
-        initializeTagsAndClassifications();
-        initializeGroups();
-    });
+   document.addEventListener('DOMContentLoaded', async function() {
+    populateYearDropdown();
+    await fetchUploadSettings(); // ⭐ ADD THIS LINE
+    await fetchMetadataSchema();
+    await checkClassificationEditionAccess();
+    await fetchTagPolicies(); // ⭐ ADD THIS LINE
+    initializeTagsAndClassifications();
+    initializeGroups();
+});
 
     // ==================== INITIALIZE TAGS AND CLASSIFICATIONS ====================
     /**
@@ -1501,25 +1678,36 @@ function applyEssentialClassificationLock() {
         });
 
         // Attach click handlers to existing tags
-        document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item => {
-            item.addEventListener('click', function() {
-                const checkbox = this.querySelector('.tag-checkbox');
-                const tagName = this.getAttribute('data-tag-name');
-                if (checkbox.checked) {
-                    checkbox.checked = false;
-                    this.classList.remove('selected');
-                    selectedTags = selectedTags.filter(t => t !== tagName);
-                } else {
-                    checkbox.checked = true;
-                    this.classList.add('selected');
-                    if (!selectedTags.includes(tagName)) {
-                        selectedTags.push(tagName);
-                    }
-                }
-                renderSelectedTags();
-                formChanged = true;
-            });
-        });
+document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item => {
+    item.addEventListener('click', function() {
+        const checkbox = this.querySelector('.tag-checkbox');
+        const tagName = this.getAttribute('data-tag-name');
+
+        if (checkbox.checked) {
+            // Deselecting - always allowed
+            checkbox.checked = false;
+            this.classList.remove('selected');
+            selectedTags = selectedTags.filter(t => t !== tagName);
+        } else {
+            // Selecting - check limit
+            if (selectedTags.length >= maxTagsPerDocument) {
+                // ⭐ VALIDATION: Show error and blink
+                this.classList.add('blink');
+                setTimeout(() => this.classList.remove('blink'), 800);
+                showTagError(`<i class="bi bi-exclamation-circle"></i> Maximum ${maxTagsPerDocument} tags allowed per document`);
+                return; // ← STOP HERE!
+            }
+
+            checkbox.checked = true;
+            this.classList.add('selected');
+            if (!selectedTags.includes(tagName)) {
+                selectedTags.push(tagName);
+            }
+        }
+        renderSelectedTags();
+        formChanged = true;
+    });
+});
 
         // Attach click handlers to existing classifications
         document.querySelectorAll('.selection-item-flex[data-classification-name]').forEach(item => {
@@ -1667,42 +1855,61 @@ function applyEssentialClassificationLock() {
     /**
      * Next button handler - validates and moves to next step
      */
-    document.getElementById('nextBtn').addEventListener('click', function() {
-        if (currentStep === 1) {
-            // Validate file upload
-            if (!uploadedFile) {
-                showCustomAlert('Please upload a PDF file before proceeding.');
-                return;
-            }
-            formChanged = true;
-            updateWizardStep(2);
-        } else if (currentStep === 2) {
-            // Validate required fields
-            const title = document.getElementById('title').value.trim();
-            const productCode = document.getElementById('productCode').value.trim();
-            const publishYear = document.getElementById('publishYear').value.trim();
-            const noOfPages = document.getElementById('noOfPages').value.trim();
-
-            if (!title || !productCode) {
-                showCustomAlert('Please fill in all required fields (Title and Product Code).');
-                return;
-            }
-
-            if (!publishYear) {
-                showCustomAlert('Publication Year is required.');
-                return;
-            }
-
-            if (!noOfPages) {
-                showCustomAlert('Number of Pages is required.');
-                return;
-            }
-
-            updateWizardStep(3);
-        } else if (currentStep === 3) {
-            updateWizardStep(4);
+   document.getElementById('nextBtn').addEventListener('click', function() {
+    if (currentStep === 1) {
+        // Validate file upload
+        if (!uploadedFile) {
+            showCustomAlert('Please upload a PDF file before proceeding.');
+            return;
         }
-    });
+        formChanged = true;
+        updateWizardStep(2);
+    } else if (currentStep === 2) {
+        // ⭐ DYNAMIC VALIDATION BASED ON METADATA SCHEMA
+        const missingFields = [];
+
+        // Check Product Code (if required)
+        if (metadataSchema.productCode && !document.getElementById('productCode').value.trim()) {
+            missingFields.push('Product Code');
+        }
+
+        // Check Edition (if required)
+        if (metadataSchema.edition && !document.getElementById('edition').value.trim()) {
+            missingFields.push('Edition');
+        }
+
+        // Check Publication Year (if required)
+        if (metadataSchema.publicationDate && !document.getElementById('publishYear').value.trim()) {
+            missingFields.push('Publication Year');
+        }
+
+        // Check Title (if required)
+        if (metadataSchema.title && !document.getElementById('title').value.trim()) {
+            missingFields.push('Document Title');
+        }
+
+        // Check Description/Notes (if required)
+        if (metadataSchema.description && !document.getElementById('notes').value.trim()) {
+            missingFields.push('Notes/Description');
+        }
+
+        // Always check Number of Pages (system requirement)
+        if (!document.getElementById('noOfPages').value.trim()) {
+            missingFields.push('Number of Pages');
+        }
+
+        // Show error if any required fields are missing
+        if (missingFields.length > 0) {
+            const fieldsList = missingFields.join(', ');
+            showCustomAlert(`Please fill in the following required fields: ${fieldsList}`);
+            return;
+        }
+
+        updateWizardStep(3);
+    } else if (currentStep === 3) {
+        updateWizardStep(4);
+    }
+});
 
     /**
      * Previous button handler - moves to previous step
@@ -1753,28 +1960,35 @@ function applyEssentialClassificationLock() {
      * Process uploaded files
      * @param {FileList} files - Uploaded files
      */
-    async function handleFiles(files) {
-        if (files.length > 0) {
-            const file = files[0];
+   async function handleFiles(files) {
+    if (files.length > 0) {
+        const file = files[0];
 
-            // Validate file type
-            if (file.type !== 'application/pdf') {
-                showCustomAlert('Please upload only PDF files');
-                fileInput.value = '';
-                return;
-            }
-
-            // Validate file size (50MB max)
-            if (file.size > 50 * 1024 * 1024) {
-                showCustomAlert('File size must be less than 50MB');
-                fileInput.value = '';
-                return;
-            }
-
-            uploadedFile = file;
-            await checkPdfProtection(file);
+        // ⭐ VALIDATE FILE TYPE
+        const fileExtension = file.name.split('.').pop().toUpperCase();
+        if (!allowedFormats.includes(fileExtension)) {
+            showCustomAlert(
+                `File type not allowed. Supported formats: ${allowedFormats.join(', ')}`
+            );
+            fileInput.value = '';
+            return;
         }
+
+        // ⭐ VALIDATE FILE SIZE - THIS IS THE KEY PART!
+        const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
+        if (file.size > maxSizeBytes) {
+            showCustomAlert(
+                `File size exceeds maximum limit of ${maxFileSizeMB}MB. ` +
+                `Your file is ${formatFileSize(file.size)}.`
+            );
+            fileInput.value = '';
+            return; // ← STOPS HERE! User cannot proceed!
+        }
+
+        uploadedFile = file;
+        await checkPdfProtection(file);
     }
+}
 
     /**
      * Check if PDF has protection/restrictions
@@ -2005,6 +2219,11 @@ function applyEssentialClassificationLock() {
         }
 
         tagName = tagName.toLowerCase();
+        if (selectedTags.length >= maxTagsPerDocument) {
+            showTagError(`<i class="bi bi-exclamation-circle"></i> Maximum ${maxTagsPerDocument} tags allowed per document`);
+            return; // ← STOP HERE!
+        }
+
 
         if (allExistingTags.includes(tagName)) {
             const existingItem = Array.from(document.querySelectorAll('.selection-item-flex[data-tag-name]')).find(
@@ -2071,36 +2290,46 @@ function applyEssentialClassificationLock() {
         `;
 
         item.addEventListener('click', function() {
-            const checkbox = this.querySelector(`.${type}-checkbox`);
-            const itemName = this.getAttribute(`data-${type}-name`);
+    const checkbox = this.querySelector(`.${type}-checkbox`);
+    const itemName = this.getAttribute(`data-${type}-name`);
 
-            if (checkbox.checked) {
-                checkbox.checked = false;
-                this.classList.remove('selected');
-                if (type === 'tag') {
-                    selectedTags = selectedTags.filter(t => t !== itemName);
-                    renderSelectedTags();
-                } else {
-                    selectedClassifications = selectedClassifications.filter(c => c !== itemName);
-                    renderSelectedClassifications();
-                }
-            } else {
-                checkbox.checked = true;
-                this.classList.add('selected');
-                if (type === 'tag') {
-                    if (!selectedTags.includes(itemName)) {
-                        selectedTags.push(itemName);
-                    }
-                    renderSelectedTags();
-                } else {
-                    if (!selectedClassifications.includes(itemName)) {
-                        selectedClassifications.push(itemName);
-                    }
-                    renderSelectedClassifications();
-                }
+    if (checkbox.checked) {
+        // Deselecting - always allowed
+        checkbox.checked = false;
+        this.classList.remove('selected');
+        if (type === 'tag') {
+            selectedTags = selectedTags.filter(t => t !== itemName);
+            renderSelectedTags();
+        } else {
+            selectedClassifications = selectedClassifications.filter(c => c !== itemName);
+            renderSelectedClassifications();
+        }
+    } else {
+        // Selecting - check limit for tags
+        if (type === 'tag' && selectedTags.length >= maxTagsPerDocument) {
+            // ⭐ VALIDATION: Show error and blink
+            this.classList.add('blink');
+            setTimeout(() => this.classList.remove('blink'), 800);
+            showTagError(`<i class="bi bi-exclamation-circle"></i> Maximum ${maxTagsPerDocument} tags allowed per document`);
+            return; // ← STOP HERE!
+        }
+
+        checkbox.checked = true;
+        this.classList.add('selected');
+        if (type === 'tag') {
+            if (!selectedTags.includes(itemName)) {
+                selectedTags.push(itemName);
             }
-            formChanged = true;
-        });
+            renderSelectedTags();
+        } else {
+            if (!selectedClassifications.includes(itemName)) {
+                selectedClassifications.push(itemName);
+            }
+            renderSelectedClassifications();
+        }
+    }
+    formChanged = true;
+});
 
         return item;
     }

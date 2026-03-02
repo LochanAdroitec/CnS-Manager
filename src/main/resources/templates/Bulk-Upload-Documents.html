@@ -180,6 +180,8 @@
         .file-name-wrapper{display:flex;align-items:center;gap:6px;flex:1;min-width:0}
         .file-name-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .protected-badge{display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px}
+        /* ====== CHANGE 1: Oversized file badge ====== */
+        .oversized-badge{display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-size:11px}
 
         .info-box{background:#eff6ff;border-left:4px solid #3b82f6;padding:20px;border-radius:8px;margin-bottom:30px}
         .info-box-title{font-weight:600;color:#1e40af;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -199,7 +201,7 @@
         table.self-validation-table td input{width:100%;border-radius:6px;border:1px solid #d1d5db;padding:3px 5px;font-size:12px}
         table.self-validation-table td input[readonly]{background-color:#f9fafb;color:#6b7280;cursor:not-allowed}
 
-        /* multi-select dropdown */
+        /* ====== CHANGE 5: multi-select dropdown – fixed alignment ====== */
         .multi-select-container{position:relative}
         .multi-select-display{
             display:flex;align-items:center;justify-content:space-between;
@@ -208,24 +210,46 @@
         }
         .multi-select-display span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
         .multi-select-panel{
-            position:absolute;top:100%;left:0;right:0;z-index:20;
+            position:fixed; /* fixed so it always renders above table */
+            z-index:9999;
             background:#fff;border:1px solid #d1d5db;border-radius:6px;
             margin-top:4px;max-height:220px;overflow-y:auto;
             box-shadow:0 4px 12px rgba(0,0,0,0.15);
+            min-width:200px;
         }
         .multi-select-search{padding:6px 8px;border-bottom:1px solid #e5e7eb;}
         .multi-select-search input{
             width:100%;border-radius:4px;border:1px solid #d1d5db;
             padding:4px 6px;font-size:12px;
         }
+        /* ====== CHANGE 5: option row – checkbox + label on same line ====== */
         .multi-select-option{
-            padding:6px 10px;display:flex;align-items:center;gap:8px;
-            font-size:12px;cursor:pointer;
+            padding:6px 10px;
+            display:grid;
+            grid-template-columns:16px 1fr; /* checkbox fixed, label fills rest */
+            align-items:center;
+            gap:8px;
+            font-size:12px;
+            cursor:pointer;
+            user-select:none;
         }
         .multi-select-option:hover{background:#f3f4f6;}
-        .multi-select-footer{
-            padding:6px 10px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;
+        .multi-select-option input[type="checkbox"]{
+            width:14px;height:14px;cursor:pointer;
+            accent-color:#667eea;
+            flex-shrink:0;
+            margin:0;
         }
+        .multi-select-option span{
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+            line-height:1.4;
+        }
+        .multi-select-footer{
+            padding:6px 10px;border-top:1px solid #e5e7eb;font-size:11px;color:#6b7280;
+            background:#f9fafb;
+        }
+        /* max-tags warning in footer */
+        .multi-select-footer.at-limit{color:#b91c1c;background:#fee2e2;font-weight:600;}
 
         .validation-results{background:#f9fafb;border-radius:12px;padding:25px;margin-bottom:20px}
         .validation-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
@@ -300,6 +324,12 @@
         .protected-file-name{font-weight:600;color:#1a2332;margin-bottom:5px;font-size:14px}
         .protected-file-issues{font-size:13px;color:#6b7280}
         .protected-file-issues span{display:inline-block;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;margin-right:5px;margin-top:3px;font-size:12px}
+        /* ====== CHANGE 1: oversized file modal item ====== */
+        .oversized-file-item{padding:10px;background:#fff;border-radius:6px;margin-bottom:8px;border-left:3px solid #ef4444}
+        .oversized-file-item:last-child{margin-bottom:0}
+        .oversized-file-name{font-weight:600;color:#1a2332;margin-bottom:3px;font-size:14px}
+        .oversized-file-size{font-size:12px;color:#6b7280}
+        .oversized-file-size span{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;margin-right:4px;font-size:11px}
         .modal-footer-custom{padding:20px 30px;background:#f9fafb;display:flex;justify-content:flex-end;gap:12px}
         .modal-btn{padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s}
         .modal-btn-secondary{background:#fff;color:#374151;border:2px solid #e5e7eb}
@@ -369,19 +399,19 @@
             <div id="editionRestrictionMessage" style="display: none;">
                 <div class="edition-restriction-container">
                     <div class="edition-restriction-icon">🔒</div>
-                    <h1 class="edition-restriction-title">Bulk Upload - ED2 Professional Feature</h1>
+                    <h1 class="edition-restriction-title">Bulk Upload - Professional Edition Feature</h1>
                     <p class="edition-restriction-subtitle">
-                        The <strong>bulk upload feature</strong> is only available in the <strong>ED2 Professional Edition</strong>.
+                        The <strong>bulk upload feature</strong> is only available in the <strong>Professional Edition</strong>.
                     </p>
 
                     <div class="edition-info-box">
                         <div class="edition-info-row">
                             <span class="edition-info-label">Your Edition:</span>
-                            <span class="edition-info-value" id="currentEditionText">ED1</span>
+                            <span class="edition-info-value" id="currentEditionText">Essential Edition</span>
                         </div>
                         <div class="edition-info-row">
                             <span class="edition-info-label">Required:</span>
-                            <span class="edition-info-value">ED2 Professional</span>
+                            <span class="edition-info-value">Professional Edition</span>
                         </div>
                         <div class="edition-info-row">
                             <span class="edition-info-label">License Valid:</span>
@@ -389,18 +419,18 @@
                         </div>
                     </div>
 
-                    <h3 class="edition-features-title">ED2 Professional Features:</h3>
+                    <h3 class="edition-features-title"> Professional Edition Features:</h3>
                     <ul class="edition-features-list">
                         <li>✨ <strong>Bulk Upload</strong> - Upload multiple documents at once</li>
                         <li>📊 <strong>Advanced Analytics</strong> - Detailed insights and reports</li>
                         <li>🚀 <strong>Priority Support</strong> - Fast response time</li>
-                        <li>✓ <strong>All ED1 Features</strong> - Plus everything else</li>
+                        <li>✓ <strong>All Essential Edition Features</strong> - Plus everything else</li>
                     </ul>
                     <a href="/license-activation" class="alert-link ms-2">Upgrade to Professional Edition</a>
 
 
                     <p class="edition-contact-note">
-                        💡 Contact your administrator to upgrade to ED2 Professional Edition
+                        💡 Contact your administrator to upgrade to Professional Edition
                     </p>
                 </div>
             </div>
@@ -446,7 +476,7 @@
                             </svg>
                             <div class="drop-zone-text">Select Folder with PDF Files</div>
                             <div class="drop-zone-info">Choose a folder containing all your PDF documents</div>
-                            <div class="drop-zone-info" style="margin-bottom:20px;">
+                            <div class="drop-zone-info" style="margin-bottom:20px;" id="dropZoneMaxSizeInfo">
                                 <i class="bi bi-info-circle"></i> All checked PDF files will be processed
                             </div>
                             <button type="button" class="browse-btn" onclick="triggerFolderSelection()">
@@ -564,14 +594,14 @@
                                         <thead>
                                         <tr>
                                             <th style="min-width:180px;">Document Name</th>
-                                            <th style="min-width:150px;">Title <span class="wizard-btn-danger">*</span></th>
-                                            <th style="min-width:120px;">Product Code <span class="wizard-btn-danger">*</span></th>
+                                            <th style="min-width:150px;">Title <span style="color:#ef4444">*</span></th>
+                                            <th style="min-width:120px;">Product Code <span style="color:#ef4444">*</span></th>
                                             <th style="min-width:100px;">Edition</th>
                                             <th style="min-width:120px;">Publish Month</th>
-                                            <th style="min-width:100px;">Publish Year <span class="wizard-btn-danger">*</span></th>
+                                            <th style="min-width:100px;">Publish Year <span style="color:#ef4444">*</span></th>
                                             <th style="min-width:100px;">No of Pages</th>
                                             <th style="min-width:160px;">Notes</th>
-                                            <th style="min-width:180px;">Tags (multi)</th>
+                                            <th style="min-width:180px;" id="tagsColumnHeader">Tags (multi)</th>
                                             <th style="min-width:200px;">Classifications (multi)</th>
                                         </tr>
                                         </thead>
@@ -694,9 +724,7 @@
             </div>
         </div>
 
-        <!-- FEATURE 1: Updated Upload Valid Confirmation Modal with Skipped Documents List -->
-        <!-- Replace the existing uploadValidConfirmModal div with this -->
-
+        <!-- Upload Valid Confirmation Modal -->
         <div class="custom-modal-overlay" id="uploadValidConfirmModal">
             <div class="custom-modal" style="max-width:700px;">
                 <div class="modal-header-custom modal-header-warning">
@@ -717,18 +745,13 @@
                         <span id="validDocsCount" style="color:#10b981;font-weight:600;">0</span> documents will be uploaded successfully.<br>
                         <span id="errorDocsCount" style="color:#ef4444;font-weight:600;">0</span> documents with errors will be skipped.
                     </p>
-
-                    <!-- FEATURE 1: Skipped Documents List -->
                     <div style="margin-top:20px;">
                         <p style="font-weight:600;color:#1a2332;margin-bottom:10px;">
                             <i class="bi bi-exclamation-circle-fill" style="color:#ef4444;"></i>
                             Documents that will be skipped:
                         </p>
-                        <div class="protected-files-list" id="skippedDocumentsList" style="max-height:250px;">
-                            <!-- Dynamically populated by JavaScript -->
-                        </div>
+                        <div class="protected-files-list" id="skippedDocumentsList" style="max-height:250px;"></div>
                     </div>
-
                     <p style="margin-top:15px;">Do you want to proceed with uploading only the valid documents?</p>
                     <p style="font-size:13px;color:#6b7280;margin-top:10px;">
                         <i class="bi bi-info-circle"></i> You can fix the errors and upload the remaining documents later.
@@ -784,6 +807,84 @@
             </div>
         </div>
 
+        <!-- ====== CHANGE 1: Oversized Files Modal ====== -->
+        <div class="custom-modal-overlay" id="oversizedFilesModal">
+            <div class="custom-modal" style="max-width:650px;">
+                <div class="modal-header-custom modal-header-danger">
+                    <div class="modal-icon">
+                        <i class="bi bi-exclamation-octagon"></i>
+                    </div>
+                    <div class="modal-title-custom">
+                        <h3>Oversized Files Detected</h3>
+                        <p id="oversizedModalSubtitle">Some PDF files exceed the maximum allowed size</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="cancelOversizedFiles()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-custom">
+                    <p>
+                        <strong id="oversizedCount">0</strong> PDF file(s) exceed the maximum file size of
+                        <strong id="oversizedMaxSizeDisplay">50MB</strong>.
+                    </p>
+                    <div class="protected-files-list" id="oversizedFilesList" style="max-height:250px;"></div>
+                    <p style="margin-top:15px;"><strong>How do you want to proceed?</strong></p>
+                    <ul>
+                        <li><strong>Cancel</strong>: Go back and choose a different folder.</li>
+                        <li><strong>Remove &amp; Continue</strong>: The oversized files will be excluded. Remaining files will be processed.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelOversizedFiles()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-danger" id="removeOversizedAndContinueBtn">
+                        <i class="bi bi-trash"></i> Remove &amp; Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====== EXCESS TAGS MODAL (Step 3 – after Excel upload) ====== -->
+        <div class="custom-modal-overlay" id="excessTagsModal">
+            <div class="custom-modal" style="max-width:680px;">
+                <div class="modal-header-custom modal-header-warning">
+                    <div class="modal-icon">
+                        <i class="bi bi-tags"></i>
+                    </div>
+                    <div class="modal-title-custom">
+                        <h3>Too Many Tags Detected</h3>
+                        <p id="excessTagsModalSubtitle">Some documents exceed the maximum tags allowed</p>
+                    </div>
+                    <button type="button" class="modal-close-btn" onclick="cancelExcessTagsModal()">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-custom">
+                    <p>
+                        The maximum allowed tags per document is
+                        <strong id="excessTagsMaxDisplay">10</strong>.
+                        The following document(s) have more tags than allowed:
+                    </p>
+                    <div class="protected-files-list" id="excessTagsFilesList" style="max-height:280px;margin-top:12px;"></div>
+                    <p style="margin-top:18px;"><strong>How do you want to proceed?</strong></p>
+                    <ul style="margin-top:8px;">
+                        <li><strong>Keep First <span class="excess-tags-max-inline">N</span> Tags &amp; Continue</strong>: Extra tags will be removed. Only the first <span class="excess-tags-max-inline">N</span> tags will be kept for each affected document.</li>
+                        <li><strong>Cancel</strong>: Go back and fix the Excel file before uploading again.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="modal-btn modal-btn-secondary" onclick="cancelExcessTagsModal()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-warning" id="keepFirstTagsBtn">
+                        <i class="bi bi-scissors"></i> Keep First <span id="keepFirstTagsBtnCount">N</span> Tags &amp; Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 </div>
 
@@ -791,133 +892,123 @@
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 <script>
 
-    // =====================================================================
-   // BULK UPLOAD DOCUMENTS - JAVASCRIPT CODE
-   // =====================================================================
-   // This is the complete JavaScript section for Bulk-Upload-Documents.html
-   // =====================================================================
+    // ===================== GLOBAL VARIABLES =====================
+    let currentStep = 1;
+    let formChanged = false;
+    let pdfFiles = [];
+    let protectedPdfFiles = [];
+    let excelFile = null;
+    let validationResult = null;
+    let uploadStartTime = null;
+    let isSubmitting = false;
+    let navigationConfirmed = false;
+    let pendingNavigationUrl = null;
+    let isDownloadingTemplate = false;
+    let selectedPdfIndices = new Set();
+    let lastVisitedUrl = document.referrer || '';
+    let selfValidationData = [];
+    let isEditingMetadata = false;
+    let backendTags = [];
+    let backendClassifications = [];
+    let selfValidationInitialized = false;
+    let selfValidationDirty = false;
 
-       // ===================== GLOBAL VARIABLES =====================
-       let currentStep = 1;
-       let formChanged = false;
-       let pdfFiles = [];
-       let protectedPdfFiles = [];
-       let excelFile = null;
-       let validationResult = null;
-       let uploadStartTime = null;
-       let isSubmitting = false;
-       let navigationConfirmed = false;
-       let pendingNavigationUrl = null;
-       let isDownloadingTemplate = false;
-       let selectedPdfIndices = new Set();
-       let lastVisitedUrl = document.referrer || '';
-       let selfValidationData = [];
-       let isEditingMetadata = false;
-       let backendTags = [];
-       let backendClassifications = [];
-       let selfValidationInitialized = false;
-       let selfValidationDirty = false;
+    // ====== CHANGE 1 & 4: Settings loaded from /api/settings ======
+    let maxFileSizeMB = 50;          // default, overridden by settings
+    let maxTagsPerDocument = 10;     // default, overridden by settings
+    let oversizedPdfFiles = [];      // files that exceed max size
+    let tempPendingFiles = [];       // files waiting after size check
 
+    const MONTH_OPTIONS = [
+        { value: '01', label: '01 (Jan)' },
+        { value: '02', label: '02 (Feb)' },
+        { value: '03', label: '03 (Mar)' },
+        { value: '04', label: '04 (Apr)' },
+        { value: '05', label: '05 (May)' },
+        { value: '06', label: '06 (Jun)' },
+        { value: '07', label: '07 (Jul)' },
+        { value: '08', label: '08 (Aug)' },
+        { value: '09', label: '09 (Sep)' },
+        { value: '10', label: '10 (Oct)' },
+        { value: '11', label: '11 (Nov)' },
+        { value: '12', label: '12 (Dec)' }
+    ];
 
-       const MONTH_OPTIONS = [
-           { value: '01', label: '01 (Jan)' },
-           { value: '02', label: '02 (Feb)' },
-           { value: '03', label: '03 (Mar)' },
-           { value: '04', label: '04 (Apr)' },
-           { value: '05', label: '05 (May)' },
-           { value: '06', label: '06 (Jun)' },
-           { value: '07', label: '07 (Jul)' },
-           { value: '08', label: '08 (Aug)' },
-           { value: '09', label: '09 (Sep)' },
-           { value: '10', label: '10 (Oct)' },
-           { value: '11', label: '11 (Nov)' },
-           { value: '12', label: '12 (Dec)' }
-       ];
+    // ===================== PAGE LOAD - LICENSE CHECK =====================
+    document.addEventListener('DOMContentLoaded', async function () {
+         // Check license edition first
+         try {
+             const response = await fetch('/api/license/status');
+             const data = await response.json();
 
-       // ===================== PAGE LOAD - LICENSE CHECK =====================
-       // Show loading screen immediately
-       function showLoadingScreen() {
-           const loadingScreen = document.createElement('div');
-           loadingScreen.id = 'license-loading-screen';
-           loadingScreen.style.cssText = `
-               position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-               display: flex; align-items: center; justify-content: center;
-               z-index: 999999; flex-direction: column; color: white;
-           `;
-           loadingScreen.innerHTML = `
-               <div style="text-align: center;">
-                   <div class="spinner-border" role="status" style="width: 4rem; height: 4rem; border-width: 0.4rem;">
-                       <span class="visually-hidden">Loading...</span>
-                   </div>
-                   <h3 style="margin-top: 30px; font-weight: 600;">Validating License...</h3>
-                   <p style="margin-top: 15px; opacity: 0.9; font-size: 16px;">Checking edition permissions for bulk upload</p>
-                   <div id="loading-progress" style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
-                       <i class="bi bi-hourglass-split"></i> Please wait...
-                   </div>
-               </div>
-           `;
-           document.body.appendChild(loadingScreen);
-           return loadingScreen;
-       }
+             console.log('License check:', data);
 
-       function hideLoadingScreen() {
-           const loadingScreen = document.getElementById('license-loading-screen');
-           if (loadingScreen) {
-               loadingScreen.style.transition = 'opacity 0.5s ease';
-               loadingScreen.style.opacity = '0';
-               setTimeout(() => loadingScreen.remove(), 500);
-           }
-       }
+             if (!data.isActive || !data.isValid) {
+                 showInlineEditionRestriction('Essential Edition', 0, 'License not valid or expired');
+                 return;
+             }
 
-       function updateLoadingProgress(message) {
-           const progressDiv = document.getElementById('loading-progress');
-           if (progressDiv) {
-               progressDiv.innerHTML = `<i class="bi bi-hourglass-split"></i> ${message}`;
-           }
-       }
+             if (!data.bulkUploadAllowed || data.edition !== 'ED2') {
+                 showInlineEditionRestriction(data.edition, data.daysRemaining, 'ED2 Required');
+                 return;
+             }
 
-       // ===================== LICENSE EDITION CHECK ON PAGE LOAD =====================
-       document.addEventListener('DOMContentLoaded', async function () {
-        // Check license edition first
-        try {
-            const response = await fetch('/api/license/status');
-            const data = await response.json();
+             await initializePage();
 
-            console.log('License check:', data);
+             console.log('✓ ED2 license valid - bulk upload allowed');
+             sessionStorage.setItem('edition', data.edition);
+             sessionStorage.setItem('bulkUploadAllowed', 'true');
+             showEditionBadge(data.edition);
 
-            // Check if license is valid
-            if (!data.isActive || !data.isValid) {
-                showInlineEditionRestriction('ED1', 0, 'License not valid or expired');
-                return;
-            }
+         } catch (error) {
+             console.error('License check failed:', error);
+             showInlineEditionRestriction('Unknown', 0, 'License check failed');
+             return;
+         }
 
-            // Check if bulk upload is allowed (ED2 only)
-            if (!data.bulkUploadAllowed || data.edition !== 'ED2') {
-                // Show inline edition restriction message
-                showInlineEditionRestriction(data.edition, data.daysRemaining, 'ED2 Required');
-                return;
-            }
-            // ✅ License valid → initialize wizard
-            await initializePage();
+         if (typeof pdfjsLib !== 'undefined') {
+             pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.js';
+         }
 
-            // License valid and ED2 - show success message
-            console.log('✓ ED2 license valid - bulk upload allowed');
+         const folderInput = document.getElementById('folderInput');
+         if (!('webkitdirectory' in folderInput)) {
+             showCustomAlert('Your browser may not fully support folder selection. Please try Chrome, Edge, or another modern browser.', 'warning');
+         }
+    });
 
-            // Store edition info
-            sessionStorage.setItem('edition', data.edition);
-            sessionStorage.setItem('bulkUploadAllowed', 'true');
+  function showInlineEditionRestriction(currentEdition, daysRemaining, reason) {
+    console.log('Showing inline edition restriction:', currentEdition, daysRemaining, reason);
 
-            // Show edition badge
-            showEditionBadge(data.edition);
+    document.getElementById('wizardContentArea').style.display = 'none';
+    const restrictionMsg = document.getElementById('editionRestrictionMessage');
+    restrictionMsg.style.display = 'block';
 
-        } catch (error) {
-            console.error('License check failed:', error);
-            showInlineEditionRestriction('Unknown', 0, 'License check failed');
-            return;
+    // Convert edition code to readable text
+    let editionDisplay = currentEdition;
+
+    if (currentEdition === 'ED1') {
+        editionDisplay = 'Essential Edition';
+    } else if (currentEdition === 'ED2') {
+        editionDisplay = 'Professional Edition';
+    }
+
+    document.getElementById('currentEditionText').textContent = editionDisplay;
+    document.getElementById('daysRemainingText').textContent = (daysRemaining || 0) + ' days';
+}
+
+    function goBackToDocuments() {
+        window.location.href = '/documents';
+    }
+
+    function showEditionBadge(edition) {
+        const header = document.querySelector('.wizard-header p');
+        if (header && edition === 'ED2') {
+            header.innerHTML += ' <span style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 10px;">✨ Professional Edition</span>';
         }
+    }
 
-        // Initialize PDF.js
+    // ===================== INITIALIZE PAGE =====================
+    async function initializePage() {
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.js';
         }
@@ -927,535 +1018,427 @@
             showCustomAlert('Your browser may not fully support folder selection. Please try Chrome, Edge, or another modern browser.', 'warning');
         }
 
+        // ====== CHANGE 1 + 4: Fetch settings FIRST ======
+        await fetchAppSettings();
 
+        await fetchTagsAndClassifications();
+        setupEventListeners();
+        updateWizardStep(1);
 
-    });
+        console.log('✅ Page initialized successfully');
+    }
 
-       // ===================== SHOW LICENSE ERROR MODAL =====================
-       function showLicenseErrorModal(title, message, redirectUrl) {
-           const modal = document.createElement('div');
-           modal.style.cssText = `
-               position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-               background: rgba(0, 0, 0, 0.9); display: flex;
-               align-items: center; justify-content: center; z-index: 9999999;
-           `;
-
-           const content = document.createElement('div');
-           content.style.cssText = `
-               background: white; padding: 40px; border-radius: 16px;
-               max-width: 500px; text-align: center;
-               box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-           `;
-
-           content.innerHTML = `
-               <div style="font-size: 64px; margin-bottom: 20px;">❌</div>
-               <h2 style="color: #e53e3e; margin-bottom: 15px; font-size: 26px;">${title}</h2>
-               <p style="color: #4a5568; line-height: 1.8; margin-bottom: 25px; font-size: 15px;">
-                   ${message}
-               </p>
-               <p style="color: #718096; font-size: 14px; margin-top: 20px;">
-                   Redirecting in 3 seconds...
-               </p>
-           `;
-
-           modal.appendChild(content);
-           document.body.appendChild(modal);
-
-           // Redirect after 3 seconds
-           setTimeout(() => {
-               window.location.href = redirectUrl;
-           }, 3000);
-       }
-
-       // ===================== SHOW EDITION UPGRADE MODAL =====================
-       // ===== NEW FUNCTION: Show inline edition restriction message =====
-        function showInlineEditionRestriction(currentEdition, daysRemaining, reason) {
-            console.log('Showing inline edition restriction:', currentEdition, daysRemaining, reason);
-
-            // Hide the wizard content
-            document.getElementById('wizardContentArea').style.display = 'none';
-
-            // Show the edition restriction message
-            const restrictionMsg = document.getElementById('editionRestrictionMessage');
-            restrictionMsg.style.display = 'block';
-
-            // Update the edition info
-            document.getElementById('currentEditionText').textContent = currentEdition || 'ED1';
-            document.getElementById('daysRemainingText').textContent = (daysRemaining || 0) + ' days';
-        }
-
-        // ===== NEW FUNCTION: Back to documents page =====
-        function goBackToDocuments() {
-            window.location.href = '/documents';
-        }
-
-       // ===================== SHOW EDITION BADGE =====================
-       function showEditionBadge(edition) {
-           const header = document.querySelector('.wizard-header p');
-           if (header && edition === 'ED2') {
-               header.innerHTML += ' <span style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 10px;">✨ ED2 Professional</span>';
-           }
-       }
-
-       // ===================== INITIALIZE PAGE (AFTER LICENSE CHECK PASSES) =====================
-       async function initializePage() {
-           // Initialize PDF.js
-           if (typeof pdfjsLib !== 'undefined') {
-               pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.js';
-           }
-
-           const folderInput = document.getElementById('folderInput');
-           if (!('webkitdirectory' in folderInput)) {
-               showCustomAlert('Your browser may not fully support folder selection. Please try Chrome, Edge, or another modern browser.', 'warning');
-           }
-
-           // Fetch tags and classifications
-           await fetchTagsAndClassifications();
-
-           // Setup event listeners
-           setupEventListeners();
-
-           // Initialize wizard
-           updateWizardStep(1);
-
-           console.log('✅ Page initialized successfully');
-       }
-
-       // ===================== FETCH TAGS AND CLASSIFICATIONS =====================
-       async function fetchTagsAndClassifications() {
-           try {
-               const tagsResponse = await fetch('/api/tags/all');
-               if (tagsResponse.ok) {
-                   backendTags = await tagsResponse.json();
-                   console.log('✅ Loaded tags from backend:', backendTags);
-               }
-
-               const classResponse = await fetch('/api/classifications/all');
-               if (classResponse.ok) {
-                   backendClassifications = await classResponse.json();
-                   console.log('✅ Loaded classifications from backend:', backendClassifications);
-               }
-           } catch (error) {
-               console.error('❌ Error fetching tags/classifications:', error);
-               backendTags = [];
-               backendClassifications = [];
-           }
-       }
-
-       // ===================== SETUP EVENT LISTENERS =====================
-       function setupEventListeners() {
-           // Folder input
-           const folderInput = document.getElementById('folderInput');
-           if (folderInput) {
-               folderInput.addEventListener('change', async function (e) {
-                   const files = Array.from(e.target.files);
-                   if (files.length > 0) await handleFolderSelection(files);
-               });
-           }
-
-           // Excel file input
-           const excelFileInput = document.getElementById('excelFileInput');
-           if (excelFileInput) {
-               excelFileInput.addEventListener('change', e => {
-                   if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
-               });
-           }
-
-           // Excel drop zone
-           const excelDropZone = document.getElementById('excelDropZone');
-           if (excelDropZone) {
-               ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
-                   excelDropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
-               });
-               ['dragenter', 'dragover'].forEach(ev => {
-                   excelDropZone.addEventListener(ev, () => excelDropZone.classList.add('dragover'));
-               });
-               ['dragleave', 'drop'].forEach(ev => {
-                   excelDropZone.addEventListener(ev, () => excelDropZone.classList.remove('dragover'));
-               });
-               excelDropZone.addEventListener('drop', e => {
-                   const dt = e.dataTransfer;
-                   const files = dt.files;
-                   if (files.length > 0) handleExcelFile(files[0]);
-               });
-           }
-
-           // Navigation buttons
-           const nextBtn = document.getElementById('nextBtn');
-           if (nextBtn) {
-               nextBtn.addEventListener('click', handleNextButton);
-           }
-
-           const prevBtn = document.getElementById('prevBtn');
-           if (prevBtn) {
-               prevBtn.addEventListener('click', function () {
-                   if (currentStep > 1 && currentStep <= 6) {
-                       const o = formChanged;
-                       formChanged = false;
-                       updateWizardStep(currentStep - 1);
-                       formChanged = o;
-                   }
-               });
-           }
-
-           const cancelBtn = document.getElementById('cancelBtn');
-           if (cancelBtn) {
-               cancelBtn.addEventListener('click', function () {
-                   if (formChanged && !isSubmitting) {
-                       document.getElementById('confirmationModal').classList.add('show');
-                   } else {
-                       navigateAway();
-                   }
-               });
-           }
-
-           // Self validation buttons
-           const editMetadataBtn = document.getElementById('editMetadataBtn');
-           if (editMetadataBtn) {
-               editMetadataBtn.addEventListener('click', function () {
-                   isEditingMetadata = true;
-                   updateSelfValidationEditState();
-                   showCustomAlert('Editing enabled. Make your changes and click Done when finished.', 'info');
-               });
-           }
-
-           const doneMetadataBtn = document.getElementById('doneMetadataBtn');
-           if (doneMetadataBtn) {
-               doneMetadataBtn.addEventListener('click', function () {
-                   captureSelfValidationDataFromTable();
-                   selfValidationDirty = true;
-                   isEditingMetadata = false;
-                   updateSelfValidationEditState();
-                   formChanged = true;
-                   console.log('=== DATA CAPTURED AFTER EDITING (DONE CLICKED) ===');
-                   console.log('selfValidationData:', JSON.stringify(selfValidationData, null, 2));
-                   // ✅ ADD THIS LINE HERE ⬇️
-                    document.querySelector('.self-validation-info')
-                            ?.classList.add('edited');
-                   showCustomAlert('Metadata confirmed. You can proceed to validation.', 'success');
-               });
-           }
-
-           // Template download button
-           const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
-           if (downloadTemplateBtn) {
-               downloadTemplateBtn.addEventListener('click', downloadTemplate);
-           }
-
-           // Validation error action buttons
-           const uploadValidBtn = document.getElementById('uploadValidBtn');
-           if (uploadValidBtn) {
-               uploadValidBtn.addEventListener('click', showUploadValidConfirmation);
-           }
-
-           const reuploadFolderBtn = document.getElementById('reuploadFolderBtn');
-           if (reuploadFolderBtn) {
-               reuploadFolderBtn.addEventListener('click', function () {
-                   changeFolder();
-                   changeExcelFile();
-                   const o = formChanged;
-                   formChanged = false;
-                   updateWizardStep(1);
-                   formChanged = o;
-                   showCustomAlert('Please select a new folder with PDF files.', 'info');
-               });
-           }
-
-           const reuploadExcelBtn = document.getElementById('reuploadExcelBtn');
-           if (reuploadExcelBtn) {
-               reuploadExcelBtn.addEventListener('click', function () {
-                   changeExcelFile();
-                   const o = formChanged;
-                   formChanged = false;
-                   updateWizardStep(3);
-                   formChanged = o;
-                   showCustomAlert('Please upload the corrected metadata Excel file.', 'info');
-               });
-           }
-
-           // Modal buttons
-           const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-           if (confirmCancelBtn) {
-               confirmCancelBtn.addEventListener('click', function () {
-                   closeConfirmationModal();
-                   navigateAway();
-               });
-           }
-
-           const confirmUploadValidBtn = document.getElementById('confirmUploadValidBtn');
-           if (confirmUploadValidBtn) {
-               confirmUploadValidBtn.addEventListener('click', async function () {
-                   closeUploadValidConfirmModal();
-                   const o = formChanged;
-                   formChanged = false;
-                   await startUpload(true);
-                   formChanged = o;
-               });
-           }
-
-           // Protected PDF modal buttons
-           const removeProtectedAndContinueBtn = document.getElementById('removeProtectedAndContinueBtn');
-           if (removeProtectedAndContinueBtn) {
-               removeProtectedAndContinueBtn.addEventListener('click', async function () {
-                   closePdfProtectionModal();
-                   const allFiles = window.tempAllFiles || [];
-                   const filtered = allFiles.filter(f => !protectedPdfFiles.includes(f));
-                   await proceedWithFolderSelection(filtered);
-               });
-           }
-
-           const forceUploadProtectedBtn = document.getElementById('forceUploadProtectedBtn');
-           if (forceUploadProtectedBtn) {
-               forceUploadProtectedBtn.addEventListener('click', async function () {
-                   closePdfProtectionModal();
-                   await proceedWithFolderSelection(window.tempAllFiles || []);
-               });
-           }
-
-           // Browser navigation
-           window.history.pushState(null, '', window.location.href);
-           window.addEventListener('popstate', function (e) {
-               if (formChanged && !isSubmitting && !navigationConfirmed) {
-                   window.history.pushState(null, '', window.location.href);
-                   showNavigationConfirmation('back');
-               }
-           });
-
-           window.addEventListener('beforeunload', function (e) {
-               if (formChanged && !isSubmitting) {
-                   e.preventDefault();
-                   e.returnValue = '';
-                   return '';
-               }
-           });
-
-           // Link click interception
-           document.addEventListener('click', function (e) {
-               const link = e.target.closest('a');
-               const button = e.target.closest('button');
-
-               if (isDownloadingTemplate) return;
-
-               if (button) {
-                   const wizardBtns = ['nextBtn', 'prevBtn', 'cancelBtn', 'downloadTemplateBtn',
-                                      'reuploadFolderBtn', 'reuploadExcelBtn', 'uploadValidBtn',
-                                      'confirmUploadValidBtn', 'editMetadataBtn', 'doneMetadataBtn'];
-                   if (wizardBtns.includes(button.id)) return;
-               }
-
-               if (link && link.href && !link.hasAttribute('data-bs-toggle')) {
-                   const isWizardButton = link.closest('.wizard-navigation') ||
-                                         link.closest('.wizard-content') ||
-                                         link.id === 'confirmCancelBtn' ||
-                                         link.classList.contains('modal-btn') ||
-                                         link.classList.contains('change-file-btn') ||
-                                         link.classList.contains('download-template-btn');
-
-                   const isNavLink = link.closest('.navbar') ||
-                                    link.closest('.sidebar') ||
-                                    link.closest('nav') ||
-                                    link.hasAttribute('href');
-
-                   if (isNavLink && !isWizardButton && formChanged && !isSubmitting && !navigationConfirmed) {
-                       e.preventDefault();
-                       e.stopPropagation();
-                       e.stopImmediatePropagation();
-                       const targetUrl = link.href;
-                       showNavigationConfirmation(targetUrl);
-                       return false;
-                   }
-               }
-           }, true);
-
-           document.addEventListener('submit', function (e) {
-               if (formChanged && !isSubmitting && !navigationConfirmed) {
-                   e.preventDefault();
-                   showNavigationConfirmation(e.target.action);
-               }
-           }, true);
-
-           // Auto-dismiss alerts
-           window.addEventListener('load', function () {
-               setTimeout(() => {
-                   const alerts = document.querySelectorAll('.alert');
-                   alerts.forEach(a => {
-                       const bsAlert = bootstrap.Alert.getOrCreateInstance(a);
-                       if (bsAlert) bsAlert.close();
-                   });
-               }, 5000);
-           });
-       }
-
-       // ===================== NEXT BUTTON HANDLER =====================
-       async function handleNextButton() {
-           if (currentStep === 1) {
-               if (pdfFiles.length === 0) {
-                   showCustomAlert('Please select a folder with PDF files before proceeding.');
-                   return;
-               }
-               if (selectedPdfIndices.size === 0) {
-                   showCustomAlert('Please keep at least one document checked before proceeding.');
-                   return;
-               }
-               const o = formChanged;
-               formChanged = false;
-               updateWizardStep(2);
-               formChanged = o;
-           } else if (currentStep === 2) {
-               const o = formChanged;
-               formChanged = false;
-               updateWizardStep(3);
-               formChanged = o;
-           } else if (currentStep === 3) {
-               if (!excelFile) {
-                   showCustomAlert('Please upload the metadata Excel file before proceeding.');
-                   return;
-               }
-               const o = formChanged;
-               formChanged = false;
-               updateWizardStep(4);
-               formChanged = o;
-           } else if (currentStep === 4) {
-               if (isEditingMetadata) {
-                   showCustomAlert('Please click Done to finish editing before going to next step.', 'warning');
-                   return;
-               }
-               captureSelfValidationDataFromTable();
-               console.log('=== SENDING TO VALIDATION (FROM STEP 4) ===');
-               console.log('selfValidationData:', JSON.stringify(selfValidationData, null, 2));
-               const o = formChanged;
-               formChanged = false;
-               await validateFiles();
-               formChanged = o;
-           } else if (currentStep === 5) {
-               if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
-                   showUploadValidConfirmation();
-               } else {
-                   const o = formChanged;
-                   formChanged = false;
-                   await startUpload(false);
-                   formChanged = o;
-               }
-           }
-       }
-
-       // ===================== REST OF JAVASCRIPT FUNCTIONS =====================
-       // (Continue with all your existing functions...)
-       // I'll include the key functions below:
-
-       function extractFilenameFromPath(pathOrFilename) {
-           if (!pathOrFilename) return '';
-           const parts = pathOrFilename.split(/[/\\]/);
-           return parts[parts.length - 1];
-       }
-
-       function getFileActualName(file) {
-           if (!file) return '';
-           if (file.webkitRelativePath) {
-               return extractFilenameFromPath(file.webkitRelativePath);
-           }
-           return file.name;
-       }
-
-       function updateWizardStep(step) {
-           document.querySelectorAll('.wizard-step-content').forEach(c => c.classList.remove('active'));
-           const currentContent = document.querySelector(`.wizard-step-content[data-step="${step}"]`);
-           if (currentContent) currentContent.classList.add('active');
-
-           document.querySelectorAll('.wizard-step').forEach(el => {
-               const sn = parseInt(el.getAttribute('data-step'));
-               el.classList.remove('active', 'completed');
-               if (sn < step) el.classList.add('completed');
-               else if (sn === step) el.classList.add('active');
-           });
-
-           const prevBtn = document.getElementById('prevBtn');
-           const nextBtn = document.getElementById('nextBtn');
-           const nav = document.getElementById('wizardNavigation');
-
-           if (step === 1) {
-               prevBtn.style.display = 'none';
-               nextBtn.style.display = 'inline-flex';
-               nextBtn.className = 'wizard-btn wizard-btn-primary';
-               nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
-               nav.style.display = 'flex';
-           } else if (step === 2) {
-               prevBtn.style.display = 'inline-flex';
-               nextBtn.style.display = 'inline-flex';
-               nextBtn.className = 'wizard-btn wizard-btn-primary';
-               nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
-               nav.style.display = 'flex';
-           } else if (step === 3) {
-               prevBtn.style.display = 'inline-flex';
-               nextBtn.style.display = 'inline-flex';
-               nextBtn.className = 'wizard-btn wizard-btn-primary';
-               nextBtn.innerHTML = 'Go to Confirmation <i class="bi bi-arrow-right"></i>';
-               nav.style.display = 'flex';
-           } else if (step === 4) {
-                prevBtn.style.display = 'inline-flex';
-                nextBtn.style.display = 'inline-flex';
-                nextBtn.className = 'wizard-btn wizard-btn-primary';
-                nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
-                nav.style.display = 'flex';
-
-                // 🔥 CORE FIX
-                if (!selfValidationInitialized) {
-                    parseExcelAndBuildTable();           // first time only
-                    selfValidationInitialized = true;
-                } else {
-                    rebuildSelfValidationTableFromState(); // go-back case
+    // ====== CHANGE 1 + 4: Fetch /api/settings for maxFileSizeMb and maxTagsPerDocument ======
+    async function fetchAppSettings() {
+        try {
+            // Fetch general settings (maxFileSizeMb, allowedFiles)
+            const settingsResp = await fetch('/api/settings');
+            if (settingsResp.ok) {
+                const settings = await settingsResp.json();
+                if (settings.maxFileSizeMb) {
+                    maxFileSizeMB = settings.maxFileSizeMb;
+                    console.log('✅ maxFileSizeMB loaded:', maxFileSizeMB);
                 }
+                // Update drop zone info text to reflect current max size
+                const dropZoneInfo = document.getElementById('dropZoneMaxSizeInfo');
+                if (dropZoneInfo) {
+                    dropZoneInfo.innerHTML = `<i class="bi bi-info-circle"></i> All checked PDF files will be processed &bull; Max file size: <strong>${maxFileSizeMB}MB</strong>`;
+                }
+            }
 
+            // Fetch tag policies (maxTagsPerDocument)
+            const tagPoliciesResp = await fetch('/api/settings/tag-policies');
+            if (tagPoliciesResp.ok) {
+                const policies = await tagPoliciesResp.json();
+                if (policies.maxTagsPerDocument) {
+                    maxTagsPerDocument = policies.maxTagsPerDocument;
+                    console.log('✅ maxTagsPerDocument loaded:', maxTagsPerDocument);
+                }
+                // ====== CHANGE 4: Update Tags column header in self-validation table ======
+                const tagsColHeader = document.getElementById('tagsColumnHeader');
+                if (tagsColHeader) {
+                    tagsColHeader.innerHTML = `Tags <span style="font-size:10px;color:#6b7280;font-weight:normal;">(max ${maxTagsPerDocument})</span>`;
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error fetching app settings:', error);
+        }
+    }
 
-           } else if (step === 5) {
-               prevBtn.style.display = 'inline-flex';
-               nextBtn.style.display = 'inline-flex';
-               nextBtn.className = 'wizard-btn wizard-btn-primary';
-               nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
-               nav.style.display = 'flex';
-           } else if (step === 6) {
-               nav.style.display = 'none';
-           }
-           currentStep = step;
-       }
+    // ===================== FETCH TAGS AND CLASSIFICATIONS =====================
+    async function fetchTagsAndClassifications() {
+        try {
+            const tagsResponse = await fetch('/api/tags/all');
+            if (tagsResponse.ok) {
+                backendTags = await tagsResponse.json();
+                console.log('✅ Loaded tags from backend:', backendTags);
+            }
+            const classResponse = await fetch('/api/classifications/all');
+            if (classResponse.ok) {
+                backendClassifications = await classResponse.json();
+                console.log('✅ Loaded classifications from backend:', backendClassifications);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching tags/classifications:', error);
+            backendTags = [];
+            backendClassifications = [];
+        }
+    }
 
-       function updateStep5Navigation(hasErrors) {
-           const prevBtn = document.getElementById('prevBtn');
-           const nextBtn = document.getElementById('nextBtn');
-           prevBtn.style.display = 'inline-flex';
-           nextBtn.style.display = 'inline-flex';
-           if (hasErrors) {
-               nextBtn.className = 'wizard-btn wizard-btn-warning';
-               nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Valid Documents';
-           } else {
-               nextBtn.className = 'wizard-btn wizard-btn-success';
-               nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload All';
-           }
-       }
+    // ===================== SETUP EVENT LISTENERS =====================
+    function setupEventListeners() {
+        const folderInput = document.getElementById('folderInput');
+        if (folderInput) {
+            folderInput.addEventListener('change', async function (e) {
+                const files = Array.from(e.target.files);
+                if (files.length > 0) await handleFolderSelection(files);
+            });
+        }
 
-// =====================================================================
-// REMAINING JAVASCRIPT FUNCTIONS (Part 2)
-// Add these functions after Part 1 in your <script> tag
-// =====================================================================
+        const excelFileInput = document.getElementById('excelFileInput');
+        if (excelFileInput) {
+            excelFileInput.addEventListener('change', e => {
+                if (e.target.files.length > 0) handleExcelFile(e.target.files[0]);
+            });
+        }
 
-    // ===================== EXCEL PARSING AND TABLE BUILDING =====================
+        const excelDropZone = document.getElementById('excelDropZone');
+        if (excelDropZone) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+                excelDropZone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+            });
+            ['dragenter', 'dragover'].forEach(ev => {
+                excelDropZone.addEventListener(ev, () => excelDropZone.classList.add('dragover'));
+            });
+            ['dragleave', 'drop'].forEach(ev => {
+                excelDropZone.addEventListener(ev, () => excelDropZone.classList.remove('dragover'));
+            });
+            excelDropZone.addEventListener('drop', e => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) handleExcelFile(files[0]);
+            });
+        }
+
+        const nextBtn = document.getElementById('nextBtn');
+        if (nextBtn) nextBtn.addEventListener('click', handleNextButton);
+
+        const prevBtn = document.getElementById('prevBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function () {
+                if (currentStep > 1 && currentStep <= 6) {
+                    const o = formChanged; formChanged = false;
+                    updateWizardStep(currentStep - 1);
+                    formChanged = o;
+                }
+            });
+        }
+
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function () {
+                if (formChanged && !isSubmitting) {
+                    document.getElementById('confirmationModal').classList.add('show');
+                } else {
+                    navigateAway();
+                }
+            });
+        }
+
+        const editMetadataBtn = document.getElementById('editMetadataBtn');
+        if (editMetadataBtn) {
+            editMetadataBtn.addEventListener('click', function () {
+                isEditingMetadata = true;
+                updateSelfValidationEditState();
+                showCustomAlert('Editing enabled. Make your changes and click Done when finished.', 'info');
+            });
+        }
+
+        const doneMetadataBtn = document.getElementById('doneMetadataBtn');
+        if (doneMetadataBtn) {
+            doneMetadataBtn.addEventListener('click', function () {
+                captureSelfValidationDataFromTable();
+                selfValidationDirty = true;
+                isEditingMetadata = false;
+                updateSelfValidationEditState();
+                formChanged = true;
+                console.log('=== DATA CAPTURED AFTER EDITING (DONE CLICKED) ===');
+                console.log('selfValidationData:', JSON.stringify(selfValidationData, null, 2));
+                document.querySelector('.self-validation-info')?.classList.add('edited');
+                showCustomAlert('Metadata confirmed. You can proceed to validation.', 'success');
+            });
+        }
+
+        const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+        if (downloadTemplateBtn) downloadTemplateBtn.addEventListener('click', downloadTemplate);
+
+        const uploadValidBtn = document.getElementById('uploadValidBtn');
+        if (uploadValidBtn) uploadValidBtn.addEventListener('click', showUploadValidConfirmation);
+
+        const reuploadFolderBtn = document.getElementById('reuploadFolderBtn');
+        if (reuploadFolderBtn) {
+            reuploadFolderBtn.addEventListener('click', function () {
+                changeFolder(); changeExcelFile();
+                const o = formChanged; formChanged = false;
+                updateWizardStep(1); formChanged = o;
+                showCustomAlert('Please select a new folder with PDF files.', 'info');
+            });
+        }
+
+        const reuploadExcelBtn = document.getElementById('reuploadExcelBtn');
+        if (reuploadExcelBtn) {
+            reuploadExcelBtn.addEventListener('click', function () {
+                changeExcelFile();
+                const o = formChanged; formChanged = false;
+                updateWizardStep(3); formChanged = o;
+                showCustomAlert('Please upload the corrected metadata Excel file.', 'info');
+            });
+        }
+
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        if (confirmCancelBtn) {
+            confirmCancelBtn.addEventListener('click', function () {
+                closeConfirmationModal();
+                navigateAway();
+            });
+        }
+
+        const confirmUploadValidBtn = document.getElementById('confirmUploadValidBtn');
+        if (confirmUploadValidBtn) {
+            confirmUploadValidBtn.addEventListener('click', async function () {
+                closeUploadValidConfirmModal();
+                const o = formChanged; formChanged = false;
+                await startUpload(true);
+                formChanged = o;
+            });
+        }
+
+        const removeProtectedAndContinueBtn = document.getElementById('removeProtectedAndContinueBtn');
+        if (removeProtectedAndContinueBtn) {
+            removeProtectedAndContinueBtn.addEventListener('click', async function () {
+                closePdfProtectionModal();
+                const allFiles = window.tempAllFiles || [];
+                const filtered = allFiles.filter(f => !protectedPdfFiles.includes(f));
+                await proceedWithFileSizeCheck(filtered);
+            });
+        }
+
+        const forceUploadProtectedBtn = document.getElementById('forceUploadProtectedBtn');
+        if (forceUploadProtectedBtn) {
+            forceUploadProtectedBtn.addEventListener('click', async function () {
+                closePdfProtectionModal();
+                await proceedWithFileSizeCheck(window.tempAllFiles || []);
+            });
+        }
+
+        // ====== CHANGE 1: Oversized modal button ======
+        const removeOversizedAndContinueBtn = document.getElementById('removeOversizedAndContinueBtn');
+        if (removeOversizedAndContinueBtn) {
+            removeOversizedAndContinueBtn.addEventListener('click', async function () {
+                closeOversizedFilesModal();
+                // Remove oversized files and continue with the rest
+                const remaining = tempPendingFiles.filter(f => !oversizedPdfFiles.includes(f));
+                if (remaining.length === 0) {
+                    showCustomAlert('No PDF files remaining after removing oversized files. Please select a different folder.', 'error');
+                    return;
+                }
+                await proceedWithFolderSelection(remaining);
+            });
+        }
+
+        // ====== EXCESS TAGS: Keep First N Tags & Continue button ======
+        const keepFirstTagsBtn = document.getElementById('keepFirstTagsBtn');
+        if (keepFirstTagsBtn) {
+            keepFirstTagsBtn.addEventListener('click', function () {
+                closeExcessTagsModalAndContinue();
+            });
+        }
+
+        window.history.pushState(null, '', window.location.href);
+        window.addEventListener('popstate', function (e) {
+            if (formChanged && !isSubmitting && !navigationConfirmed) {
+                window.history.pushState(null, '', window.location.href);
+                showNavigationConfirmation('back');
+            }
+        });
+
+        window.addEventListener('beforeunload', function (e) {
+            if (formChanged && !isSubmitting) {
+                e.preventDefault(); e.returnValue = ''; return '';
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('a');
+            const button = e.target.closest('button');
+            if (isDownloadingTemplate) return;
+            if (button) {
+                const wizardBtns = ['nextBtn','prevBtn','cancelBtn','downloadTemplateBtn',
+                                    'reuploadFolderBtn','reuploadExcelBtn','uploadValidBtn',
+                                    'confirmUploadValidBtn','editMetadataBtn','doneMetadataBtn'];
+                if (wizardBtns.includes(button.id)) return;
+            }
+            if (link && link.href && !link.hasAttribute('data-bs-toggle')) {
+                const isWizardButton = link.closest('.wizard-navigation') ||
+                                       link.closest('.wizard-content') ||
+                                       link.id === 'confirmCancelBtn' ||
+                                       link.classList.contains('modal-btn') ||
+                                       link.classList.contains('change-file-btn') ||
+                                       link.classList.contains('download-template-btn');
+                const isNavLink = link.closest('.navbar') || link.closest('.sidebar') ||
+                                  link.closest('nav') || link.hasAttribute('href');
+                if (isNavLink && !isWizardButton && formChanged && !isSubmitting && !navigationConfirmed) {
+                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+                    showNavigationConfirmation(link.href);
+                    return false;
+                }
+            }
+        }, true);
+
+        document.addEventListener('submit', function (e) {
+            if (formChanged && !isSubmitting && !navigationConfirmed) {
+                e.preventDefault(); showNavigationConfirmation(e.target.action);
+            }
+        }, true);
+
+        window.addEventListener('load', function () {
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(a => { const b = bootstrap.Alert.getOrCreateInstance(a); if (b) b.close(); });
+            }, 5000);
+        });
+    }
+
+    // ===================== NEXT BUTTON HANDLER =====================
+    async function handleNextButton() {
+        if (currentStep === 1) {
+            if (pdfFiles.length === 0) { showCustomAlert('Please select a folder with PDF files before proceeding.'); return; }
+            if (selectedPdfIndices.size === 0) { showCustomAlert('Please keep at least one document checked before proceeding.'); return; }
+            const o = formChanged; formChanged = false; updateWizardStep(2); formChanged = o;
+        } else if (currentStep === 2) {
+            const o = formChanged; formChanged = false; updateWizardStep(3); formChanged = o;
+        } else if (currentStep === 3) {
+            if (!excelFile) { showCustomAlert('Please upload the metadata Excel file before proceeding.'); return; }
+            const o = formChanged; formChanged = false; updateWizardStep(4); formChanged = o;
+        } else if (currentStep === 4) {
+            if (isEditingMetadata) { showCustomAlert('Please click Done to finish editing before going to next step.', 'warning'); return; }
+            captureSelfValidationDataFromTable();
+            console.log('=== SENDING TO VALIDATION (FROM STEP 4) ===');
+            console.log('selfValidationData:', JSON.stringify(selfValidationData, null, 2));
+            const o = formChanged; formChanged = false; await validateFiles(); formChanged = o;
+        } else if (currentStep === 5) {
+            if (validationResult && validationResult.errors && validationResult.errors.length > 0) {
+                showUploadValidConfirmation();
+            } else {
+                const o = formChanged; formChanged = false; await startUpload(false); formChanged = o;
+            }
+        }
+    }
+
+    function extractFilenameFromPath(pathOrFilename) {
+        if (!pathOrFilename) return '';
+        const parts = pathOrFilename.split(/[/\\]/);
+        return parts[parts.length - 1];
+    }
+
+    function getFileActualName(file) {
+        if (!file) return '';
+        if (file.webkitRelativePath) return extractFilenameFromPath(file.webkitRelativePath);
+        return file.name;
+    }
+
+    function updateWizardStep(step) {
+        document.querySelectorAll('.wizard-step-content').forEach(c => c.classList.remove('active'));
+        const currentContent = document.querySelector(`.wizard-step-content[data-step="${step}"]`);
+        if (currentContent) currentContent.classList.add('active');
+
+        document.querySelectorAll('.wizard-step').forEach(el => {
+            const sn = parseInt(el.getAttribute('data-step'));
+            el.classList.remove('active', 'completed');
+            if (sn < step) el.classList.add('completed');
+            else if (sn === step) el.classList.add('active');
+        });
+
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const nav = document.getElementById('wizardNavigation');
+
+        if (step === 1) {
+            prevBtn.style.display = 'none'; nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
+            nav.style.display = 'flex';
+        } else if (step === 2) {
+            prevBtn.style.display = 'inline-flex'; nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
+            nav.style.display = 'flex';
+        } else if (step === 3) {
+            prevBtn.style.display = 'inline-flex'; nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Go to Confirmation <i class="bi bi-arrow-right"></i>';
+            nav.style.display = 'flex';
+        } else if (step === 4) {
+            prevBtn.style.display = 'inline-flex'; nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
+            nav.style.display = 'flex';
+            if (!selfValidationInitialized) {
+                parseExcelAndBuildTable();
+                selfValidationInitialized = true;
+            } else {
+                rebuildSelfValidationTableFromState();
+            }
+        } else if (step === 5) {
+            prevBtn.style.display = 'inline-flex'; nextBtn.style.display = 'inline-flex';
+            nextBtn.className = 'wizard-btn wizard-btn-primary';
+            nextBtn.innerHTML = 'Validate <i class="bi bi-check-square"></i>';
+            nav.style.display = 'flex';
+        } else if (step === 6) {
+            nav.style.display = 'none';
+        }
+        currentStep = step;
+    }
+
+    function updateStep5Navigation(hasErrors) {
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        prevBtn.style.display = 'inline-flex'; nextBtn.style.display = 'inline-flex';
+        if (hasErrors) {
+            nextBtn.className = 'wizard-btn wizard-btn-warning';
+            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload Valid Documents';
+        } else {
+            nextBtn.className = 'wizard-btn wizard-btn-success';
+            nextBtn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload All';
+        }
+    }
+
+    // ===================== EXCEL PARSING =====================
     function normalizeFilename(filename) {
         if (!filename) return '';
         const justFilename = extractFilenameFromPath(filename);
-        return justFilename
-            .toLowerCase()
-            .replace(/\.pdf$/i, '')
-            .replace(/[_\s-]+/g, '')
-            .trim();
+        return justFilename.toLowerCase().replace(/\.pdf$/i, '').replace(/[_\s-]+/g, '').trim();
     }
 
+    /**
+     * Get column value from an Excel row object.
+     * Handles both old headers (e.g. "Filename") and new headers with asterisk (e.g. "Filename *").
+     * Matching is case-insensitive and also strips trailing " *" for comparison.
+     */
     function getColumnValue(row, possibleNames) {
+        const keys = Object.keys(row);
+
         for (let name of possibleNames) {
+            // 1. Exact match
             if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
                 return row[name].toString().trim();
             }
-            const keys = Object.keys(row);
-            const matchedKey = keys.find(k => k.toLowerCase() === name.toLowerCase());
+
+            // 2. Case-insensitive match (also strip " *" suffix from key for comparison)
+            const nameLower = name.toLowerCase().replace(/\s*\*\s*$/, '').trim();
+            const matchedKey = keys.find(k => {
+                const kLower = k.toLowerCase().replace(/\s*\*\s*$/, '').trim();
+                return kLower === nameLower;
+            });
             if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== null && row[matchedKey] !== '') {
                 return row[matchedKey].toString().trim();
             }
@@ -1463,143 +1446,223 @@
         return '';
     }
 
+    /**
+     * Detect if a row from XLSX.utils.sheet_to_json is a legend/note row (not real data).
+     * Legend rows in the new template have merged cells with instructional text.
+     */
+    function isLegendOrExampleRow(row) {
+        const keys = Object.keys(row);
+        if (keys.length === 0) return true;
+
+        // Get first cell value
+        const firstVal = (row[keys[0]] || '').toString().trim();
+
+        // Legend row contains "= Required" or starts with "*"
+        if (firstVal.includes('= Required') || firstVal.includes('Required field')) return true;
+
+        // Example row — first cell value looks like an example PDF filename pattern
+        // We detect example rows by checking if the value matches a known example filename
+        if (firstVal.toLowerCase() === 'document1.pdf') return true;
+
+        // If the first key itself looks like a legend (merged cell key from XLSX)
+        // XLSX.js names merged cells by their first cell address e.g. "__EMPTY", "__EMPTY_1" etc.
+        // A row that has all __EMPTY keys is likely a merged/legend row
+        const nonEmptyKeys = keys.filter(k => !k.startsWith('__EMPTY'));
+        if (nonEmptyKeys.length === 0) return true;
+
+        return false;
+    }
+
     async function parseExcelAndBuildTable() {
-        // 🔒 SAFETY GUARD
         if (selfValidationDirty) {
             console.warn('Skipped Excel parsing — edited data exists');
             buildSelfValidationTable();
             return;
         }
-
-        if (!excelFile) {
-            showCustomAlert('No Excel file uploaded.', 'error');
-            return;
-        }
-
+        if (!excelFile) { showCustomAlert('No Excel file uploaded.', 'error'); return; }
         const loadingAlert = showCustomAlert('Reading Excel file...', 'info', false);
-
         try {
             const arrayBuffer = await excelFile.arrayBuffer();
             const workbook = XLSX.read(arrayBuffer, { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+            // Use header:1 to get raw rows as arrays, then manually detect the header row
+            // This is more robust than relying on sheet_to_json with default header detection
+            const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+            // Find the actual header row (first row containing "Filename" or "Filename *")
+            let headerRowIndex = 0;
+            for (let i = 0; i < Math.min(rawRows.length, 5); i++) {
+                const rowArr = rawRows[i];
+                const firstCell = (rowArr[0] || '').toString().toLowerCase().replace(/\s*\*/,'').trim();
+                if (firstCell === 'filename') {
+                    headerRowIndex = i;
+                    break;
+                }
+            }
+
+            console.log('Detected header row at index:', headerRowIndex);
+            console.log('Header row values:', rawRows[headerRowIndex]);
+
+            // Build column name → index map from the header row
+            const headerRow = rawRows[headerRowIndex];
+            const colMap = {};
+
+            // Strips *, parenthetical parts like "(comma-separated, max 10)", trims spaces
+            const normalizeColKey = (raw) => raw
+                .toString()
+                .toLowerCase()
+                .replace(/\s*\*/g, '')
+                .replace(/\s*\(.*?\)/g, '')
+                .trim();
+
+            headerRow.forEach((cell, idx) => {
+                if (cell === undefined || cell === null || cell.toString().trim() === '') return;
+                // 1. Store exact original (trimmed)
+                colMap[cell.toString().trim()] = idx;
+                // 2. Fully normalized: no *, no parens, lowercase
+                colMap[normalizeColKey(cell)] = idx;
+                // 3. Lowercase original fallback
+                colMap[cell.toString().toLowerCase().trim()] = idx;
+            });
+            console.log('Column map:', colMap);
+
+            // Data rows start after header row (skip legend row and example row if present)
+            // A data row is one where the Filename column has a .pdf value
+            const filenameColIdx = colMap['filename'] !== undefined ? colMap['filename'] : 0;
+            const dataRows = [];
+
+            for (let i = headerRowIndex + 1; i < rawRows.length; i++) {
+                const rowArr = rawRows[i];
+                const cellVal = (rowArr[filenameColIdx] || '').toString().trim();
+                // Skip empty rows, legend rows, and example rows
+                if (!cellVal) continue;
+                if (cellVal.includes('= Required') || cellVal.includes('Required field')) continue;
+                if (cellVal.toLowerCase() === 'document1.pdf') continue; // example row
+                // Only include rows that look like a PDF filename
+                if (cellVal.toLowerCase().endsWith('.pdf')) {
+                    dataRows.push(rowArr);
+                }
+            }
+
+            console.log(`Found ${dataRows.length} valid data rows in Excel (skipped legend/example rows)`);
 
             if (loadingAlert) loadingAlert.remove();
 
-            console.log('Excel parsed successfully. Rows:', jsonData.length);
-
-            if (!jsonData || jsonData.length === 0) {
-                showCustomAlert('Excel file is empty or has no data.', 'warning');
-                buildEmptySelfValidationTable();
-                return;
+            if (dataRows.length === 0) {
+                showCustomAlert('Excel file has no valid document data rows. Make sure filenames end with .pdf', 'warning');
+                buildEmptySelfValidationTable(); return;
             }
+
+            // Helper to get a value from a raw row array using the column map
+            // Uses same normalizeColKey so "tags", "Tags", "Tags (comma-separated, max 10)" all resolve
+            const getVal = (rowArr, ...possibleColNames) => {
+                for (const colName of possibleColNames) {
+                    // Try exact
+                    let idx = colMap[colName];
+                    // Try normalized (strips *, parens)
+                    if (idx === undefined) idx = colMap[normalizeColKey(colName)];
+                    // Try lowercase original
+                    if (idx === undefined) idx = colMap[colName.toLowerCase().trim()];
+                    if (idx !== undefined && rowArr[idx] !== undefined && rowArr[idx] !== null && rowArr[idx].toString().trim() !== '') {
+                        return rowArr[idx].toString().trim();
+                    }
+                }
+                return '';
+            };
+
+            // Build a lookup map: normalized filename → data row array
+            const excelFileMap = {};
+            dataRows.forEach(rowArr => {
+                const rawFilename = getVal(rowArr, 'filename', 'Filename', 'Filename *', 'document name', 'DocumentName');
+                if (rawFilename) {
+                    const justName = extractFilenameFromPath(rawFilename);
+                    // Store under both exact (lowercase) and normalized (no extension, no separators)
+                    excelFileMap[justName.toLowerCase()] = rowArr;
+                    excelFileMap[normalizeFilename(justName)] = rowArr;
+                }
+            });
+
+            console.log('Excel file map keys:', Object.keys(excelFileMap));
 
             const indices = Array.from(selectedPdfIndices);
             selfValidationData = [];
-
             let matchCount = 0;
 
             indices.forEach(idx => {
                 const file = pdfFiles[idx];
                 const fileName = getFileActualName(file);
-
                 console.log(`Processing file ${idx}: actualName="${fileName}"`);
 
-                let excelRow = jsonData.find(row => {
-                    const rowFileName = getColumnValue(row, ['Filename', 'Document Name', 'FileName', 'File Name', 'document_name', 'filename', 'file_name', 'DocumentName']);
-                    const extractedFileName = extractFilenameFromPath(rowFileName);
-                    const match = extractedFileName.toLowerCase() === fileName.toLowerCase();
-                    if (match) console.log(`  ✓ Exact match found: "${extractedFileName}"`);
-                    return match;
-                });
-
-                if (!excelRow) {
-                    excelRow = jsonData.find(row => {
-                        const rowFileName = getColumnValue(row, ['Filename', 'Document Name', 'FileName', 'File Name', 'document_name', 'filename', 'file_name', 'DocumentName']);
-                        const extractedFileName = extractFilenameFromPath(rowFileName);
-                        const normalizedExcelName = normalizeFilename(extractedFileName);
-                        const normalizedPdfName = normalizeFilename(fileName);
-                        const match = normalizedExcelName === normalizedPdfName;
-                        if (match) console.log(`  ✓ Normalized match found: "${extractedFileName}"`);
-                        return match;
-                    });
-                }
+                // Try exact lowercase match first, then normalized match
+                let excelRow = excelFileMap[fileName.toLowerCase()]
+                            || excelFileMap[normalizeFilename(fileName)];
 
                 if (excelRow) {
                     matchCount++;
+                    console.log(`  ✓ Matched "${fileName}"`);
                 } else {
-                    console.log(`  ✗ No match found for "${fileName}"`);
+                    console.log(`  ✗ No match found for "${fileName}" (tried: "${fileName.toLowerCase()}" and "${normalizeFilename(fileName)}")`);
                 }
 
                 let tags = [];
                 let classifications = [];
 
                 if (excelRow) {
-                    const tagsValue = getColumnValue(excelRow, ['Tags', 'tags', 'TAG', 'tag', 'Tags (comma-separated)']);
+                    // ====== CHANGE 3: Split by comma THEN normalize each tag ======
+                    // getVal uses the colMap built from the actual header row — handles "Tags (comma-separated, max N)" etc.
+                    const tagsValue = getVal(excelRow, 'tags', 'Tags', 'tag', 'Tags (comma-separated)', 'Tags(comma-separated)');
                     if (tagsValue) {
-                        if (typeof tagsValue === 'string') {
-                            tags = tagsValue.split(',').map(t => normalizeTag(t)).filter(t => t);
-                        } else if (Array.isArray(tagsValue)) {
-                            tags = tagsValue.map(t => normalizeTag(t.toString())).filter(t => t);
+                        tags = tagsValue.split(',')
+                            .map(t => t.trim())
+                            .filter(t => t.length > 0)
+                            .map(t => normalizeTagForDisplay(t));
+                        // Enforce max tags — silently truncate to first N (user was already warned by modal)
+                        if (tags.length > maxTagsPerDocument) {
+                            tags = tags.slice(0, maxTagsPerDocument);
                         }
                     }
 
-                    const classValue = getColumnValue(excelRow, ['Classifications', 'Classification', 'classifications', 'classification', 'CLASSIFICATION', 'Classifications (comma-separated)']);
+                    const classValue = getVal(excelRow, 'classifications', 'Classifications', 'classification', 'Classifications (comma-separated)', 'Classifications(comma-separated)');
                     if (classValue) {
-                        if (typeof classValue === 'string') {
-                            classifications = classValue.split(',').map(c => c.trim()).filter(c => c);
-                        } else if (Array.isArray(classValue)) {
-                            classifications = classValue.map(c => c.toString().trim()).filter(c => c);
-                        }
+                        classifications = classValue.split(',')
+                            .map(c => c.trim())
+                            .filter(c => c.length > 0);
                     }
                 }
 
                 let publishMonth = '';
                 if (excelRow) {
-                    publishMonth = getColumnValue(excelRow, ['Publish Month', 'PublishMonth', 'publish_month', 'PUBLISH_MONTH', 'Month', 'month']);
-
+                    publishMonth = getVal(excelRow, 'publish month', 'Publish Month', 'publishmonth', 'month');
                     if (publishMonth) {
                         publishMonth = publishMonth.trim();
-
-                        if (publishMonth.includes('(')) {
-                            publishMonth = publishMonth.substring(0, publishMonth.indexOf('(')).trim();
-                        }
-
-                        if (publishMonth.length === 1 && !isNaN(publishMonth)) {
-                            publishMonth = '0' + publishMonth;
-                        }
-
-                        console.log(`  Parsed publishMonth: "${publishMonth}"`);
+                        if (publishMonth.includes('(')) publishMonth = publishMonth.substring(0, publishMonth.indexOf('(')).trim();
+                        if (publishMonth.length === 1 && !isNaN(publishMonth)) publishMonth = '0' + publishMonth;
                     }
                 }
 
                 const metadata = {
                     fileIndex: idx,
                     fileName: fileName,
-                    title: excelRow ? getColumnValue(excelRow, ['Title', 'title', 'TITLE']) : '',
-                    productCode: excelRow ? getColumnValue(excelRow, ['Product Code', 'ProductCode', 'product_code', 'PRODUCT_CODE', 'Code', 'code']) : '',
-                    edition: excelRow ? getColumnValue(excelRow, ['Edition', 'edition', 'EDITION', 'Version', 'version']) : '',
+                    title:       excelRow ? getVal(excelRow, 'title', 'Title') : '',
+                    productCode: excelRow ? getVal(excelRow, 'product code', 'Product Code', 'productcode', 'code') : '',
+                    edition:     excelRow ? getVal(excelRow, 'edition', 'Edition', 'version') : '',
                     publishMonth: publishMonth,
-                    publishYear: excelRow ? getColumnValue(excelRow, ['Publish Year', 'PublishYear', 'publish_year', 'PUBLISH_YEAR', 'Year', 'year']) : '',
-                    noOfPages: excelRow ? getColumnValue(excelRow, ['No of Pages', 'NoOfPages', 'no_of_pages', 'Pages', 'pages', 'PAGE_COUNT', 'PageCount']) : '',
-                    notes: excelRow ? getColumnValue(excelRow, ['Notes', 'notes', 'NOTES', 'Note', 'note', 'Description', 'description']) : '',
+                    publishYear: excelRow ? getVal(excelRow, 'publish year', 'Publish Year', 'publishyear', 'year') : '',
+                    noOfPages:   excelRow ? getVal(excelRow, 'no of pages', 'No of Pages', 'noofpages', 'pages') : '',
+                    notes:       excelRow ? getVal(excelRow, 'notes', 'Notes', 'note', 'description') : '',
                     tags: tags,
                     classifications: classifications
                 };
-
                 selfValidationData.push(metadata);
             });
 
             buildSelfValidationTable();
 
-            if (matchCount === 0) {
-                showCustomAlert('Warning: No filenames matched! Check the console (F12) for details.', 'warning');
-            } else if (matchCount < indices.length) {
-                showCustomAlert(`Partial match: ${matchCount} of ${indices.length} documents matched.`, 'warning');
-            } else {
-                showCustomAlert(`Success! All ${matchCount} documents matched with Excel data.`, 'success');
-            }
+            if (matchCount === 0) showCustomAlert('Warning: No filenames matched! Check the console (F12) for details.', 'warning');
+            else if (matchCount < indices.length) showCustomAlert(`Partial match: ${matchCount} of ${indices.length} documents matched.`, 'warning');
+            else showCustomAlert(`Success! All ${matchCount} documents matched with Excel data.`, 'success');
 
         } catch (error) {
             if (loadingAlert) loadingAlert.remove();
@@ -1609,9 +1672,12 @@
         }
     }
 
-    function normalizeTag(tag) {
+    // ====== CHANGE 3: Separate display normalizer (keep readable but lowercase, no leading/trailing spaces) ======
+    function normalizeTagForDisplay(tag) {
         if (!tag) return '';
-        return tag.trim().replace(/\s+/g, '').toLowerCase();
+        // Keep internal structure but trim and lowercase — do NOT collapse internal spaces here
+        // (Backend normalizeTag removes all spaces; we just trim for display)
+        return tag.trim().toLowerCase();
     }
 
     function buildEmptySelfValidationTable() {
@@ -1619,15 +1685,8 @@
         selfValidationData = indices.map(idx => ({
             fileIndex: idx,
             fileName: getFileActualName(pdfFiles[idx]),
-            title: '',
-            productCode: '',
-            edition: '',
-            publishMonth: '',
-            publishYear: '',
-            noOfPages: '',
-            notes: '',
-            tags: [],
-            classifications: []
+            title: '', productCode: '', edition: '', publishMonth: '', publishYear: '',
+            noOfPages: '', notes: '', tags: [], classifications: []
         }));
         buildSelfValidationTable();
     }
@@ -1636,37 +1695,27 @@
         const editBtn = document.getElementById('editMetadataBtn');
         const doneBtn = document.getElementById('doneMetadataBtn');
         const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
         const inputs = document.querySelectorAll('#selfValidationTable tbody input, #selfValidationTable tbody select');
 
         if (isEditingMetadata) {
-            editBtn.disabled = true;
-            doneBtn.disabled = false;
-            nextBtn.disabled = true;
-            prevBtn.disabled = true;
+            editBtn.disabled = true; doneBtn.disabled = false;
+            nextBtn.disabled = true; prevBtn.disabled = true;
             prevBtn.innerHTML = '<i class="bi bi-info-circle"></i> Click Done to go back';
-            prevBtn.style.cursor = "not-allowed";   // 🚫 shows disabled cursor
-
+            prevBtn.style.cursor = 'not-allowed';
             inputs.forEach(i => {
                 if (i.dataset.locked === 'true') return;
-                if (i.tagName === 'SELECT') {
-                    i.disabled = false;
-                } else {
-                    i.readOnly = false;
-                }
+                if (i.tagName === 'SELECT') i.disabled = false;
+                else i.readOnly = false;
             });
         } else {
-            editBtn.disabled = false;
-            doneBtn.disabled = false;
-            nextBtn.disabled = false;
-            prevBtn.disabled = false;
+            editBtn.disabled = false; doneBtn.disabled = false;
+            nextBtn.disabled = false; prevBtn.disabled = false;
             prevBtn.innerHTML = '<i class="bi bi-arrow-left"></i> Previous';
-            prevBtn.style.cursor = "pointer";
+            prevBtn.style.cursor = 'pointer';
             inputs.forEach(i => {
-                if (i.tagName === 'SELECT') {
-                    i.disabled = true;
-                } else {
-                    i.readOnly = true;
-                }
+                if (i.tagName === 'SELECT') i.disabled = true;
+                else i.readOnly = true;
             });
         }
     }
@@ -1675,27 +1724,23 @@
         const tbody = document.querySelector('#selfValidationTable tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
-
         if (selectedPdfIndices.size === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#6b7280;padding:16px;">No documents selected.</td></tr>';
             return;
         }
-
         if (selfValidationData.length === 0) {
             tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#6b7280;padding:16px;">No metadata loaded. Please check Excel file.</td></tr>';
             return;
         }
 
-        selfValidationData.forEach((meta, index) => {
+        selfValidationData.forEach((meta) => {
             const tagsArr = meta.tags || [];
             const classArr = meta.classifications || [];
 
             const tagsDisplay = tagsArr.length === 0 ? 'Select tags...' :
-                               tagsArr.length === 1 ? tagsArr[0] :
-                               `${tagsArr.length} selected`;
+                                tagsArr.length === 1 ? tagsArr[0] : `${tagsArr.length} selected`;
             const classDisplay = classArr.length === 0 ? 'Select classifications...' :
-                                classArr.length === 1 ? classArr[0] :
-                                `${classArr.length} selected`;
+                                 classArr.length === 1 ? classArr[0] : `${classArr.length} selected`;
 
             const monthOptions = MONTH_OPTIONS.map(opt =>
                 `<option value="${opt.value}" ${meta.publishMonth === opt.value ? 'selected' : ''}>${opt.label}</option>`
@@ -1744,8 +1789,7 @@
 
     function escapeHtml(text) {
         const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        div.textContent = text; return div.innerHTML;
     }
 
     function wireMultiSelectEvents() {
@@ -1759,80 +1803,178 @@
         });
     }
 
-    document.addEventListener('click', () => {
-        document.querySelectorAll('.multi-select-panel').forEach(p => p.remove());
+    // Close all panels when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.multi-select-container')) {
+            document.querySelectorAll('.multi-select-panel').forEach(p => p.remove());
+        }
     });
 
+    // ====== CHANGE 5: toggleMultiSelectPanel – fixed positioning, checkbox click, max-tags enforcement ======
     function toggleMultiSelectPanel(container) {
+        // Remove any other open panels
+        document.querySelectorAll('.multi-select-panel').forEach(p => {
+            if (!container.contains(p)) p.remove();
+        });
+
         const existing = container.querySelector('.multi-select-panel');
         if (existing) { existing.remove(); return; }
 
         const type = container.dataset.type;
 
-        // 🔐 Block classifications for non-ED2
         if (type === 'classifications' && sessionStorage.getItem('edition') !== 'ED2') {
-        showCustomAlert('Upgrade to Professional Edition to modify classifications.', 'warning');
-        return;
+            showCustomAlert('Upgrade to Professional Edition to modify classifications.', 'warning');
+            return;
         }
 
-        const allItems = type === 'tags' ? backendTags.map(t => t.tagName || t) :
-                                           backendClassifications.map(c => c.classificationName || c);
-        const selected = JSON.parse(container.dataset.selected || '[]');
+        const allItems = type === 'tags'
+            ? backendTags.map(t => t.tagName || t)
+            : backendClassifications.map(c => c.classificationName || c);
+
+        let selected = JSON.parse(container.dataset.selected || '[]');
 
         const panel = document.createElement('div');
         panel.className = 'multi-select-panel';
 
+        // ====== CHANGE 5: Position panel using getBoundingClientRect (fixed positioning) ======
+        const displayRect = container.querySelector('.multi-select-display').getBoundingClientRect();
+        panel.style.top = (displayRect.bottom + window.scrollY + 4) + 'px';
+        panel.style.left = (displayRect.left + window.scrollX) + 'px';
+        panel.style.width = Math.max(displayRect.width, 200) + 'px';
+
+        // Search box
         const searchDiv = document.createElement('div');
         searchDiv.className = 'multi-select-search';
         searchDiv.innerHTML = '<input type="text" placeholder="Search...">';
         panel.appendChild(searchDiv);
 
+        // List container
         const listDiv = document.createElement('div');
-        allItems.forEach(item => {
-            const opt = document.createElement('div');
-            opt.className = 'multi-select-option';
-            const isSelected = selected.includes(item);
-            opt.innerHTML = `<input type="checkbox" ${isSelected?'checked':''}><span>${item}</span>`;
-            opt.onclick = function (e) {
-                e.stopPropagation();
-                const cb = this.querySelector('input[type="checkbox"]');
-                cb.checked = !cb.checked;
-                const label = this.querySelector('span').textContent;
-                const arr = JSON.parse(container.dataset.selected || '[]');
-                if (cb.checked && !arr.includes(label)) arr.push(label);
-                if (!cb.checked) {
-                    const i = arr.indexOf(label); if (i>=0) arr.splice(i,1);
-                }
-                container.dataset.selected = JSON.stringify(arr);
 
-                const dispSpan = container.querySelector('.multi-select-display span');
-                if (arr.length === 0) {
-                    dispSpan.textContent = type === 'tags' ? 'Select tags...' : 'Select classifications...';
-                } else if (arr.length === 1) {
-                    dispSpan.textContent = arr[0];
-                } else {
-                    dispSpan.textContent = `${arr.length} selected`;
+        function renderOptions(filterText) {
+            listDiv.innerHTML = '';
+            const filtered = allItems.filter(item =>
+                !filterText || item.toLowerCase().includes(filterText.toLowerCase())
+            );
+            filtered.forEach(item => {
+                const isSelected = selected.includes(item);
+                const opt = document.createElement('div');
+                opt.className = 'multi-select-option';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.checked = isSelected;
+                const lbl = document.createElement('span');
+                lbl.textContent = item;
+                lbl.title = item; // tooltip for long names
+                opt.appendChild(cb);
+                opt.appendChild(lbl);
+
+                // ====== CHANGE 5: Click on entire row OR checkbox toggles selection ======
+                function toggleItem(e) {
+                    e.stopPropagation();
+                    if (cb.checked && !opt.dataset.preventing) {
+                        // Deselect
+                        cb.checked = false;
+                        selected = selected.filter(s => s !== item);
+                    } else {
+                        // Select — enforce max tags
+                        if (type === 'tags' && selected.length >= maxTagsPerDocument) {
+                            showCustomAlert(`Maximum ${maxTagsPerDocument} tags allowed per document.`, 'warning');
+                            cb.checked = false;
+                            updateFooter();
+                            return;
+                        }
+                        cb.checked = true;
+                        if (!selected.includes(item)) selected.push(item);
+                    }
+                    container.dataset.selected = JSON.stringify(selected);
+                    updateDisplay();
+                    updateFooter();
                 }
-            };
-            listDiv.appendChild(opt);
-        });
+
+                opt.addEventListener('click', toggleItem);
+                // Prevent double-toggle when clicking directly on checkbox
+                cb.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // Re-sync checkbox with current selected state before toggling
+                    if (this.checked) {
+                        // Was just checked by click
+                        if (type === 'tags' && selected.filter(s=>s!==item).length >= maxTagsPerDocument && !selected.includes(item)) {
+                            // Over limit — undo
+                            this.checked = false;
+                            showCustomAlert(`Maximum ${maxTagsPerDocument} tags allowed per document.`, 'warning');
+                            updateFooter();
+                            return;
+                        }
+                        if (!selected.includes(item)) selected.push(item);
+                    } else {
+                        // Was just unchecked
+                        selected = selected.filter(s => s !== item);
+                    }
+                    container.dataset.selected = JSON.stringify(selected);
+                    updateDisplay();
+                    updateFooter();
+                });
+
+                listDiv.appendChild(opt);
+            });
+
+            if (filtered.length === 0) {
+                listDiv.innerHTML = '<div style="padding:10px;color:#9ca3af;font-size:12px;text-align:center;">No results</div>';
+            }
+        }
+
         panel.appendChild(listDiv);
 
+        // Footer with count / max-tags info
         const footer = document.createElement('div');
         footer.className = 'multi-select-footer';
-        footer.textContent = `${allItems.length} ${type} available. Multiple selection allowed.`;
         panel.appendChild(footer);
 
-        const searchInput = searchDiv.querySelector('input');
-        searchInput.oninput = function () {
-            const term = this.value.toLowerCase();
-            listDiv.querySelectorAll('.multi-select-option').forEach(o => {
-                const txt = o.querySelector('span').textContent.toLowerCase();
-                o.style.display = txt.includes(term) ? 'flex' : 'none';
-            });
-        };
+        function updateFooter() {
+            if (type === 'tags') {
+                const remaining = maxTagsPerDocument - selected.length;
+                footer.className = 'multi-select-footer' + (remaining <= 0 ? ' at-limit' : '');
+                footer.textContent = remaining > 0
+                    ? `${selected.length}/${maxTagsPerDocument} selected — ${remaining} more allowed`
+                    : `⚠ Maximum ${maxTagsPerDocument} tags reached`;
+            } else {
+                footer.className = 'multi-select-footer';
+                footer.textContent = `${allItems.length} ${type} available. Multiple selection allowed.`;
+            }
+        }
 
-        container.appendChild(panel);
+        function updateDisplay() {
+            const dispSpan = container.querySelector('.multi-select-display span');
+            if (selected.length === 0) {
+                dispSpan.textContent = type === 'tags' ? 'Select tags...' : 'Select classifications...';
+            } else if (selected.length === 1) {
+                dispSpan.textContent = selected[0];
+            } else {
+                dispSpan.textContent = `${selected.length} selected`;
+            }
+        }
+
+        // Wire search
+        const searchInput = searchDiv.querySelector('input');
+        searchInput.addEventListener('input', function (e) {
+            e.stopPropagation();
+            renderOptions(this.value);
+        });
+        searchInput.addEventListener('click', e => e.stopPropagation());
+
+        renderOptions('');
+        updateFooter();
+
+        document.body.appendChild(panel);
+
+        // Adjust if panel goes off-screen bottom
+        requestAnimationFrame(() => {
+            const panelRect = panel.getBoundingClientRect();
+            if (panelRect.bottom > window.innerHeight) {
+                panel.style.top = (displayRect.top + window.scrollY - panelRect.height - 4) + 'px';
+            }
+        });
     }
 
     function captureSelfValidationDataFromTable() {
@@ -1844,32 +1986,14 @@
             if (cells.length < 10) return;
 
             const getVal = i => cells[i].querySelector('input')?.value || '';
-
             const getSelectVal = i => {
                 const select = cells[i].querySelector('select');
                 if (!select) return '';
                 let value = select.value || '';
-
-                if (value && value.includes('(')) {
-                    value = value.substring(0, value.indexOf('(')).trim();
-                }
-
-                if (value && value.length === 1) {
-                    value = '0' + value;
-                }
-
-                console.log(`Captured month from row ${idx}: "${value}"`);
+                if (value && value.includes('(')) value = value.substring(0, value.indexOf('(')).trim();
+                if (value && value.length === 1) value = '0' + value;
                 return value;
             };
-
-            const fileName = getVal(0);
-            const title = getVal(1);
-            const productCode = getVal(2);
-            const edition = getVal(3);
-            const publishMonth = getSelectVal(4);
-            const publishYear = getVal(5);
-            const noOfPages = getVal(6);
-            const notes = getVal(7);
 
             const tagsContainer = cells[8].querySelector('.multi-select-container');
             const classContainer = cells[9].querySelector('.multi-select-container');
@@ -1878,46 +2002,38 @@
 
             result.push({
                 fileIndex: idx,
-                fileName: fileName,
-                title,
-                productCode,
-                edition,
-                publishMonth,
-                publishYear,
-                noOfPages,
-                notes,
+                fileName: getVal(0),
+                title: getVal(1),
+                productCode: getVal(2),
+                edition: getVal(3),
+                publishMonth: getSelectVal(4),
+                publishYear: getVal(5),
+                noOfPages: getVal(6),
+                notes: getVal(7),
                 tags,
                 classifications
             });
         });
         selfValidationData = result;
-        console.log('=== CAPTURED FROM TABLE ===');
-        console.log('Captured edited data:', JSON.stringify(selfValidationData, null, 2));
     }
-    // ===================== STEP 4 – REBUILD FROM SAVED STATE =====================
-        function rebuildSelfValidationTableFromState() {
-            console.log('Rebuilding Step 4 from saved selfValidationData');
-            buildSelfValidationTable(); // uses existing in-memory edited data
-        }
 
+    function rebuildSelfValidationTableFromState() {
+        console.log('Rebuilding Step 4 from saved selfValidationData');
+        buildSelfValidationTable();
+    }
 
-    // ===================== FOLDER SELECTION AND PDF PROTECTION =====================
+    // ===================== FOLDER SELECTION WITH SIZE CHECK =====================
     async function handleFolderSelection(files) {
         if (!files || files.length === 0) {
-            showCustomAlert('No files selected. Please select a folder.');
-            return;
+            showCustomAlert('No files selected. Please select a folder.'); return;
         }
-        const pdfFilesTemp = files.filter(f => {
-            const actualName = getFileActualName(f);
-            return actualName.toLowerCase().endsWith('.pdf');
-        });
-
+        const pdfFilesTemp = files.filter(f => getFileActualName(f).toLowerCase().endsWith('.pdf'));
         if (pdfFilesTemp.length === 0) {
             showCustomAlert('No PDF files found in the selected folder. Please select a folder containing PDF files.');
             return;
         }
-
         console.log(`Found ${pdfFilesTemp.length} PDF files in folder`);
+        // First check PDF protection, then size check follows
         await checkPdfProtection(pdfFilesTemp);
     }
 
@@ -1930,12 +2046,11 @@
         for (let file of files) {
             try {
                 checkedCount++;
-                if (loadingAlert && loadingAlert.querySelector('span')) {
-                    loadingAlert.querySelector('span').textContent =
-                        `Checking PDF files (${checkedCount}/${files.length})...`;
+                if (loadingAlert?.querySelector('span')) {
+                    loadingAlert.querySelector('span').textContent = `Checking PDF files (${checkedCount}/${files.length})...`;
                 }
                 const arrayBuffer = await file.arrayBuffer();
-                const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
                 try {
                     const pdf = await loadingTask.promise;
                     const restrictions = [];
@@ -1943,19 +2058,19 @@
                     try {
                         const permissions = await pdf.getPermissions();
                         if (permissions) {
-                            if (permissions.includes(4) === false) restrictions.push('Print Restricted');
-                            if (permissions.includes(16) === false) restrictions.push('Copy Restricted');
-                            if (permissions.includes(8) === false) restrictions.push('Modification Restricted');
+                            if (!permissions.includes(4)) restrictions.push('Print Restricted');
+                            if (!permissions.includes(16)) restrictions.push('Copy Restricted');
+                            if (!permissions.includes(8)) restrictions.push('Modification Restricted');
                         }
                     } catch (permError) {}
                     if (restrictions.length > 0) {
                         protectedPdfFiles.push(file);
-                        protectedFilesData.push({name: getFileActualName(file), restrictions});
+                        protectedFilesData.push({ name: getFileActualName(file), restrictions });
                     }
                 } catch (pdfError) {
                     if (pdfError.name === 'PasswordException') {
                         protectedPdfFiles.push(file);
-                        protectedFilesData.push({name: getFileActualName(file), restrictions:['Password Protected']});
+                        protectedFilesData.push({ name: getFileActualName(file), restrictions: ['Password Protected'] });
                     }
                 }
             } catch (err) {
@@ -1971,8 +2086,81 @@
         if (protectedFilesData.length > 0) {
             showProtectionWarning(files, protectedFilesData);
         } else {
+            // No protection issues — proceed to size check
+            await proceedWithFileSizeCheck(files);
+        }
+    }
+
+    // ====== CHANGE 1: File size check step (runs after protection check) ======
+    async function proceedWithFileSizeCheck(files) {
+        tempPendingFiles = files;
+        oversizedPdfFiles = [];
+        const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
+        const oversizedData = [];
+
+        for (let file of files) {
+            if (file.size > maxSizeBytes) {
+                oversizedPdfFiles.push(file);
+                oversizedData.push({
+                    name: getFileActualName(file),
+                    size: file.size,
+                    sizeMB: (file.size / (1024 * 1024)).toFixed(2)
+                });
+            }
+        }
+
+        if (oversizedData.length > 0) {
+            showOversizedFilesModal(oversizedData);
+        } else {
             await proceedWithFolderSelection(files);
         }
+    }
+
+    // ====== CHANGE 1: Show oversized files modal ======
+    function showOversizedFilesModal(oversizedData) {
+        document.getElementById('oversizedCount').textContent = oversizedData.length;
+        document.getElementById('oversizedMaxSizeDisplay').textContent = maxFileSizeMB + 'MB';
+        document.getElementById('oversizedModalSubtitle').textContent =
+            `${oversizedData.length} file(s) exceed the ${maxFileSizeMB}MB limit`;
+
+        const list = document.getElementById('oversizedFilesList');
+        list.innerHTML = '';
+        oversizedData.forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'oversized-file-item';
+            item.innerHTML = `
+                <div class="oversized-file-name">
+                    <i class="bi bi-file-earmark-pdf" style="color:#ef4444;margin-right:6px;"></i>${escapeHtml(f.name)}
+                </div>
+                <div class="oversized-file-size">
+                    <span>File Size: ${f.sizeMB}MB</span>
+                    <span>Limit: ${maxFileSizeMB}MB</span>
+                    <span style="background:#fee2e2;color:#991b1b;">Exceeds by ${(f.sizeMB - maxFileSizeMB).toFixed(2)}MB</span>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+        document.getElementById('oversizedFilesModal').classList.add('show');
+    }
+
+    function closeOversizedFilesModal() {
+        document.getElementById('oversizedFilesModal').classList.remove('show');
+    }
+
+    function cancelOversizedFiles() {
+        closeOversizedFilesModal();
+        // Reset folder input
+        const folderInput = document.getElementById('folderInput');
+        folderInput.value = '';
+        pdfFiles = [];
+        protectedPdfFiles = [];
+        oversizedPdfFiles = [];
+        tempPendingFiles = [];
+        selectedPdfIndices.clear();
+        document.getElementById('folderUploadedMessage').classList.remove('show');
+        document.getElementById('dropZone').style.display = 'block';
+        formChanged = false;
+        selfValidationData = [];
     }
 
     function showProtectionWarning(allFiles, protectedFilesData) {
@@ -1993,26 +2181,21 @@
         window.tempAllFiles = allFiles;
     }
 
-    function closePdfProtectionModal() {
-        document.getElementById('pdfProtectionModal').classList.remove('show');
-    }
+    function closePdfProtectionModal() { document.getElementById('pdfProtectionModal').classList.remove('show'); }
 
     function cancelProtectedPdfs() {
         const folderInput = document.getElementById('folderInput');
         folderInput.value = '';
-        pdfFiles = [];
-        protectedPdfFiles = [];
-        selectedPdfIndices.clear();
+        pdfFiles = []; protectedPdfFiles = []; selectedPdfIndices.clear();
         document.getElementById('folderUploadedMessage').classList.remove('show');
         document.getElementById('dropZone').style.display = 'block';
         closePdfProtectionModal();
-        formChanged = false;
-        selfValidationData = [];
+        formChanged = false; selfValidationData = [];
     }
 
     async function proceedWithFolderSelection(files) {
         pdfFiles = files;
-        selectedPdfIndices = new Set(pdfFiles.map((_,i)=>i));
+        selectedPdfIndices = new Set(pdfFiles.map((_,i) => i));
         let totalSize = 0;
         pdfFiles.forEach(f => totalSize += f.size);
         document.getElementById('uploadedFileCount').textContent = pdfFiles.length + ' PDF files';
@@ -2020,8 +2203,7 @@
         document.getElementById('folderUploadedMessage').classList.add('show');
         document.getElementById('dropZone').style.display = 'none';
         displayFileList();
-        formChanged = true;
-        selfValidationData = [];
+        formChanged = true; selfValidationData = [];
         showCustomAlert(`Successfully loaded ${pdfFiles.length} PDF file(s)`, 'success');
     }
 
@@ -2045,23 +2227,26 @@
         const selectAllCheckbox = header.querySelector('#selectAllFiles');
         selectAllCheckbox.checked = selectedPdfIndices.size === pdfFiles.length;
         selectAllCheckbox.addEventListener('change', function () {
-            if (this.checked) selectedPdfIndices = new Set(pdfFiles.map((_,i)=>i));
+            if (this.checked) selectedPdfIndices = new Set(pdfFiles.map((_,i) => i));
             else selectedPdfIndices.clear();
             refreshFileCheckboxes();
         });
 
-        pdfFiles.forEach((file,index) => {
+        const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
+        pdfFiles.forEach((file, index) => {
             const item = document.createElement('div');
             item.className = 'file-list-item';
             const isProtected = protectedPdfFiles.includes(file);
+            const isOversized = file.size > maxSizeBytes;
             const protectedHtml = isProtected ? `<span class="protected-badge"><i class="bi bi-shield-lock"></i> Protected</span>` : '';
+            const oversizedHtml = isOversized ? `<span class="oversized-badge"><i class="bi bi-exclamation-octagon"></i> Oversized (${(file.size/1024/1024).toFixed(1)}MB)</span>` : '';
             const displayName = getFileActualName(file);
             item.innerHTML = `
                 <input type="checkbox" class="form-check-input file-checkbox" data-index="${index}">
                 <i class="bi bi-file-earmark-pdf" style="color:#ef4444;"></i>
                 <div class="file-name-wrapper">
                     <span class="file-name-text" title="${displayName}">${displayName}</span>
-                    ${protectedHtml}
+                    ${protectedHtml}${oversizedHtml}
                 </div>
             `;
             fileList.appendChild(item);
@@ -2088,50 +2273,40 @@
     function changeFolder() {
         const folderInput = document.getElementById('folderInput');
         folderInput.value = '';
-        pdfFiles = [];
-        protectedPdfFiles = [];
+        pdfFiles = []; protectedPdfFiles = []; oversizedPdfFiles = []; tempPendingFiles = [];
         selectedPdfIndices.clear();
         document.getElementById('folderUploadedMessage').classList.remove('show');
         document.getElementById('dropZone').style.display = 'block';
-        selfValidationData = [];
-        selfValidationInitialized = false;
-        selfValidationDirty = false;
-        formChanged = false;
-        selfValidationData = [];
+        selfValidationData = []; selfValidationInitialized = false; selfValidationDirty = false;
+        formChanged = false; selfValidationData = [];
     }
 
-    function triggerFolderSelection() {
-        document.getElementById('folderInput').click();
-    }
+    function triggerFolderSelection() { document.getElementById('folderInput').click(); }
 
     // ===================== TEMPLATE DOWNLOAD =====================
     async function downloadTemplate() {
         if (!pdfFiles || pdfFiles.length === 0) {
-            showCustomAlert('No PDF files available. Please go back and select a folder.', 'error');
-            return;
+            showCustomAlert('No PDF files available. Please go back and select a folder.', 'error'); return;
         }
         if (selectedPdfIndices.size === 0) {
-            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
-            return;
+            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error'); return;
         }
         isDownloadingTemplate = true;
         const formData = new FormData();
         Array.from(selectedPdfIndices).forEach(idx => formData.append('pdfFiles', pdfFiles[idx]));
-        try{
+        try {
             const loadingAlert = showCustomAlert('Downloading template...', 'info', false);
-            const response = await fetch('/api/bulk-upload/generate-template',{method:'POST',body:formData});
+            const response = await fetch('/api/bulk-upload/generate-template', { method: 'POST', body: formData });
             if (loadingAlert) loadingAlert.remove();
-            if (!response.ok){
-                if (response.status === 403){
+            if (!response.ok) {
+                if (response.status === 403) {
                     const errorData = await response.json();
                     if (errorData.code === 'EDITION_UPGRADE_REQUIRED') {
-                        showEditionUpgradeModal(errorData.currentEdition, errorData.daysRemaining);
-                        isDownloadingTemplate = false;
-                        return;
+                        showCustomAlert('ED2 Professional required for this feature.', 'error');
+                        isDownloadingTemplate = false; return;
                     }
-                    showCustomAlert('Access Denied: Admin access required or license issue.', 'error');
-                    isDownloadingTemplate = false;
-                    return;
+                    showCustomAlert('Access Denied.', 'error');
+                    isDownloadingTemplate = false; return;
                 }
                 throw new Error(`Download failed: ${response.status}`);
             }
@@ -2139,161 +2314,270 @@
             if (blob.size === 0) throw new Error('Received empty file');
             const cd = response.headers.get('Content-Disposition');
             let filename = 'bulk_upload_template.xlsx';
-            if (cd){
+            if (cd) {
                 const m = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (m && m[1]) filename = m[1].replace(/['"]/g,'');
+                if (m && m[1]) filename = m[1].replace(/['"]/g, '');
             }
             downloadBlob(blob, filename);
             showCustomAlert('Template downloaded successfully!', 'success');
-        }catch(err){
+        } catch (err) {
             console.error('Template download error:', err);
             showCustomAlert(`Failed to download template: ${err.message}`, 'error');
-        }finally{
+        } finally {
             isDownloadingTemplate = false;
         }
     }
 
-    function downloadBlob(blob, filename){
+    function downloadBlob(blob, filename) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = filename; a.style.display='none';
+        a.href = url; a.download = filename; a.style.display = 'none';
         document.body.appendChild(a); a.click();
-        setTimeout(()=>{window.URL.revokeObjectURL(url);document.body.removeChild(a);},100);
+        setTimeout(() => { window.URL.revokeObjectURL(url); document.body.removeChild(a); }, 100);
     }
 
     // ===================== EXCEL FILE HANDLING =====================
-    function handleExcelFile(file){
+    async function handleExcelFile(file) {
         if (!file) return;
-        const exts=['.xlsx','.xls'];
-        const ext='.'+file.name.split('.').pop().toLowerCase();
-        if (!exts.includes(ext)){
-            showCustomAlert('Please upload a valid Excel file (.xlsx or .xls)');
-            return;
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        if (!['.xlsx', '.xls'].includes(ext)) {
+            showCustomAlert('Please upload a valid Excel file (.xlsx or .xls)'); return;
         }
-        excelFile=file;
-        document.getElementById('uploadedExcelName').textContent=file.name;
-        document.getElementById('uploadedExcelSize').textContent=formatFileSize(file.size);
+        excelFile = file;
+        document.getElementById('uploadedExcelName').textContent = file.name;
+        document.getElementById('uploadedExcelSize').textContent = formatFileSize(file.size);
         document.getElementById('excelUploadedMessage').classList.add('show');
-        document.getElementById('excelDropZone').style.display='none';
+        document.getElementById('excelDropZone').style.display = 'none';
         formChanged = true;
+
+        // ====== Check for excess tags immediately after Excel upload ======
+        await checkExcelForExcessTags(file);
     }
 
     function changeExcelFile() {
-    const excelFileInput = document.getElementById('excelFileInput');
-    excelFileInput.value = '';
-    excelFile = null;
+        document.getElementById('excelFileInput').value = '';
+        excelFile = null;
+        document.getElementById('excelUploadedMessage').classList.remove('show');
+        document.getElementById('excelDropZone').style.display = 'block';
+        selfValidationData = []; selfValidationInitialized = false; selfValidationDirty = false;
+        formChanged = true;
+    }
 
-    document.getElementById('excelUploadedMessage').classList.remove('show');
-    document.getElementById('excelDropZone').style.display = 'block';
+    // ====== EXCESS TAGS: Parse Excel immediately on upload and check tag counts ======
+    async function checkExcelForExcessTags(file) {
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
 
-    // 🔥 RESET STATE
-    selfValidationData = [];
-    selfValidationInitialized = false;
-    selfValidationDirty = false;
+            // Detect header row (same logic as parseExcelAndBuildTable)
+            let headerRowIndex = 0;
+            for (let i = 0; i < Math.min(rawRows.length, 5); i++) {
+                const firstCell = (rawRows[i][0] || '').toString().toLowerCase().replace(/\s*\*/, '').trim();
+                if (firstCell === 'filename') { headerRowIndex = i; break; }
+            }
 
-    formChanged = true;
-}
+            const headerRow = rawRows[headerRowIndex];
+            const colMap = {};
+            const normalizeColKey = (raw) => raw.toString().toLowerCase()
+                .replace(/\s*\*/g, '').replace(/\s*\(.*?\)/g, '').trim();
 
+            headerRow.forEach((cell, idx) => {
+                if (!cell || cell.toString().trim() === '') return;
+                colMap[cell.toString().trim()] = idx;
+                colMap[normalizeColKey(cell)] = idx;
+                colMap[cell.toString().toLowerCase().trim()] = idx;
+            });
+
+            const getVal = (rowArr, ...names) => {
+                for (const n of names) {
+                    let i = colMap[n];
+                    if (i === undefined) i = colMap[normalizeColKey(n)];
+                    if (i === undefined) i = colMap[n.toLowerCase().trim()];
+                    if (i !== undefined && rowArr[i] !== undefined && rowArr[i] !== null && rowArr[i].toString().trim() !== '')
+                        return rowArr[i].toString().trim();
+                }
+                return '';
+            };
+
+            const filenameColIdx = colMap['filename'] !== undefined ? colMap['filename'] : 0;
+
+            // Collect excess-tag documents
+            const excessTagsDocs = [];
+
+            for (let i = headerRowIndex + 1; i < rawRows.length; i++) {
+                const row = rawRows[i];
+                const cellVal = (row[filenameColIdx] || '').toString().trim();
+                if (!cellVal || !cellVal.toLowerCase().endsWith('.pdf')) continue;
+                if (cellVal.toLowerCase() === 'document1.pdf') continue;
+
+                const tagsRaw = getVal(row, 'tags', 'Tags', 'tag');
+                if (!tagsRaw) continue;
+
+                const tagList = tagsRaw.split(',').map(t => t.trim()).filter(t => t.length > 0);
+                if (tagList.length > maxTagsPerDocument) {
+                    excessTagsDocs.push({
+                        fileName: cellVal,
+                        tags: tagList,
+                        count: tagList.length,
+                        allowed: maxTagsPerDocument,
+                        kept: tagList.slice(0, maxTagsPerDocument),
+                        removed: tagList.slice(maxTagsPerDocument)
+                    });
+                }
+            }
+
+            if (excessTagsDocs.length > 0) {
+                showExcessTagsModal(excessTagsDocs);
+            }
+
+        } catch (err) {
+            console.error('Error checking Excel for excess tags:', err);
+            // Silent fail — don't block the upload
+        }
+    }
+
+    // Store excess tag docs for the "Keep First N" action
+    let pendingExcessTagsDocs = [];
+
+    function showExcessTagsModal(excessDocs) {
+        pendingExcessTagsDocs = excessDocs;
+
+        document.getElementById('excessTagsMaxDisplay').textContent = maxTagsPerDocument;
+        document.getElementById('keepFirstTagsBtnCount').textContent = maxTagsPerDocument;
+        document.querySelectorAll('.excess-tags-max-inline').forEach(el => el.textContent = maxTagsPerDocument);
+        document.getElementById('excessTagsModalSubtitle').textContent =
+            excessDocs.length + ' document(s) have more than ' + maxTagsPerDocument + ' tags';
+
+        const list = document.getElementById('excessTagsFilesList');
+        list.innerHTML = '';
+
+        excessDocs.forEach(doc => {
+            const item = document.createElement('div');
+            item.className = 'oversized-file-item';
+            item.style.borderLeftColor = '#f59e0b';
+
+            const keptHtml = doc.kept.map(t =>
+                `<span style="display:inline-block;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:4px;font-size:11px;margin:2px;">${t}</span>`
+            ).join('');
+            const removedHtml = doc.removed.map(t =>
+                `<span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:4px;font-size:11px;margin:2px;text-decoration:line-through;">${t}</span>`
+            ).join('');
+
+            item.innerHTML = `
+                <div style="font-weight:600;color:#1a2332;margin-bottom:6px;font-size:13px;">
+                    <i class="bi bi-file-earmark-pdf" style="color:#ef4444;margin-right:5px;"></i>
+                    ${doc.fileName}
+                    <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:8px;">
+                        ${doc.count} tags entered — max ${doc.allowed}
+                    </span>
+                </div>
+                <div style="margin-bottom:4px;">
+                    <span style="font-size:11px;color:#374151;font-weight:600;">✅ Will keep (${doc.kept.length}):</span>
+                    <div style="margin-top:3px;">${keptHtml}</div>
+                </div>
+                <div>
+                    <span style="font-size:11px;color:#374151;font-weight:600;">❌ Will remove (${doc.removed.length}):</span>
+                    <div style="margin-top:3px;">${removedHtml}</div>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+
+        document.getElementById('excessTagsModal').classList.add('show');
+    }
+
+    function cancelExcessTagsModal() {
+        document.getElementById('excessTagsModal').classList.remove('show');
+        pendingExcessTagsDocs = [];
+        // Reset the Excel upload so user can fix and re-upload
+        changeExcelFile();
+    }
+
+    function closeExcessTagsModalAndContinue() {
+        document.getElementById('excessTagsModal').classList.remove('show');
+        // The actual truncation happens during parseExcelAndBuildTable (tags are sliced to maxTagsPerDocument)
+        pendingExcessTagsDocs = [];
+        showCustomAlert(
+            'Tags have been trimmed to the first ' + maxTagsPerDocument + ' for affected documents.',
+            'info'
+        );
+    }
 
     // ===================== VALIDATION =====================
-    async function validateFiles(){
-        if (selectedPdfIndices.size === 0){
-            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
-            return;
+    async function validateFiles() {
+        if (selectedPdfIndices.size === 0) {
+            showCustomAlert('No documents selected.', 'error'); return;
         }
-
         updateWizardStep(5);
-        document.getElementById('validationStatus').textContent='Validating...';
-        document.getElementById('validationStatus').className='validation-status';
+        document.getElementById('validationStatus').textContent = 'Validating...';
+        document.getElementById('validationStatus').className = 'validation-status';
         document.getElementById('validationErrorActions').classList.remove('show');
 
         const formData = new FormData();
-        Array.from(selectedPdfIndices).forEach(idx=>formData.append('pdfFiles', pdfFiles[idx]));
+        Array.from(selectedPdfIndices).forEach(idx => formData.append('pdfFiles', pdfFiles[idx]));
         formData.append('excelFile', excelFile);
-
         if (selfValidationData && selfValidationData.length > 0) {
-            const jsonString = JSON.stringify(selfValidationData);
-            formData.append('selfValidationJson', jsonString);
-            console.log('=== SENDING TO VALIDATION API ===');
-            console.log('selfValidationJson:', jsonString);
-        } else {
-            console.warn('WARNING: selfValidationData is empty!');
+            formData.append('selfValidationJson', JSON.stringify(selfValidationData));
         }
 
-        try{
-            const response = await fetch('/api/bulk-upload/validate',{method:'POST',body:formData});
-            if (!response.ok){
-                if (response.status===403){
+        try {
+            const response = await fetch('/api/bulk-upload/validate', { method: 'POST', body: formData });
+            if (!response.ok) {
+                if (response.status === 403) {
                     const errorData = await response.json();
                     if (errorData.code === 'EDITION_UPGRADE_REQUIRED') {
-                        showEditionUpgradeModal(errorData.currentEdition, errorData.daysRemaining);
-                        return;
+                        showCustomAlert('ED2 Professional required.', 'error'); return;
                     }
-                    showCustomAlert('Access Denied: Admin access required or license issue.', 'error');
-                    return;
+                    showCustomAlert('Access Denied.', 'error'); return;
                 }
                 throw new Error('Validation failed');
             }
             validationResult = await response.json();
-            console.log('=== VALIDATION RESULT ===');
-            console.log(validationResult);
             displayValidationResults(validationResult);
-        }catch(err){
+        } catch (err) {
             console.error('Validation error:', err);
             showCustomAlert('Validation failed. Please check your files and try again.', 'error');
         }
     }
 
-    function displayValidationResults(result){
+    function displayValidationResults(result) {
         document.getElementById('totalDocuments').textContent = result.totalDocuments || 0;
         document.getElementById('validDocuments').textContent = result.validDocuments || 0;
         document.getElementById('warningCount').textContent = result.warnings?.length || 0;
         document.getElementById('errorCount').textContent = result.errors?.length || 0;
 
         const issues = document.getElementById('validationIssues');
-        issues.innerHTML='';
-        const hasErrors = result.errors && result.errors.length>0;
-        if (hasErrors){
-            result.errors.forEach(e=>{
-                const o = typeof e === 'string' ? JSON.parse(e) : e;
-                issues.appendChild(createIssueItem(o,'error'));
-            });
+        issues.innerHTML = '';
+        const hasErrors = result.errors && result.errors.length > 0;
+        if (hasErrors) result.errors.forEach(e => { const o = typeof e === 'string' ? JSON.parse(e) : e; issues.appendChild(createIssueItem(o, 'error')); });
+        if (result.warnings?.length > 0) result.warnings.forEach(w => { const o = typeof w === 'string' ? JSON.parse(w) : w; issues.appendChild(createIssueItem(o, 'warning')); });
+        if (issues.innerHTML === '') {
+            issues.innerHTML = '<div style="padding:20px;text-align:center;color:#10b981;"><i class="bi bi-check-circle" style="font-size:24px;"></i><br><br>No issues found! All documents are ready to upload.</div>';
         }
-        if (result.warnings && result.warnings.length>0){
-            result.warnings.forEach(w=>{
-                const o = typeof w === 'string' ? JSON.parse(w) : w;
-                issues.appendChild(createIssueItem(o,'warning'));
-            });
-        }
-        if (issues.innerHTML===''){
-            issues.innerHTML='<div style="padding:20px;text-align:center;color:#10b981;"><i class="bi bi-check-circle" style="font-size:24px;"></i><br><br>No issues found! All documents are ready to upload.</div>';
-        }
-        if (hasErrors){
-            document.getElementById('validationStatus').textContent='Has Errors';
+        if (hasErrors) {
+            document.getElementById('validationStatus').textContent = 'Has Errors';
             document.getElementById('validationStatus').classList.add('error');
             document.getElementById('validationErrorActions').classList.add('show');
-        }else if (result.warnings && result.warnings.length>0){
-            document.getElementById('validationStatus').textContent='Ready with Warnings';
+        } else if (result.warnings?.length > 0) {
+            document.getElementById('validationStatus').textContent = 'Ready with Warnings';
             document.getElementById('validationStatus').classList.add('warning');
-        }else{
-            document.getElementById('validationStatus').textContent='All Valid';
+        } else {
+            document.getElementById('validationStatus').textContent = 'All Valid';
             document.getElementById('validationStatus').classList.add('success');
         }
         updateStep5Navigation(hasErrors);
-        if (hasErrors){
-            showCustomAlert(`Validation complete. ${result.validDocuments} documents are ready to upload.`, 'warning');
-        }else{
-            showCustomAlert('Validation successful! Click "Upload" to proceed.', 'success');
-        }
+        if (hasErrors) showCustomAlert(`Validation complete. ${result.validDocuments} documents are ready to upload.`, 'warning');
+        else showCustomAlert('Validation successful! Click "Upload" to proceed.', 'success');
     }
 
-    function createIssueItem(issue,type){
-        const item=document.createElement('div');
-        item.className='issue-item';
-        item.innerHTML=`
-            <div class="issue-icon ${type}">
-                <i class="bi bi-${type==='error'?'x-circle':'exclamation-triangle'}"></i>
-            </div>
+    function createIssueItem(issue, type) {
+        const item = document.createElement('div');
+        item.className = 'issue-item';
+        item.innerHTML = `
+            <div class="issue-icon ${type}"><i class="bi bi-${type === 'error' ? 'x-circle' : 'exclamation-triangle'}"></i></div>
             <div class="issue-content">
                 <div class="issue-title">${issue.title || issue.message}</div>
                 <div class="issue-desc">${issue.description || issue.details || ''}</div>
@@ -2303,43 +2587,32 @@
     }
 
     // ===================== UPLOAD =====================
-    async function startUpload(onlyValid=false){
-        if (selectedPdfIndices.size === 0){
-            showCustomAlert('No documents selected. Please select at least one document in Step 1.', 'error');
-            return;
+    async function startUpload(onlyValid = false) {
+        if (selectedPdfIndices.size === 0) {
+            showCustomAlert('No documents selected.', 'error'); return;
         }
-
         updateWizardStep(6);
-        isSubmitting = true;
-        uploadStartTime = Date.now();
+        isSubmitting = true; uploadStartTime = Date.now();
 
         const formData = new FormData();
-        Array.from(selectedPdfIndices).forEach(idx=>formData.append('pdfFiles', pdfFiles[idx]));
+        Array.from(selectedPdfIndices).forEach(idx => formData.append('pdfFiles', pdfFiles[idx]));
         formData.append('excelFile', excelFile);
-        if (onlyValid) formData.append('uploadOnlyValid','true');
-
+        if (onlyValid) formData.append('uploadOnlyValid', 'true');
         if (selfValidationData && selfValidationData.length > 0) {
-            const jsonString = JSON.stringify(selfValidationData);
-            formData.append('selfValidationJson', jsonString);
-            console.log('=== SENDING TO UPLOAD API ===');
-            console.log('selfValidationJson:', jsonString);
-        } else {
-            console.warn('WARNING: selfValidationData is empty for upload!');
+            formData.append('selfValidationJson', JSON.stringify(selfValidationData));
         }
 
-        try{
-            const response = await fetch('/api/bulk-upload/process',{method:'POST',body:formData});
-            if (!response.ok){
-                if (response.status===403){
+        try {
+            const response = await fetch('/api/bulk-upload/process', { method: 'POST', body: formData });
+            if (!response.ok) {
+                if (response.status === 403) {
                     const errorData = await response.json();
                     if (errorData.code === 'EDITION_UPGRADE_REQUIRED') {
-                        showEditionUpgradeModal(errorData.currentEdition, errorData.daysRemaining);
-                        isSubmitting=false;
-                        return;
+                        showCustomAlert('ED2 Professional required.', 'error');
+                        isSubmitting = false; return;
                     }
-                    showCustomAlert('Access Denied: Admin access required or license issue.', 'error');
-                    isSubmitting=false;
-                    return;
+                    showCustomAlert('Access Denied.', 'error');
+                    isSubmitting = false; return;
                 }
                 throw new Error('Upload failed');
             }
@@ -2349,99 +2622,73 @@
             await simulateProgress(docsToUpload);
             const result = await response.json();
             showCompletion(result);
-        }catch(err){
+        } catch (err) {
             console.error('Upload error:', err);
             showCustomAlert('Upload failed. Please try again.', 'error');
-            isSubmitting=false;
+            isSubmitting = false;
         }
     }
 
-    async function simulateProgress(totalDocs){
-        const bar=document.getElementById('progressBar');
-        const text=document.getElementById('progressText');
-        const log=document.getElementById('uploadLog');
-        log.innerHTML='';
-        const selectedFilesArray = Array.from(selectedPdfIndices).map(idx=>pdfFiles[idx]);
-        for(let i=1;i<=totalDocs;i++){
-            const pct=Math.round((i/totalDocs)*100);
-            bar.style.width=pct+'%';
-            bar.textContent=pct+'%';
-            text.textContent=`Processing ${i} of ${totalDocs} documents...`;
-            const file = selectedFilesArray[i-1];
+    async function simulateProgress(totalDocs) {
+        const bar = document.getElementById('progressBar');
+        const text = document.getElementById('progressText');
+        const log = document.getElementById('uploadLog');
+        log.innerHTML = '';
+        const selectedFilesArray = Array.from(selectedPdfIndices).map(idx => pdfFiles[idx]);
+        for (let i = 1; i <= totalDocs; i++) {
+            const pct = Math.round((i / totalDocs) * 100);
+            bar.style.width = pct + '%'; bar.textContent = pct + '%';
+            text.textContent = `Processing ${i} of ${totalDocs} documents...`;
+            const file = selectedFilesArray[i - 1];
             const displayName = getFileActualName(file);
-            const li=document.createElement('div');
-            li.className='log-item';
-            li.innerHTML=`
-                <div class="log-icon processing"><i class="bi bi-arrow-repeat"></i></div>
-                <div class="log-text">Uploading ${displayName}...</div>
-            `;
-            log.appendChild(li);
-            log.scrollTop=log.scrollHeight;
-            await new Promise(r=>setTimeout(r,300));
-            li.innerHTML=`
-                <div class="log-icon success"><i class="bi bi-check"></i></div>
-                <div class="log-text">${displayName} uploaded successfully</div>
-            `;
+            const li = document.createElement('div');
+            li.className = 'log-item';
+            li.innerHTML = `<div class="log-icon processing"><i class="bi bi-arrow-repeat"></i></div><div class="log-text">Uploading ${displayName}...</div>`;
+            log.appendChild(li); log.scrollTop = log.scrollHeight;
+            await new Promise(r => setTimeout(r, 300));
+            li.innerHTML = `<div class="log-icon success"><i class="bi bi-check"></i></div><div class="log-text">${displayName} uploaded successfully</div>`;
         }
     }
 
-    function showCompletion(result){
-        const endTime=Date.now();
-        const totalTime=Math.round((endTime-uploadStartTime)/1000);
-        const successCount=result.successCount || 0;
-        const failedCount=result.failedCount || 0;
-        let msg=`Bulk upload complete! ${successCount} documents uploaded successfully.`;
-        if (failedCount>0) msg += ` ${failedCount} documents were skipped due to errors.`;
+    function showCompletion(result) {
+        const endTime = Date.now();
+        const totalTime = Math.round((endTime - uploadStartTime) / 1000);
+        let msg = `Bulk upload complete! ${result.successCount || 0} documents uploaded successfully.`;
+        if (result.failedCount > 0) msg += ` ${result.failedCount} documents were skipped due to errors.`;
         msg += ` Time taken: ${totalTime}s.`;
-        showCustomAlert(msg,'success');
-        setTimeout(()=>{window.location.href='/documents';},2000);
+        showCustomAlert(msg, 'success');
+        setTimeout(() => { window.location.href = '/documents'; }, 2000);
     }
 
-    // ===================== UPLOAD VALID CONFIRMATION =====================
     function showUploadValidConfirmation() {
         if (!validationResult) return;
-
         const totalDocs = validationResult.totalDocuments || 0;
         const validDocs = validationResult.validDocuments || 0;
         const errorDocs = totalDocs - validDocs;
-
         document.getElementById('validDocsCount').textContent = validDocs;
         document.getElementById('errorDocsCount').textContent = errorDocs;
 
         const skippedList = document.getElementById('skippedDocumentsList');
         if (skippedList) {
             skippedList.innerHTML = '';
-
-            if (validationResult.errors && validationResult.errors.length > 0) {
+            if (validationResult.errors?.length > 0) {
                 const skippedFilenames = new Set();
-
                 validationResult.errors.forEach(errorObj => {
-                    const errorStr = typeof errorObj === 'string' ? errorObj : JSON.stringify(errorObj);
-
                     try {
                         const parsed = typeof errorObj === 'string' ? JSON.parse(errorObj) : errorObj;
                         const desc = parsed.description || parsed.details || parsed.message || '';
-
                         const match = desc.match(/Document '([^']+)'/);
-                        if (match && match[1]) {
-                            skippedFilenames.add(match[1]);
-                        }
+                        if (match?.[1]) skippedFilenames.add(match[1]);
                     } catch (e) {
-                        const match = errorStr.match(/Document '([^']+)'/);
-                        if (match && match[1]) {
-                            skippedFilenames.add(match[1]);
-                        }
+                        const match = JSON.stringify(errorObj).match(/Document '([^']+)'/);
+                        if (match?.[1]) skippedFilenames.add(match[1]);
                     }
                 });
-
                 if (skippedFilenames.size > 0) {
                     Array.from(skippedFilenames).forEach(filename => {
                         const item = document.createElement('div');
                         item.className = 'skipped-doc-item';
-                        item.innerHTML = `
-                            <i class="bi bi-file-earmark-pdf-fill" style="color:#ef4444;"></i>
-                            <span>${filename}</span>
-                        `;
+                        item.innerHTML = `<i class="bi bi-file-earmark-pdf-fill" style="color:#ef4444;"></i><span>${filename}</span>`;
                         skippedList.appendChild(item);
                     });
                 } else {
@@ -2449,99 +2696,75 @@
                 }
             }
         }
-
         document.getElementById('uploadValidConfirmModal').classList.add('show');
     }
 
-    function closeUploadValidConfirmModal() {
-        document.getElementById('uploadValidConfirmModal').classList.remove('show');
+    function closeUploadValidConfirmModal() { document.getElementById('uploadValidConfirmModal').classList.remove('show'); }
+    function closeConfirmationModal() { document.getElementById('confirmationModal').classList.remove('show'); }
+
+    function navigateAway() {
+        formChanged = false; isSubmitting = true;
+        if (lastVisitedUrl && lastVisitedUrl !== window.location.href) window.location.href = lastVisitedUrl;
+        else window.location.href = '/documents';
     }
 
-    // ===================== MODAL FUNCTIONS =====================
-    function closeConfirmationModal(){
-        document.getElementById('confirmationModal').classList.remove('show');
-    }
-
-    function navigateAway(){
-        formChanged=false;
-        isSubmitting=true;
-        if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
-            window.location.href = lastVisitedUrl;
-        } else {
-            window.location.href = '/documents';
-        }
-    }
-
-    function showNavigationConfirmation(targetUrl){
+    function showNavigationConfirmation(targetUrl) {
         pendingNavigationUrl = targetUrl;
-        const modal = document.getElementById('confirmationModal');
-        modal.classList.add('show');
+        document.getElementById('confirmationModal').classList.add('show');
         const confirmBtn = document.getElementById('confirmCancelBtn');
         const newConfirmBtn = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-        newConfirmBtn.onclick = function(){
-            navigationConfirmed = true;
-            formChanged = false;
-            isSubmitting = true;
+        newConfirmBtn.onclick = function () {
+            navigationConfirmed = true; formChanged = false; isSubmitting = true;
             closeConfirmationModal();
-            if (pendingNavigationUrl === 'back'){
-                if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
-                    window.location.href = lastVisitedUrl;
-                } else {
-                    window.location.href = '/documents';
-                }
+            if (pendingNavigationUrl === 'back') {
+                if (lastVisitedUrl && lastVisitedUrl !== window.location.href) window.location.href = lastVisitedUrl;
+                else window.location.href = '/documents';
             } else {
                 window.location.href = pendingNavigationUrl;
             }
         };
     }
 
-    // ===================== UTILITY FUNCTIONS =====================
-    function formatFileSize(bytes){
-        if (bytes===0) return '0 Bytes';
-        const k=1024; const sizes=['Bytes','KB','MB','GB'];
-        const i=Math.floor(Math.log(bytes)/Math.log(k));
-        return Math.round(bytes/Math.pow(k,i)*100)/100+' '+sizes[i];
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024; const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     }
 
-    function showCustomAlert(message,type='error',autoClose=true){
-        const alertDiv=document.createElement('div');
-        const bgColor=type==='error'?'#ef4444':type==='success'?'#10b981':'#3b82f6';
-        alertDiv.style.cssText=`
+    function showCustomAlert(message, type = 'error', autoClose = true) {
+        const alertDiv = document.createElement('div');
+        const bgColor = type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : type === 'warning' ? '#f59e0b' : '#3b82f6';
+        alertDiv.style.cssText = `
             position:fixed;top:20px;right:20px;background:${bgColor};color:#fff;
             padding:16px 24px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);
             z-index:10000;animation:slideInRight .3s ease;max-width:400px;display:flex;align-items:center;gap:10px;
         `;
-        alertDiv.innerHTML=`
-            <i class="bi bi-${type==='error'?'exclamation-circle-fill':type==='success'?'check-circle-fill':'info-circle-fill'}" style="font-size:20px;"></i>
+        alertDiv.innerHTML = `
+            <i class="bi bi-${type === 'error' ? 'exclamation-circle-fill' : type === 'success' ? 'check-circle-fill' : type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill'}" style="font-size:20px;"></i>
             <span>${message}</span>
         `;
         document.body.appendChild(alertDiv);
-        if (autoClose){
-            setTimeout(()=>{
-                alertDiv.style.animation='slideOutRight .3s ease';
-                setTimeout(()=>alertDiv.remove(),300);
-            },3000);
+        if (autoClose) {
+            setTimeout(() => {
+                alertDiv.style.animation = 'slideOutRight .3s ease';
+                setTimeout(() => alertDiv.remove(), 300);
+            }, 3000);
         }
         return alertDiv;
     }
 
-    function goBack(){
-        if (formChanged && !isSubmitting){
+    function goBack() {
+        if (formChanged && !isSubmitting) {
             document.getElementById('confirmationModal').classList.add('show');
-            const confirmBtn = document.getElementById('confirmCancelBtn');
-            confirmBtn.onclick=function(){
-                navigationConfirmed=true;
-                formChanged=false;
-                isSubmitting=true;
+            document.getElementById('confirmCancelBtn').onclick = function () {
+                navigationConfirmed = true; formChanged = false; isSubmitting = true;
                 closeConfirmationModal();
-                if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
-                    window.location.href = lastVisitedUrl;
-                } else {
-                    window.location.href = '/documents';
-                }
+                if (lastVisitedUrl && lastVisitedUrl !== window.location.href) window.location.href = lastVisitedUrl;
+                else window.location.href = '/documents';
             };
-        } else if (lastVisitedUrl && lastVisitedUrl !== window.location.href){
+        } else if (lastVisitedUrl && lastVisitedUrl !== window.location.href) {
             window.location.href = lastVisitedUrl;
         } else {
             window.location.href = '/documents';

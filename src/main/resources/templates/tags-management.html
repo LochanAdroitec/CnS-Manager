@@ -348,11 +348,6 @@
             <div class="empty-state" id="emptyState" style="display: none;">
                 <i class="bi bi-tags"></i>
                 <p class="text-muted mt-3 fs-5">No tags found.</p>
-                <button class="btn btn-primary mt-2" id="emptyCreateBtn"
-                        data-bs-toggle="modal" data-bs-target="#createTagModal"
-                        style="display: none;">
-                    <i class="bi bi-plus-circle me-2"></i> Create Your First Tag
-                </button>
             </div>
         </div>
     </div>
@@ -543,14 +538,11 @@
 
         // Show/hide create button based on role
         const createBtn = document.getElementById('createTagBtn');
-        const emptyCreateBtn = document.getElementById('emptyCreateBtn');
 
         if (canManage) {
             if (createBtn) createBtn.style.display = 'block';
-            if (emptyCreateBtn) emptyCreateBtn.style.display = 'block';
         } else {
             if (createBtn) createBtn.style.display = 'none';
-            if (emptyCreateBtn) emptyCreateBtn.style.display = 'none';
         }
     }
 

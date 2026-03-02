@@ -28,12 +28,13 @@
         .login-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #4a90e2 0%, #2196F3 100%);
+            background: #345580;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
+            margin-top:50px;
             box-shadow: 0 8px 16px rgba(74, 144, 226, 0.3);
         }
 
@@ -43,12 +44,12 @@
             fill: white;
         }
 
-        .login-header h2 {
+        .login-header h1 {
             color: #2c3e50;
             font-weight: 600;
             text-align: center;
             margin-bottom: 10px;
-            font-size: 28px;
+            font-size: 40px;
         }
 
         .login-header p {
@@ -176,7 +177,7 @@
 
     <!-- Header -->
     <div class="login-header">
-        <h2>Codes and Standards Manager</h2>
+        <h1>Document Manager</h1>
         <p>Sign in to access your documents</p>
     </div>
     <div class="login-container d-flex flex-column justify-content-center">
@@ -184,6 +185,11 @@
         <div class="welcome-box">
             <h5>Welcome Back</h5>
             <p>Enter your credentials to continue</p>
+        </div>
+
+        <!-- Session Expired Message -->
+        <div th:if="${param.expired}" class="alert alert-warning shake" role="alert">
+            <strong>⏱️ Session Expired!</strong> Your session has expired due to inactivity. Please log in again.
         </div>
 
         <!-- Logout Success Message -->
@@ -239,9 +245,15 @@
             </div>
         </form>
     </div>
-    <div class="login-header" style="margin-top: 20px; text-align: center; ">
+    <div class="login-header" style="margin-top: 10px; text-align: center; ">
+        <a>
+            <img src="/images/Adroitec_logo_blue (3).png"
+                 alt="Adroitec Company Logo"
+                 class="me-3"
+                 style="height: 100px; width: auto; cursor: pointer;">
+        </a>
 
-        <p style="color: #2c3e50;">© 2025 Codes and Standards Manager<br>
+        <p style="color: #2c3e50;">© 2026 Document Manager<br>
 
             Your role will be determined automatically based on your credentials</p>
     </div>

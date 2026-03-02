@@ -6,7 +6,7 @@ import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.ActivityLogService;
 import codesAndStandards.springboot.userApp.service.UserService;
-import codesAndStandards.springboot.userApp.service.LicenseService; // ADD THIS
+import codesAndStandards.springboot.userApp.service.LicenseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +35,7 @@ public class ActivityLogsController {
     private UserService userService;
 
     @Autowired
-    private LicenseService licenseService; // ADD THIS
+    private LicenseService licenseService;
 
     /**
      * View all activity logs
@@ -58,19 +58,24 @@ public class ActivityLogsController {
         }
 
         // Get statistics
-        Long todayCount = activityLogService.getTodayCount();
+        Long todayCount       = activityLogService.getTodayCount();
         Long countSuccessLogs = activityLogService.countSuccessLogs();
-        Long countFailedLogs = activityLogService.countFailedLogs();
+        Long countFailedLogs  = activityLogService.countFailedLogs();
 
         // Count download logs
         long countDownloadLogs = logs.stream()
                 .filter(log -> "DOCUMENT_DOWNLOAD".equals(log.getAction()))
                 .count();
 
-        // ✅ ADD LICENSE CHECK
-        String currentEdition = licenseService.getCurrentEdition();
+        // ✅ Count settings-related logs (all actions starting with SETTINGS_)
+        long countSettingsLogs = logs.stream()
+                .filter(log -> log.getAction() != null && log.getAction().startsWith("SETTINGS_"))
+                .count();
+
+        // License check
+        String currentEdition         = licenseService.getCurrentEdition();
         boolean isProfessionalEdition = "ED2".equalsIgnoreCase(currentEdition);
-        boolean hasValidLicense = licenseService.isLicenseValid();
+        boolean hasValidLicense       = licenseService.isLicenseValid();
 
         model.addAttribute("logs", logs);
         model.addAttribute("userMap", userMap);
@@ -79,8 +84,9 @@ public class ActivityLogsController {
         model.addAttribute("countSuccessLogs", countSuccessLogs);
         model.addAttribute("countFailedLogs", countFailedLogs);
         model.addAttribute("countDownloadLogs", countDownloadLogs);
+        // ✅ Pass settings count to the view
+        model.addAttribute("countSettingsLogs", countSettingsLogs);
 
-        // ✅ ADD LICENSE ATTRIBUTES
         model.addAttribute("currentEdition", currentEdition != null ? currentEdition : "No License");
         model.addAttribute("isProfessionalEdition", isProfessionalEdition);
         model.addAttribute("hasValidLicense", hasValidLicense);
@@ -93,19 +99,15 @@ public class ActivityLogsController {
     public ResponseEntity<?> getUserDetails(@PathVariable Long userId) {
         try {
             System.out.println("API called - Fetching user with ID: " + userId);
-
             UserDto userDTO = userService.findUserById(userId);
-
             if (userDTO == null) {
                 System.out.println("User not found with ID: " + userId);
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "User not found");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
             }
-
             System.out.println("User found: " + userDTO.getUsername());
             return ResponseEntity.ok(userDTO);
-
         } catch (Exception e) {
             System.err.println("Error fetching user: " + e.getMessage());
             e.printStackTrace();

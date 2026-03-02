@@ -2,9 +2,11 @@ package codesAndStandards.springboot.userApp.controller;
 
 import codesAndStandards.springboot.userApp.dto.*;
 import codesAndStandards.springboot.userApp.entity.AccessControlLogic;
+import codesAndStandards.springboot.userApp.entity.Group;
+import codesAndStandards.springboot.userApp.repository.AccessControlLogicRepository;
+import codesAndStandards.springboot.userApp.service.GroupService;
 import codesAndStandards.springboot.userApp.entity.User;
 import codesAndStandards.springboot.userApp.entity.Role;
-import codesAndStandards.springboot.userApp.repository.AccessControlLogicRepository;
 import codesAndStandards.springboot.userApp.repository.RoleRepository;
 import codesAndStandards.springboot.userApp.repository.UserRepository;
 import codesAndStandards.springboot.userApp.service.*;
@@ -27,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
+//import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +62,9 @@ public class AuthController {
     private final ActivityLogService activityLogService;
     private final GroupService groupService;
 
+
     public AuthController(UserService userService, UserServiceImpl userServiceImpl,
-                          RoleRepository roleRepository, DocumentService documentService, ActivityLogService activityLogService, GroupService groupService) {
+                          RoleRepository roleRepository, DocumentService documentService, ActivityLogService activityLogService,GroupService groupService) {
         this.userService = userService;
         this.userServiceImpl = userServiceImpl;
         this.roleRepository = roleRepository;
@@ -79,7 +83,7 @@ public class AuthController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()
                 && !"anonymousUser".equals(authentication.getPrincipal())) {
-            return "redirect:/users";
+            return "redirect:/documents";
         }
 
         return "login";
@@ -218,6 +222,10 @@ public class AuthController {
         }
     }
 
+
+
+
+
     // FIXED in users.html for adding new user by admin -AJ
     @PreAuthorize("hasAuthority('Admin')")
     @PostMapping("/add/save")
@@ -235,8 +243,48 @@ public class AuthController {
             userDto.setCreatedByUsername(adminUsername);
         }
 
+        // Basic length check
         if (userDto.getPassword().length() < 1) {
             result.rejectValue("password", null, "Password should have at least 1 characters");
+        }
+
+// ⭐ Password Policy Enforcement
+        try {
+            Map<String, Object> policy = applicationSettingsService.getPasswordPolicy();
+            Boolean enforced = (Boolean) policy.get("enforcePasswordPolicy");
+
+            if (Boolean.TRUE.equals(enforced)) {
+                String pass = userDto.getPassword();
+                Integer minLen = (Integer) policy.get("minPasswordLength");
+                Boolean requireUppercase = (Boolean) policy.get("requireUppercase");
+                Boolean requireLowercase = (Boolean) policy.get("requireLowercase");
+                Boolean requireNumber = (Boolean) policy.get("requireNumber");
+                Boolean requireSpecialChar = (Boolean) policy.get("requireSpecialChar");
+
+                if (minLen != null && pass.length() < minLen) {
+                    result.rejectValue("password", null,
+                            "Password must be at least " + minLen + " characters long");
+                }
+                if (Boolean.TRUE.equals(requireUppercase) && !pass.matches(".*[A-Z].*")) {
+                    result.rejectValue("password", null,
+                            "Password must contain at least one uppercase letter");
+                }
+                if (Boolean.TRUE.equals(requireLowercase) && !pass.matches(".*[a-z].*")) {
+                    result.rejectValue("password", null,
+                            "Password must contain at least one lowercase letter");
+                }
+                if (Boolean.TRUE.equals(requireNumber) && !pass.matches(".*[0-9].*")) {
+                    result.rejectValue("password", null,
+                            "Password must contain at least one number");
+                }
+                if (Boolean.TRUE.equals(requireSpecialChar) && !pass.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+                    result.rejectValue("password", null,
+                            "Password must contain at least one special character");
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Could not validate password policy: {}", e.getMessage());
+            // Don't block user creation if policy check fails
         }
 
         if (result.hasErrors()) {
@@ -344,6 +392,48 @@ public class AuthController {
                                  RedirectAttributes redirectAttributes) {
 
         String adminUsername = principal != null ? principal.getName() : "Unknown";
+        // ⭐ NEW: Password Policy Validation (only if password is provided)
+        String newPassword = updatedUserDto.getPassword();
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            try {
+                Map<String, Object> policy = applicationSettingsService.getPasswordPolicy();
+                Boolean enforced = (Boolean) policy.get("enforcePasswordPolicy");
+
+                if (Boolean.TRUE.equals(enforced)) {
+                    Integer minLen = (Integer) policy.get("minPasswordLength");
+                    Boolean requireUppercase = (Boolean) policy.get("requireUppercase");
+                    Boolean requireLowercase = (Boolean) policy.get("requireLowercase");
+                    Boolean requireNumber = (Boolean) policy.get("requireNumber");
+                    Boolean requireSpecialChar = (Boolean) policy.get("requireSpecialChar");
+
+                    StringBuilder policyErrors = new StringBuilder();
+
+                    if (minLen != null && newPassword.length() < minLen) {
+                        policyErrors.append("Password must be at least ").append(minLen).append(" characters long. ");
+                    }
+                    if (Boolean.TRUE.equals(requireUppercase) && !newPassword.matches(".*[A-Z].*")) {
+                        policyErrors.append("Password must contain at least one uppercase letter. ");
+                    }
+                    if (Boolean.TRUE.equals(requireLowercase) && !newPassword.matches(".*[a-z].*")) {
+                        policyErrors.append("Password must contain at least one lowercase letter. ");
+                    }
+                    if (Boolean.TRUE.equals(requireNumber) && !newPassword.matches(".*[0-9].*")) {
+                        policyErrors.append("Password must contain at least one number. ");
+                    }
+                    if (Boolean.TRUE.equals(requireSpecialChar) && !newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+                        policyErrors.append("Password must contain at least one special character. ");
+                    }
+
+                    if (policyErrors.length() > 0) {
+                        redirectAttributes.addFlashAttribute("error", policyErrors.toString().trim());
+                        return "redirect:/users?error=true";
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Could not validate password policy: {}", e.getMessage());
+            }
+        }
+
 
         if (result.hasErrors()) {
             activityLogService.logByUsername(
@@ -442,6 +532,7 @@ public class AuthController {
     }
 
 
+
     // All user can edit his own profile(Admin can't do any changes here) -AJ
     @GetMapping("/profile")
     public String showProfilePage(Model model, Principal principal) {
@@ -525,6 +616,46 @@ public class AuthController {
                 if (newPassword == null || confirmPassword == null || !newPassword.equals(confirmPassword)) {
                     redirectAttributes.addFlashAttribute("passwordError", "mismatch");
                     return "redirect:/profile#changePasswordModal";
+                }
+                // ⭐ NEW: Password Policy Validation - ADD THIS ENTIRE BLOCK
+                try {
+                    Map<String, Object> policy = applicationSettingsService.getPasswordPolicy();
+                    Boolean enforced = (Boolean) policy.get("enforcePasswordPolicy");
+
+                    if (Boolean.TRUE.equals(enforced)) {
+                        Integer minLen = (Integer) policy.get("minPasswordLength");
+                        Boolean requireUppercase = (Boolean) policy.get("requireUppercase");
+                        Boolean requireLowercase = (Boolean) policy.get("requireLowercase");
+                        Boolean requireNumber = (Boolean) policy.get("requireNumber");
+                        Boolean requireSpecialChar = (Boolean) policy.get("requireSpecialChar");
+
+                        StringBuilder policyErrors = new StringBuilder();
+
+                        if (minLen != null && newPassword.length() < minLen) {
+                            policyErrors.append("Password must be at least ").append(minLen).append(" characters long. ");
+                        }
+                        if (Boolean.TRUE.equals(requireUppercase) && !newPassword.matches(".*[A-Z].*")) {
+                            policyErrors.append("Password must contain at least one uppercase letter. ");
+                        }
+                        if (Boolean.TRUE.equals(requireLowercase) && !newPassword.matches(".*[a-z].*")) {
+                            policyErrors.append("Password must contain at least one lowercase letter. ");
+                        }
+                        if (Boolean.TRUE.equals(requireNumber) && !newPassword.matches(".*[0-9].*")) {
+                            policyErrors.append("Password must contain at least one number. ");
+                        }
+                        if (Boolean.TRUE.equals(requireSpecialChar) && !newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+                            policyErrors.append("Password must contain at least one special character. ");
+                        }
+
+                        if (policyErrors.length() > 0) {
+                            redirectAttributes.addFlashAttribute("passwordError", "policy");
+                            redirectAttributes.addFlashAttribute("error", policyErrors.toString().trim());
+                            activityLogService.logByUsername(username, ActivityLogService.EDIT_PROFILE_FAILED, "Password policy validation failed");
+                            return "redirect:/profile#changePasswordModal";
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Could not validate password policy: {}", e.getMessage());
                 }
 
                 // Encode and set new password (do NOT encode original DB password)
@@ -678,12 +809,13 @@ public class AuthController {
     @Autowired
     private ClassificationService classificationService;
 
+//    @Autowired
+//    private GroupService groupService;
 
     @GetMapping("/bulk-upload")
     public String showBulkUpload() {
         return "Bulk-Upload-Documents";
     }
-
 
     // Load upload page: Uploading new document, admin and manager both have permission for this -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
@@ -879,7 +1011,7 @@ public class AuthController {
 
 
     // ================== DOCUMENT LIST - SHOW ALL DOCUMENTS ==================
-
+//    private final DocumentService documentService;
     //DOCUMENT LIBRARY: Show all the uploaded document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin', 'Viewer')")
     @GetMapping("/documents")
@@ -913,6 +1045,8 @@ public class AuthController {
 
         return "document-list";
     }
+
+
 
     // Editing only the metadata's of the document -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
@@ -1082,10 +1216,6 @@ public class AuthController {
         }
     }
 
-    @Autowired
-
-//    private NetworkFileService fileStorageService;
-
     @PreAuthorize("hasAuthority('Admin')")
     @GetMapping("/diagnose-network-share")
     @ResponseBody
@@ -1153,6 +1283,9 @@ public class AuthController {
     @Autowired
     private WatermarkService watermarkService;
 
+    @Autowired
+    private ApplicationSettingsService applicationSettingsService;
+
     //Viewing any document(all have permission for this) -AJ
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/documents/DocView/{id}")
@@ -1209,8 +1342,11 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
+//    @Autowired
+//    private GroupService groupService;  // Add this at the top of your controller
+
     @Autowired
-    private AccessControlLogicRepository accessControlLogicRepository;
+    private AccessControlLogicRepository accessControlLogicRepository;  // Add this
 
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @GetMapping("/DocViewer")
@@ -1304,39 +1440,70 @@ public class AuthController {
         String username = principal != null ? principal.getName() : "Unknown";
 
         try {
+            // ⭐ STEP 1: Fetch watermark settings from database
+            Map<String, Object> watermarkSettings = applicationSettingsService.getWatermarkSettings();
+            Boolean watermarkEnabled = (Boolean) watermarkSettings.get("watermarkEnabled");
+            Integer watermarkOpacity = (Integer) watermarkSettings.get("watermarkOpacity");
+            String watermarkPosition = (String) watermarkSettings.get("watermarkPosition");
+            Integer watermarkFontSize = (Integer) watermarkSettings.get("watermarkFontSize");
+            logger.info("Watermark Settings - Enabled: {}, Opacity: {}, Position: {}, FontSize: {}",
+                    watermarkEnabled, watermarkOpacity, watermarkPosition, watermarkFontSize);
+
             DocumentDto document = documentService.findDocumentById(id);
             String filePath = documentService.getFilePath(id);
-            logger.info("Downloading and watermarking document: {} for user: {}", document.getTitle(), username);
 
             // Read original PDF from network share
             byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
             logger.info("Original PDF loaded, size: {} bytes", originalPdfBytes.length);
 
-            // Add watermark
-            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(originalPdfBytes, username);
+            byte[] finalPdfBytes;
+            String filename;
 
-            // Prepare filename
-            String filename = "WATERMARKED_" + document.getTitle() + ".pdf";
+            // ⭐ STEP 2: Apply watermark ONLY if enabled
+            if (watermarkEnabled != null && watermarkEnabled) {
+                logger.info("Applying watermark to document: {} for user: {}", document.getTitle(), username);
 
-            logger.info("Downloaded PDF with watermark successfully, size: {} bytes", watermarkedPdfBytes.length);
+                // ⭐ STEP 3: Pass settings to watermark service
+                finalPdfBytes = watermarkService.addWatermarkToPdf(
+                        originalPdfBytes,
+                        username,
+                        watermarkOpacity,
+                        watermarkPosition,
+                        watermarkFontSize  // ⭐ ADD THIS PARAMETER
+                );
 
-            // LOG SUCCESS - DOCUMENT_DOWNLOAD
-            activityLogService.logByUsername(
-                    username,
-                    ActivityLogService.DOCUMENT_DOWNLOAD,
-                    String.format("Downloaded document: '%s' (Uploaded By: %s)",
-                            document.getTitle(),
-                            document.getUploadedByUsername())
-            );
+                filename = "WATERMARKED_" + document.getTitle() + ".pdf";
+                logger.info("Downloaded PDF with watermark successfully, size: {} bytes", finalPdfBytes.length);
+
+                // LOG SUCCESS - DOCUMENT_DOWNLOAD (with watermark)
+                activityLogService.logByUsername(
+                        username,
+                        ActivityLogService.DOCUMENT_DOWNLOAD,
+                        String.format("Downloaded document with watermark: '%s' (Opacity: %d%%, FontSize: %d%%, Position: %s)",
+                                document.getTitle(), watermarkOpacity, watermarkFontSize, watermarkPosition)
+                );
+            } else {
+                // ⭐ STEP 4: Return original PDF without watermark
+                logger.info("Watermark disabled - returning original document: {}", document.getTitle());
+                finalPdfBytes = originalPdfBytes;
+                filename = document.getTitle() + ".pdf";
+
+                // LOG SUCCESS - DOCUMENT_DOWNLOAD (without watermark)
+                activityLogService.logByUsername(
+                        username,
+                        ActivityLogService.DOCUMENT_DOWNLOAD,
+                        String.format("Downloaded document without watermark: '%s'", document.getTitle())
+                );
+            }
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_PDF)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
-                    .body(watermarkedPdfBytes);
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(finalPdfBytes.length))
+                    .body(finalPdfBytes);
 
         } catch (Exception e) {
-            logger.error("Failed to download and watermark document", e);
+            logger.error("Failed to download document", e);
 
             // LOG FAILURE - DOCUMENT_DOWNLOAD_FAILED
             activityLogService.logByUsername(
@@ -1351,42 +1518,7 @@ public class AuthController {
         }
     }
 
-    //19.11.2025
 
-//    @PreAuthorize("hasAnyAuthority('Manager', 'Admin')")
-//    @GetMapping("/documents/download-watermarked/{id}")
-//    public ResponseEntity<byte[]> downloadWatermarkedDocument(@PathVariable Long id, Principal principal) {
-//        try {
-//            DocumentDto document = documentService.findDocumentById(id);
-//
-//            String filePath = documentService.getFilePath(id);
-//            logger.info("Downloading watermarked document from viewer: {} for user: {}",
-//                    document.getTitle(), principal.getName());
-//
-//            // Read original PDF from network share
-//            byte[] originalPdfBytes = networkFileService.readFileFromNetworkShare(filePath);
-//
-//            // Add watermark
-//            byte[] watermarkedPdfBytes = watermarkService.addWatermarkToPdf(
-//                    originalPdfBytes,
-//                    principal.getName()
-//            );
-//
-//            String watermarkedFilename = "WATERMARKED_" + document.getTitle() + ".pdf";
-//
-//            return ResponseEntity.ok()
-//                    .contentType(MediaType.APPLICATION_PDF)
-//                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + watermarkedFilename + "\"")
-//                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(watermarkedPdfBytes.length))
-//                    .body(watermarkedPdfBytes);
-//
-//        } catch (Exception e) {
-//            logger.error("Failed to download watermarked document from viewer", e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .contentType(MediaType.TEXT_PLAIN)
-//                    .body(("Error downloading document: " + e.getMessage()).getBytes());
-//        }
-//    }
 
     //Every user have their own bookmark -AJ
     @Autowired
@@ -1471,7 +1603,6 @@ public class AuthController {
         return ResponseEntity.ok(isBookmarked);
     }
 
-
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @DeleteMapping("/bookmarks/document/{documentId}")
     public ResponseEntity<String> deleteBookmarkByDocument(
@@ -1502,6 +1633,7 @@ public class AuthController {
                     .body("Failed to delete bookmark: " + e.getMessage());
         }
     }
+
 
     @PreAuthorize("hasAnyAuthority('Manager', 'Admin','Viewer')")
     @DeleteMapping("/bookmarks/{id}")

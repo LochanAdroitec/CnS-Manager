@@ -81,7 +81,7 @@
         .empty-state i {
             font-size: 4rem;
             opacity: 0.3;
-            color: #28a745;
+            color: #1e3a5f;
         }
         .inline-error {
             color: #dc3545;
@@ -311,14 +311,14 @@
 
             <p style="color:#555; font-size:16px;">
                 This feature is available only in the
-                <strong>Professional Edition (ED2)</strong>.
+                <strong>Professional Edition</strong>.
             </p>
 
             <div style="background:#f8f9fa; padding:15px;
                 border-radius:8px; margin:20px auto;
                 max-width:420px; text-align:left;">
-                <div><strong>Your Edition:</strong> <span id="inlineEdition">ED1</span></div>
-                <div><strong>Required:</strong> ED2 Professional</div>
+                <div><strong>Your Edition:</strong> <span id="inlineEdition">Essential Edition</span></div>
+                <div><strong>Required:</strong> Professional Edition</div>
                 <div><strong>License Valid:</strong> <span id="inlineLicenseDays">0</span> days</div>
             </div>
 
@@ -343,11 +343,6 @@
             <div class="empty-state" id="emptyState" style="display: none;">
                 <i class="bi bi-diagram-3"></i>
                 <p class="text-muted mt-3 fs-5">No classifications found.</p>
-                <button class="btn  mt-2" id="emptyCreateBtn"
-                        data-bs-toggle="modal" data-bs-target="#createClassificationModal"
-                        style="display: none;color: #1e3a5f;">
-                    <i class="bi bi-plus-circle me-2"></i> Create Your First Classification
-                </button>
             </div>
         </div>
     </div>
@@ -502,7 +497,7 @@
 
         const accessAllowed = await checkClassificationManagementAccess();
     if (!accessAllowed) {
-        return; // ⛔ STOP for ED1
+        return; // ⛔ STOP for Essential Edition
     }
         // Initialize modals
         createModal = new bootstrap.Modal(document.getElementById('createClassificationModal'));
@@ -529,14 +524,11 @@
 
         // Show/hide create button based on role
         const createBtn = document.getElementById('createClassificationBtn');
-        const emptyCreateBtn = document.getElementById('emptyCreateBtn');
 
         if (isAdmin) {
             if (createBtn) createBtn.style.display = 'block';
-            if (emptyCreateBtn) emptyCreateBtn.style.display = 'block';
         } else {
             if (createBtn) createBtn.style.display = 'none';
-            if (emptyCreateBtn) emptyCreateBtn.style.display = 'none';
         }
     }
     // Scroll to top button
@@ -1066,7 +1058,15 @@
 
             // 🟢 Show inline upgrade message
             document.getElementById('inlineEditionUpgrade').style.display = 'block';
-            document.getElementById('inlineEdition').textContent = data.edition || 'ED1';
+           let editionName = data.edition;
+
+            if (editionName === 'ED1') {
+                editionName = 'Essential Edition';
+            } else if (editionName === 'ED2') {
+                editionName = 'Professional Edition';
+            }
+
+            document.getElementById('inlineEdition').textContent = editionName;
             document.getElementById('inlineLicenseDays').textContent = data.daysRemaining || 0;
 
             return false;

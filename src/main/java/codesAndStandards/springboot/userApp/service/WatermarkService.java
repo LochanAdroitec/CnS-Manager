@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.awt.*;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -22,16 +21,16 @@ import java.time.format.DateTimeFormatter;
 public class WatermarkService {
 
     private static final Logger logger = LoggerFactory.getLogger(WatermarkService.class);
+    private static final float FONT_SIZE = 48f;
+    private static final float FOOTER_FONT_SIZE = 12f;
 
     /**
-     * ADD WATERMARK TO PDF
-     * Works for:
-     *    - Normal PDFs
-     *    - Encrypted PDFs (but throws meaningful error)
+     * ADD WATERMARK TO PDF WITH CUSTOM SETTINGS
      */
-    public byte[] addWatermarkToPdf(byte[] pdfData, String username) throws IOException {
-        logger.info("Adding watermark to PDF for user: {}", username);
+    public byte[] addWatermarkToPdf(byte[] pdfData, String username, Integer opacity, String position, Integer fontSize) throws IOException {
+        logger.info("Adding watermark to PDF for user: {} (Opacity: {}%, Position: {}, FontSize: {}%)", username, opacity, position, fontSize);
 
+        float calculatedFontSize = calculateFontSize(fontSize);
         PDDocument document = null;
 
         try {
@@ -44,28 +43,39 @@ public class WatermarkService {
             }
 
             // =============== STEP 2: REMOVE ALL SECURITY ===============
-            // (This is WHY watermarking works after decryption)
             document.setAllSecurityToBeRemoved(true);
 
             // =============== STEP 3: PREPARE WATERMARK TEXT ===============
             String timestamp = LocalDateTime.now()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                    .format(DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm:ss"));
 
-            String mainWatermark = "CONFIDENTIAL - " + username;
-            String footerWatermark = "Downloaded by: " + username + " on " + timestamp;
+            String line1 = username;                          // Line 1: username only
+            String line2 = timestamp.split(" ")[0];           // Line 2: date only (dd-MMM-yyyy)
+            String footerText = "Downloaded by: " + username + " on " + timestamp;
 
-            logger.info("Processing {} pages", document.getNumberOfPages());
+            // Convert opacity percentage to alpha (0.0 - 1.0)
+            float alpha = calculateAlpha(opacity);
+
+            logger.info("Processing {} pages with watermark: '{}' / '{}'", document.getNumberOfPages(), line1, line2);
 
             int pageNumber = 1;
             for (PDPage page : document.getPages()) {
                 logger.debug("Adding watermark to page {}", pageNumber);
-                addWatermarksToPage(document, page, mainWatermark, footerWatermark);
+
+                // Apply main watermark based on position
+                addWatermarkToPage(document, page, line1, line2, position, alpha, calculatedFontSize);
+
+                // Always add static footer
+                addStaticFooter(document, page, footerText);
+
                 pageNumber++;
             }
 
             // =============== STEP 4: SAVE PDF ===============
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             document.save(outputStream);
+
+            logger.info("Watermark applied successfully to {} pages", pageNumber - 1);
             return outputStream.toByteArray();
 
         } finally {
@@ -76,10 +86,31 @@ public class WatermarkService {
     }
 
     /**
-     * APPLY ALL WATERMARKS TO A SINGLE PAGE
+     * BACKWARD COMPATIBILITY: Add watermark with default settings
      */
-    private void addWatermarksToPage(PDDocument document, PDPage page,
-                                     String mainWatermark, String footerWatermark) throws IOException {
+    public byte[] addWatermarkToPdf(byte[] pdfData, String username) throws IOException {
+        return addWatermarkToPdf(pdfData, username, 30, "Diagonal", 100);
+    }
+
+    /**
+     * Calculate alpha value from opacity percentage
+     */
+    private float calculateAlpha(Integer opacity) {
+        if (opacity == null || opacity < 0) {
+            return 0.3f;
+        }
+        if (opacity > 100) {
+            return 1.0f;
+        }
+        return opacity / 100.0f;
+    }
+
+    /**
+     * APPLY MAIN WATERMARK TO A SINGLE PAGE - TWO LINES
+     */
+    private void addWatermarkToPage(PDDocument document, PDPage page,
+                                    String line1, String line2, String position,
+                                    float alpha, float fontSize) throws IOException {
 
         PDPageContentStream cs = new PDPageContentStream(
                 document, page,
@@ -89,37 +120,20 @@ public class WatermarkService {
         );
 
         try {
-            // Transparency (alpha)
-            PDExtendedGraphicsState alpha = new PDExtendedGraphicsState();
-            alpha.setNonStrokingAlphaConstant(0.3f);
-            cs.setGraphicsStateParameters(alpha);
+            // Set transparency
+            PDExtendedGraphicsState graphicsState = new PDExtendedGraphicsState();
+            graphicsState.setNonStrokingAlphaConstant(alpha);
+            cs.setGraphicsStateParameters(graphicsState);
 
             float pageWidth = page.getMediaBox().getWidth();
             float pageHeight = page.getMediaBox().getHeight();
 
-            // =============== MAIN DIAGONAL WATERMARK ===============
+            // Set font and color
             cs.setNonStrokingColor(Color.RED);
-            cs.setFont(PDType1Font.HELVETICA_BOLD, 36);
+            cs.setFont(PDType1Font.HELVETICA_BOLD, fontSize);
 
-            float textWidth = PDType1Font.HELVETICA_BOLD
-                    .getStringWidth(mainWatermark) / 1000 * 36;
-
-            float x = (pageWidth - textWidth) / 2;
-            float y = pageHeight / 2;
-
-            cs.beginText();
-            Matrix matrix = new Matrix();
-            matrix.translate(x, y);
-            matrix.rotate(Math.toRadians(-45));
-            cs.setTextMatrix(matrix);
-            cs.showText(mainWatermark);
-            cs.endText();
-
-            // =============== FOOTER INFO WATERMARK ===============
-            addFooter(cs, footerWatermark);
-
-            // =============== LARGE FAINT CENTER WATERMARK ===============
-            addCenterFaintMark(cs, pageWidth, pageHeight);
+            // Apply watermark based on position
+            applyWatermarkPosition(cs, line1, line2, position, pageWidth, pageHeight, fontSize);
 
         } finally {
             cs.close();
@@ -127,41 +141,185 @@ public class WatermarkService {
     }
 
     /**
-     * SMALL FOOTER TEXT
+     * ADD STATIC FOOTER TO EVERY PAGE (ALWAYS SHOWN)
      */
-    private void addFooter(PDPageContentStream cs, String footerText) throws IOException {
-        cs.setFont(PDType1Font.HELVETICA, 10);
-        cs.setNonStrokingColor(Color.DARK_GRAY);
+    private void addStaticFooter(PDDocument document, PDPage page, String footerText) throws IOException {
 
+        PDPageContentStream cs = new PDPageContentStream(
+                document, page,
+                PDPageContentStream.AppendMode.APPEND,
+                true,
+                true
+        );
+
+        try {
+            cs.setNonStrokingColor(Color.DARK_GRAY);
+            cs.setFont(PDType1Font.HELVETICA, FOOTER_FONT_SIZE);
+
+            float marginX = 30f;
+            float marginY = 20f;
+
+            cs.beginText();
+            cs.newLineAtOffset(marginX, marginY);
+            cs.showText(footerText);
+            cs.endText();
+
+            logger.debug("Added static footer: {}", footerText);
+
+        } finally {
+            cs.close();
+        }
+    }
+
+    /**
+     * APPLY WATERMARK AT SPECIFIED POSITION - TWO LINES
+     */
+    private void applyWatermarkPosition(PDPageContentStream cs, String line1, String line2,
+                                        String position, float pageWidth,
+                                        float pageHeight, float fontSize) throws IOException {
+
+        String pos = (position != null) ? position : "Diagonal";
+
+        float textWidth1 = PDType1Font.HELVETICA_BOLD.getStringWidth(line1) / 1000 * fontSize;
+        float textWidth2 = PDType1Font.HELVETICA_BOLD.getStringWidth(line2) / 1000 * fontSize;
+        float maxTextWidth = Math.max(textWidth1, textWidth2);
+        float lineSpacing = fontSize * 1.4f;
+        float marginX = 50;
+        float marginY = 50;
+
+        switch (pos) {
+            case "Diagonal":
+                applyDiagonalWatermark(cs, line1, line2, pageWidth, pageHeight, fontSize);
+                break;
+
+            case "TopLeft":
+                applyTwoLineWatermark(cs, line1, line2,
+                        marginX,
+                        pageHeight - marginY,
+                        lineSpacing);
+                break;
+
+            case "TopRight":
+                applyTwoLineWatermark(cs, line1, line2,
+                        pageWidth - maxTextWidth - marginX,
+                        pageHeight - marginY,
+                        lineSpacing);
+                break;
+
+            case "BottomLeft":
+                applyTwoLineWatermark(cs, line1, line2,
+                        marginX,
+                        marginY + lineSpacing,
+                        lineSpacing);
+                break;
+
+            case "BottomRight":
+                applyTwoLineWatermark(cs, line1, line2,
+                        pageWidth - maxTextWidth - marginX,
+                        marginY + lineSpacing,
+                        lineSpacing);
+                break;
+
+            case "Center":
+                float centerX1 = (pageWidth - textWidth1) / 2;
+                float centerX2 = (pageWidth - textWidth2) / 2;
+                applyTwoLineWatermarkXY(cs, line1, line2,
+                        centerX1, pageHeight / 2 + lineSpacing / 2,
+                        centerX2, pageHeight / 2 - lineSpacing / 2);
+                break;
+
+            default:
+                logger.warn("Unknown watermark position: {}, using Diagonal", position);
+                applyDiagonalWatermark(cs, line1, line2, pageWidth, pageHeight, fontSize);
+        }
+    }
+
+    /**
+     * TWO-LINE WATERMARK - SAME X, STACKED VERTICALLY
+     * Used for: TopLeft, TopRight, BottomLeft, BottomRight
+     */
+    private void applyTwoLineWatermark(PDPageContentStream cs, String line1, String line2,
+                                       float x, float y, float lineSpacing) throws IOException {
+        // Line 1
         cs.beginText();
-        cs.newLineAtOffset(50, 10);
-        cs.showText(footerText);
+        cs.newLineAtOffset(x, y);
+        cs.showText(line1);
+        cs.endText();
+
+        // Line 2
+        cs.beginText();
+        cs.newLineAtOffset(x, y - lineSpacing);
+        cs.showText(line2);
         cs.endText();
     }
 
     /**
-     * LARGE, VERY FAINT "DOWNLOAD COPY"
+     * TWO-LINE WATERMARK - INDEPENDENT X/Y PER LINE
+     * Used for: Center (each line independently centered)
      */
-    private void addCenterFaintMark(PDPageContentStream cs,
-                                    float pageWidth, float pageHeight) throws IOException {
-
-        PDExtendedGraphicsState faintAlpha = new PDExtendedGraphicsState();
-        faintAlpha.setNonStrokingAlphaConstant(0.08f);
-        cs.setGraphicsStateParameters(faintAlpha);
-
-        cs.setFont(PDType1Font.HELVETICA_BOLD, 80);
-        cs.setNonStrokingColor(Color.LIGHT_GRAY);
-
-        String text = "DOWNLOAD COPY";
-        float textWidth = PDType1Font.HELVETICA_BOLD
-                .getStringWidth(text) / 1000 * 80;
-
+    private void applyTwoLineWatermarkXY(PDPageContentStream cs, String line1, String line2,
+                                         float x1, float y1, float x2, float y2) throws IOException {
+        // Line 1
         cs.beginText();
-        Matrix centerMatrix = new Matrix();
-        centerMatrix.translate((pageWidth - textWidth) / 2, pageHeight / 2 - 150);
-        centerMatrix.rotate(Math.toRadians(-45));
-        cs.setTextMatrix(centerMatrix);
-        cs.showText(text);
+        cs.newLineAtOffset(x1, y1);
+        cs.showText(line1);
         cs.endText();
+
+        // Line 2
+        cs.beginText();
+        cs.newLineAtOffset(x2, y2);
+        cs.showText(line2);
+        cs.endText();
+    }
+
+    /**
+     * DIAGONAL - TWO LINES, BOTH ROTATED 45°, CENTERED ON PAGE
+     */
+    private void applyDiagonalWatermark(PDPageContentStream cs, String line1, String line2,
+                                        float pageWidth, float pageHeight, float fontSize) throws IOException {
+
+        float textWidth1 = PDType1Font.HELVETICA_BOLD.getStringWidth(line1) / 1000 * fontSize;
+        float textWidth2 = PDType1Font.HELVETICA_BOLD.getStringWidth(line2) / 1000 * fontSize;
+        float lineSpacing = fontSize * 1.4f;
+        float centerX = pageWidth / 2;
+        float centerY = pageHeight / 2;
+
+        // Line 1 (username) - above center
+        cs.beginText();
+        Matrix matrix1 = new Matrix();
+        matrix1.translate(centerX, centerY + lineSpacing / 2);
+        matrix1.rotate(Math.toRadians(45));
+        matrix1.translate(-textWidth1 / 2, 0);
+        cs.setTextMatrix(matrix1);
+        cs.showText(line1);
+        cs.endText();
+
+        // Line 2 (date) - below center
+        cs.beginText();
+        Matrix matrix2 = new Matrix();
+        matrix2.translate(centerX, centerY - lineSpacing / 2);
+        matrix2.rotate(Math.toRadians(45));
+        matrix2.translate(-textWidth2 / 2, 0);
+        cs.setTextMatrix(matrix2);
+        cs.showText(line2);
+        cs.endText();
+
+        logger.debug("Applied two-line diagonal watermark at ({}, {})", centerX, centerY);
+    }
+
+    /**
+     * Calculate actual font size (allowed range: 12–72)
+     */
+    private float calculateFontSize(Integer fontSize) {
+        if (fontSize == null) {
+            return FONT_SIZE;
+        }
+        if (fontSize < 12) {
+            return 12f;
+        }
+        if (fontSize > 72) {
+            return 72f;
+        }
+        return fontSize.floatValue();
     }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -124,6 +124,155 @@
             box-shadow: 0 5px 15px rgba(45, 110, 196, 0.4);
             color: white !important;
         }
+        /* ==================== MODAL OVERLAY ==================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+}
+.modal-overlay.active {
+    display: block;
+    animation: overlayFadeIn 0.25s ease forwards;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ==================== CUSTOM MODAL ==================== */
+.custom-modal {
+    display: none;
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 9999;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    max-height: 85vh;
+    overflow: hidden;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+.custom-modal.active {
+    display: flex;
+    animation: modalSlideIn 0.3s ease forwards;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.custom-modal > form {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    overflow: hidden;
+}
+
+.custom-modal .modal-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
+}
+
+.custom-modal .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.custom-modal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-modal .modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-modal .modal-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 3px;
+}
+.custom-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0,0,0,0.25);
+}
+
+.custom-modal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 0 0 12px 12px;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.modal-close-btn:hover {
+    opacity: 1;
+}
+/* ==================== ALERT ANIMATION ==================== */
+.alert {
+    animation: slideDown 0.5s ease-out;
+}
+.alert.fade-out {
+    animation: slideUp 0.4s ease-in forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+        .library-icon {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        margin-right: 0px;
+        transition: transform 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -142,7 +291,9 @@
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-person me-2"></i> User Profile</h2>
+                <h2 class="mb-1"><img src="/images/profile_black_fill.png"
+                                      class="library-icon"
+                                      alt="Document Library Icon"> User Profile</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -235,7 +386,7 @@
                 <div class="profile-card">
                     <div class="section-title">
                         <i class="bi bi-shield-lock"></i> Account Security
-                        <button class="btn btn-change-password ms-auto" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                        <button class="btn btn-change-password ms-auto" onclick="openModal()">
                             <i class="bi bi-key me-2"></i> Change Password
                         </button>
                     </div>
@@ -268,90 +419,165 @@
 
 </div>
 
+
+<!-- ==================== MODAL OVERLAY ==================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 <!-- Change Password Modal -->
-<div class="modal fade" id="changePasswordModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="post" th:action="@{/profile/update}">
-                <div class="modal-header" style="background-color:#1e3a5f;color: white;">
-                    <h5 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Hidden fields to maintain user data -->
-                    <input type="hidden" name="id" th:value="${user.id}">
-                    <input type="hidden" name="firstName" th:value="${user.firstName}">
-                    <input type="hidden" name="lastName" th:value="${user.lastName}">
-                    <input type="hidden" name="username" th:value="${user.username}">
-                    <input type="hidden" name="email" th:value="${user.email}">
-                    <input type="hidden" name="roleId" th:value="${user.roleId}">
-
-                    <div class="mb-3">
-                        <label for="currentPassword" class="form-label">Current Password</label>
-
-                        <!-- keep the base class in the normal class attribute and append conditionally -->
-                        <input type="password"
-                               id="currentPassword"
-                               name="currentPassword"
-                               class="form-control"
-                               th:classappend="${passwordError == 'current'} ? ' is-invalid' : ''"
-                               required>
-
-                        <!-- show this only when the backend sets passwordError == 'current' -->
-                        <div class="invalid-feedback" th:if="${passwordError == 'current'}">
-                            Current password is incorrect.
-                        </div>
-                    </div>
-
-
-
-                    <div class="mb-3">
-                        <label for="newPassword" class="form-label">New Password</label>
-                        <input type="password"
-                               class="form-control"
-                               id="newPassword"
-                               name="newPassword"
-                               required>
-                        <!-- Real-time validation error (JavaScript) -->
-                        <div id="newPasswordPolicyError" class="invalid-feedback" style="display: none;"></div>
-                        <!-- Backend validation error (Thymeleaf) -->
-                        <div class="invalid-feedback" th:if="${passwordError == 'policy'}">
-                            <span th:text="${error}">Password policy error</span>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
-
-                        <input type="password"
-                               id="confirmPassword"
-                               name="confirmPassword"
-                               class="form-control"
-                               oninput="validateConfirmPassword()">
-
-                        <div class="invalid-feedback" id="confirmPasswordError">
-                            New password and confirm password do not match.
-                        </div>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-change-password">
-                        <i class="bi bi-check-circle me-2"></i>Update Password
-                    </button>
-                </div>
-            </form>
+<div class="custom-modal" id="changePasswordModal">
+    <form method="post" th:action="@{/profile/update}">
+        <div class="modal-header" style="background-color:#1e3a5f;color: white;">
+            <h5 class="modal-title"><i class="bi bi-key me-2"></i>Change Password</h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal()" style="color:white;">&times;</button>
         </div>
-    </div>
+        <div class="modal-body">
+            <!-- Hidden fields to maintain user data -->
+            <input type="hidden" name="id" th:value="${user.id}">
+            <input type="hidden" name="firstName" th:value="${user.firstName}">
+            <input type="hidden" name="lastName" th:value="${user.lastName}">
+            <input type="hidden" name="username" th:value="${user.username}">
+            <input type="hidden" name="email" th:value="${user.email}">
+            <input type="hidden" name="roleId" th:value="${user.roleId}">
+
+            <div class="mb-3">
+                <label for="currentPassword" class="form-label">Current Password</label>
+
+                <!-- keep the base class in the normal class attribute and append conditionally -->
+                <input type="password"
+                       id="currentPassword"
+                       name="currentPassword"
+                       class="form-control"
+                       th:classappend="${passwordError == 'current'} ? ' is-invalid' : ''"
+                       required>
+
+                <!-- show this only when the backend sets passwordError == 'current' -->
+                <div class="invalid-feedback" th:if="${passwordError == 'current'}">
+                    Current password is incorrect.
+                </div>
+            </div>
+
+
+
+            <div class="mb-3">
+                <label for="newPassword" class="form-label">New Password</label>
+                <input type="password"
+                       class="form-control"
+                       id="newPassword"
+                       name="newPassword"
+                       required>
+                <!-- Real-time validation error (JavaScript) -->
+                <div id="newPasswordPolicyError" class="invalid-feedback" style="display: none;"></div>
+                <!-- Backend validation error (Thymeleaf) -->
+                <div class="invalid-feedback" th:if="${passwordError == 'policy'}">
+                    <span th:text="${error}">Password policy error</span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Confirm New Password</label>
+
+                <input type="password"
+                       id="confirmPassword"
+                       name="confirmPassword"
+                       class="form-control"
+                       oninput="validateConfirmPassword()">
+
+                <div class="invalid-feedback" id="confirmPasswordError">
+                    New password and confirm password do not match.
+                </div>
+            </div>
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-change-password">
+                <i class="bi bi-check-circle me-2"></i>Update Password
+            </button>
+        </div>
+    </form>
 </div>
+</div>
+</div>
+
 <script src="/js/bootstrap.bundle.min.js"></script>
 
 <!-- Include Navbar JavaScript -->
 <div th:replace="~{common/navbar :: navbar-js}"></div>
 
 <script>
+    // ==================== MODAL POSITIONING (sidebar-aware) ====================
+function centerModalToMainContent() {
+    const modal = document.getElementById('changePasswordModal');
+    const mainContent = document.querySelector('.main-content');
+    if (!modal || !mainContent) return;
+
+    const mainRect = mainContent.getBoundingClientRect();
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
+
+    const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+    const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+    modal.style.left = `${left}px`;
+    modal.style.top = `${top}px`;
+}
+
+function openModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('modalOverlay');
+    if (!modal || !overlay) return;
+
+    // Step 1: Make visible but invisible to measure
+    modal.style.visibility = 'hidden';
+    modal.style.display = 'flex';
+
+    // Step 2: Position correctly while invisible
+    centerModalToMainContent();
+
+    // Step 3: Hide again
+    modal.style.display = '';
+    modal.style.visibility = '';
+
+    // Step 4: Show with animation at correct position
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    const modal = document.getElementById('changePasswordModal');
+    const overlay = document.getElementById('modalOverlay');
+
+    if (modal) {
+        modal.classList.remove('active');
+        modal.style.left = '';
+        modal.style.top = '';
+    }
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+
+    // Cleanup form errors
+    document.getElementById('newPassword')?.classList.remove('is-invalid');
+    const policyError = document.getElementById('newPasswordPolicyError');
+    if (policyError) policyError.style.display = 'none';
+    document.getElementById('confirmPassword')?.classList.remove('is-invalid');
+    const confirmError = document.getElementById('confirmPasswordError');
+    if (confirmError) confirmError.style.display = 'none';
+}
+
+// Re-center on window resize
+window.addEventListener('resize', function() {
+    const modal = document.getElementById('changePasswordModal');
+    if (modal && modal.classList.contains('active')) {
+        centerModalToMainContent();
+    }
+});
+
+// Escape key closes modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
     // Password confirmation validation
     document.querySelector('#changePasswordModal form')?.addEventListener('submit', function(e) {
         const newPassword = document.getElementById('newPassword').value;
@@ -371,10 +597,35 @@
     });
     document.addEventListener("DOMContentLoaded", function () {
         /* If backend sends an error flag, open modal automatically */
-        if ("[[${passwordError}]]" === "current" || "[[${passwordError}]]" === "mismatch" || "[[${passwordError}]]" === "policy") {
-            var myModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
-            myModal.show();
-        }
+       if ("[[${passwordError}]]" === "current" || "[[${passwordError}]]" === "mismatch" || "[[${passwordError}]]" === "policy") {
+    openModal();
+}
+        // Re-center on sidebar toggle
+const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+        setTimeout(() => {
+            const modal = document.getElementById('changePasswordModal');
+            if (modal && modal.classList.contains('active')) {
+                centerModalToMainContent();
+            }
+        }, 350);
+    });
+}
+
+// MutationObserver for sidebar
+const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+if (sidebar) {
+    const observer = new MutationObserver(function() {
+        setTimeout(() => {
+            const modal = document.getElementById('changePasswordModal');
+            if (modal && modal.classList.contains('active')) {
+                centerModalToMainContent();
+            }
+        }, 350);
+    });
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+}
     });
 
     function validateConfirmPassword() {
@@ -392,23 +643,16 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        // Select all Bootstrap alerts on the page
-        const alerts = document.querySelectorAll('.alert');
-
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                // Add fade-out class
-                alert.classList.remove('show');
-                alert.classList.add('fade');
-
-                // Fully remove after fading (Bootstrap uses 150ms animation)
-                setTimeout(() => {
-                    alert.remove();
-                }, 300);
-
-            }, 5000); // 5 seconds
-        });
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.classList.add('fade-out');
+            alert.addEventListener('animationend', () => {
+                alert.remove();
+            }, { once: true });
+        }, 5000);
     });
+});
 // ==================== PASSWORD POLICY REAL-TIME VALIDATION FOR PROFILE ====================
 let profilePasswordPolicyCache = null;
 
@@ -507,11 +751,7 @@ if (profileForm) {
     });
 }
 
-// Clear errors when modal closes
-document.getElementById('changePasswordModal')?.addEventListener('hidden.bs.modal', function() {
-    document.getElementById('newPassword').classList.remove('is-invalid');
-    document.getElementById('newPasswordPolicyError').style.display = 'none';
-});
+
 </script>
 </body>
 </html>

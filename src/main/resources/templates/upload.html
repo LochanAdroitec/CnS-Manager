@@ -27,9 +27,10 @@
           padding-top: 70px;
         }
 
+
         /* ==================== WIZARD CONTAINER ==================== */
         .wizard-container {
-          max-width: 1200px;
+          width: 100%;
           margin: 0 auto;
           background: white;
           border-radius: 12px;
@@ -658,50 +659,58 @@
         }
 
         /* ==================== CUSTOM MODALS ==================== */
-        .custom-modal-overlay {
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          z-index: 9999;
-          align-items: center;
-          justify-content: center;
-          animation: fadeIn 0.3s;
-        }
+       .custom-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+}
 
-        .custom-modal-overlay.show {
-          display: flex;
-        }
+.custom-modal-overlay.show {
+  display: block;
+}
 
-        .custom-modal {
-          background: white;
-          border-radius: 16px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          max-width: 500px;
-          width: 90%;
-          animation: slideUp 0.3s;
-          overflow: hidden;
-        }
+.custom-modal {
+  display: none;
+  position: fixed;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  max-height: 85vh;
+  animation: slideUp 0.3s;
+  overflow: hidden;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+.custom-modal.show {
+  display: flex;
+}
 
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
 
-        .modal-header-custom {
-          padding: 25px 30px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-        }
+       .modal-header-custom {
+  padding: 25px 30px;
+  background: #1e3a5f;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-shrink: 0;
+  border-radius: 16px 16px 0 0;
+}
 
         .modal-header-warning {
-          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          background: #1e3a5f;
         }
 
         .modal-icon {
@@ -750,9 +759,26 @@
           transform: rotate(90deg);
         }
 
-        .modal-body-custom {
-          padding: 30px;
-        }
+       .modal-body-custom {
+  padding: 30px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modal-body-custom::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-body-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-body-custom::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.15);
+  border-radius: 3px;
+}
+.modal-body-custom::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0,0,0,0.25);
+}
 
         .modal-body-custom p {
           margin: 0;
@@ -772,13 +798,15 @@
           font-size: 14px;
         }
 
-        .modal-footer-custom {
-          padding: 20px 30px;
-          background: #f9fafb;
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-        }
+       .modal-footer-custom {
+  padding: 20px 30px;
+  background: #f9fafb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  border-radius: 0 0 16px 16px;
+}
 
         .modal-btn {
           padding: 10px 24px;
@@ -881,6 +909,13 @@
             font-size: 16px;
           }
         }
+        .library-icon {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        margin-right: 0px;
+        transition: transform 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -915,7 +950,9 @@
         <div class="wizard-container">
             <!-- Wizard Header -->
             <div class="wizard-header">
-                <h2><i class="bi bi-file-earmark-arrow-up me-2"></i>Upload Document</h2>
+                <h2><img src="/images/upload_doc_white_fill.png"
+                         class="library-icon"
+                         alt="Document Library Icon">Upload Document</h2>
                 <p>Follow the steps below to upload your document</p>
             </div>
 
@@ -965,9 +1002,10 @@
                     <!-- Step 1: Upload File -->
                     <div class="wizard-step-content active" data-step="1">
                         <div class="drop-zone" id="dropZone">
-                            <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
+
+                            <img src="/images/upload_doc_blue_fill.png"
+                                 class="drop-zone-icon"
+                                 alt="Upload Document Icon">
                             <div class="drop-zone-text">Drag & Drop Your PDF File Here</div>
                             <div class="drop-zone-info">
                                 or click the button below to browse
@@ -1327,7 +1365,7 @@
 
         <!-- ==================== CONFIRMATION MODAL ==================== -->
         <!-- Custom Confirmation Modal -->
-        <div class="custom-modal-overlay" id="confirmationModal">
+        <div class="custom-modal-overlay" id="confirmationModal" onclick="if(event.target===this) closeCustomModal('confirmationModal')">
             <div class="custom-modal">
                 <div class="modal-header-custom">
                     <div class="modal-icon">
@@ -1357,7 +1395,7 @@
 
         <!-- ==================== PDF PROTECTION MODAL ==================== -->
         <!-- PDF Protection Warning Modal -->
-        <div class="custom-modal-overlay" id="pdfProtectionModal">
+        <div class="custom-modal-overlay" id="pdfProtectionModal" onclick="if(event.target===this) closeCustomModal('pdfProtectionModal')">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-warning">
                     <div class="modal-icon">
@@ -1419,6 +1457,62 @@
     let allowedFormats = ['PDF'];
     let metadataSchema = {};
     let maxTagsPerDocument = 10;
+
+
+    // ==================== MODAL POSITIONING (sidebar-aware) ====================
+let activeCustomModalId = null;
+
+function centerModalToMainContent(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+    const modalEl = overlay.querySelector('.custom-modal');
+    if (!modalEl) return;
+
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+
+    const mainRect = mainContent.getBoundingClientRect();
+    const modalWidth = modalEl.offsetWidth;
+    const modalHeight = modalEl.offsetHeight;
+
+    const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+    const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+    modalEl.style.left = `${left}px`;
+    modalEl.style.top = `${top}px`;
+}
+
+function openCustomModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    activeCustomModalId = modalId;
+    overlay.classList.add('show');
+
+    const modalEl = overlay.querySelector('.custom-modal');
+    if (modalEl) modalEl.classList.add('show');
+
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => centerModalToMainContent(modalId), 10);
+}
+
+function closeCustomModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    overlay.classList.remove('show');
+
+    const modalEl = overlay.querySelector('.custom-modal');
+    if (modalEl) {
+        modalEl.classList.remove('show');
+        modalEl.style.left = '';
+        modalEl.style.top = '';
+    }
+
+    document.body.style.overflow = '';
+    activeCustomModalId = null;
+}
 
 
     async function checkClassificationEditionAccess() {
@@ -1778,6 +1872,37 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
                 formChanged = true;
             });
         });
+
+        // Re-center modal on window resize
+window.addEventListener('resize', function() {
+    if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+});
+
+// Re-center on sidebar toggle
+const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+        setTimeout(() => {
+            if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+        }, 350);
+    });
+}
+
+// MutationObserver for sidebar
+const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+if (sidebar) {
+    const observer = new MutationObserver(function() {
+        setTimeout(() => {
+            if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+        }, 350);
+    });
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+}
+
+// Escape key closes active modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && activeCustomModalId) closeCustomModal(activeCustomModalId);
+});
     }
 
     // ==================== POPULATE YEAR DROPDOWN ====================
@@ -2054,14 +2179,14 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
             protectionList.appendChild(li);
         });
 
-        document.getElementById('pdfProtectionModal').classList.add('show');
+       openCustomModal('pdfProtectionModal');
     }
 
     /**
      * Close PDF protection modal
      */
     function closePdfProtectionModal() {
-        document.getElementById('pdfProtectionModal').classList.remove('show');
+       closeCustomModal('pdfProtectionModal');
     }
 
     /**
@@ -2626,7 +2751,7 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
      */
     document.getElementById('cancelBtn').addEventListener('click', function() {
         if (formChanged || uploadedFile) {
-            document.getElementById('confirmationModal').classList.add('show');
+           openCustomModal('confirmationModal');
         } else {
             navigateAway();
         }
@@ -2636,7 +2761,7 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
      * Close confirmation modal
      */
     function closeConfirmationModal() {
-        document.getElementById('confirmationModal').classList.remove('show');
+       closeCustomModal('confirmationModal');
     }
 
     /**
@@ -2804,8 +2929,7 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
     // Show confirmation modal for navigation
     function showNavigationConfirmation(targetUrl) {
         pendingNavigationUrl = targetUrl;
-        const modal = document.getElementById('confirmationModal');
-        modal.classList.add('show');
+        openCustomModal('confirmationModal');
 
         const confirmBtn = document.getElementById('confirmCancelBtn');
         // Remove old event listeners by cloning
@@ -2842,7 +2966,7 @@ document.querySelectorAll('.selection-item-flex[data-tag-name]').forEach(item =>
      */
     function goBack() {
         if (formChanged || uploadedFile) {
-            document.getElementById('confirmationModal').classList.add('show');
+           openCustomModal('confirmationModal');
 
             const confirmBtn = document.getElementById('confirmCancelBtn');
             confirmBtn.onclick = function() {

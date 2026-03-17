@@ -51,7 +51,7 @@
         .watermark-toggle-card { background: linear-gradient(135deg,#f6f8fb 0%,#ffffff 100%); border: 2px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 24px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .watermark-toggle-card:hover { border-color: #667eea; box-shadow: 0 4px 16px rgba(102,126,234,0.12); }
         .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; flex-shrink: 0; background: #1e3a5f; }
-        .watermark-info-badge { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #1e40af; display: inline-flex; align-items: center; margin-top: 12px; }
+        .watermark-info-badge { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px; font-size: 10px; color: #1e40af; display: inline-flex; align-items: center; margin-top: 0px; }
         .watermark-option-card { background: white; border: 2px solid #e5e7eb; border-radius: 16px; padding: 20px; height: 100%; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .watermark-option-card:hover { border-color: #c7d2fe; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
         .option-header { display: flex; align-items: center; margin-bottom: 20px; gap: 12px; }
@@ -227,8 +227,28 @@
         .bulk-item:hover { background: #f8fafc !important; }
 
         /* ==================== FULLSCREEN MODAL STYLES ==================== */
+        /* ==================== FULLSCREEN MODAL STYLES ==================== */
+
+#wmFullscreenModal {
+    background: rgba(0,0,0,0.4);
+}
+
+#wmFullscreenModal .modal-dialog {
+    margin: 0;
+    max-width: none;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#wmFullscreenModal .modal-content {
+    width: 95%;
+    height: 92%;
+}
         #wmFullscreenModal .modal-dialog {
-            max-width: 90vw;
+            max-width: 70vw;
         }
         #wmFullscreenModal .modal-content {
             border-radius: 16px;
@@ -291,6 +311,128 @@
         .wm-orientation-btn:hover {
             background: rgba(255,255,255,0.28);
         }
+        .library-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            margin-right: 0px;
+            transition: transform 0.3s ease;
+        }
+        /* ==================== CUSTOM MODALS (sidebar-aware) ==================== */
+.modal-overlay-custom {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+}
+.modal-overlay-custom.active {
+    display: block;
+}
+
+.custom-modal {
+    display: none;
+    position: fixed;
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    z-index: 9999;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    max-height: 85vh;
+    overflow: hidden;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+.custom-modal.modal-lg {
+    max-width: 800px;
+}
+.custom-modal.active {
+    display: flex;
+}
+
+.custom-modal .modal-header {
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
+}
+
+.custom-modal .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.custom-modal .modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-modal .modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-modal .modal-body::-webkit-scrollbar-thumb {
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 3px;
+}
+.custom-modal .modal-body::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0,0,0,0.25);
+}
+
+.custom-modal .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 0 0 12px 12px;
+}
+
+.modal-close-btn-custom {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.modal-close-btn-custom:hover {
+    opacity: 1;
+}
+/* ================= MODAL ANIMATION ================= */
+
+.custom-modal {
+    display: flex;
+    opacity: 0;
+    transform: translateY(-40px) scale(0.95);
+    transition: all 0.30s ease;
+    pointer-events: none;
+}
+
+.custom-modal.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+/* Overlay animation */
+.modal-overlay-custom {
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.modal-overlay-custom.active {
+    opacity: 1;
+}
     </style>
 </head>
 <body>
@@ -303,7 +445,9 @@
             <!-- ==================== SETTINGS SIDEBAR ==================== -->
             <div class="settings-sidebar">
                 <div class="settings-sidebar-header">
-                    <h5><i class="bi bi-gear me-2"></i>Settings</h5>
+                    <h5><img src="/images/setting_black_fill.png"
+                             class="library-icon"
+                             alt="Document Library Icon"> Settings</h5>
                 </div>
                 <div class="settings-menu">
                     <a href="#" class="settings-menu-item active" data-section="repository">
@@ -454,7 +598,7 @@
                     </div>
                     <form id="tagPoliciesForm">
                         <div class="mb-4">
-                            <label for="maxTagsPerDocument" class="form-label"><i class="bi bi-hash me-2"></i><strong>Maximum Tags per Document</strong></label>
+                            <label for="maxTagsPerDocument" class="form-label"><i class="bi bi-tag me-2"></i><strong>Maximum Tags per Document</strong></label>
                             <input type="number" class="form-control" id="maxTagsPerDocument" min="1" max="50" value="10" style="max-width:200px;">
                             <p class="helper-text mb-0 mt-2"><i class="bi bi-info-circle me-1"></i>Maximum number of tags per document (1-50)</p>
                         </div>
@@ -483,11 +627,10 @@
                                     <div class="d-flex align-items-center mb-2">
                                         <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
                                         <div class="ms-3">
-                                            <h5 class="mb-1" style="font-weight:600;color:#1f2937;">Enable Watermark</h5>
+                                            <h5 class="mb-1" style="font-weight:600;color:#1f2937;">Enable Watermark  <span class="watermark-info-badge"><i class="bi bi-info-circle me-2"></i>Watermark includes username and date</span></h5>
                                             <p class="mb-0 text-muted" style="font-size:14px;">Add watermark to downloaded documents</p>
                                         </div>
                                     </div>
-                                    <div class="watermark-info-badge"><i class="bi bi-info-circle me-2"></i>Watermark includes username and date</div>
                                 </div>
                                 <div class="form-check form-switch ms-4" style="transform:scale(1.5);">
                                     <input class="form-check-input" type="checkbox" id="watermarkEnabled" style="cursor:pointer;">
@@ -572,7 +715,7 @@
                                 <div class="wm-preview-panel-header">
                                     <div class="preview-icon"><i class="bi bi-eye"></i></div>
                                     <div>
-                                        <h6>Live Preview</h6>
+                                        <h6>Dynamic Preview</h6>
                                         <p>Click on a page to see a fullscreen preview of how the watermark will appear</p>
                                     </div>
                                 </div>
@@ -650,18 +793,18 @@
                         </div><!-- end watermarkConfigSection -->
 
                         <!-- How Watermarks Work info box -->
-                        <div class="watermark-info-box">
-                            <div class="info-icon"><i class="bi bi-lightbulb-fill"></i></div>
-                            <div class="info-content">
-                                <h6 class="mb-2" style="font-weight:600;">How Watermarks Work</h6>
-                                <ul class="info-list">
-                                    <li>Applied automatically when users download documents</li>
-                                    <li>Includes username and download timestamp</li>
-                                    <li>Changes only affect new downloads</li>
-                                    <li>Helps track document distribution</li>
-                                </ul>
-                            </div>
-                        </div>
+                        <!--                        <div class="watermark-info-box">-->
+                        <!--                            <div class="info-icon"><i class="bi bi-lightbulb-fill"></i></div>-->
+                        <!--                            <div class="info-content">-->
+                        <!--                                <h6 class="mb-2" style="font-weight:600;">How Watermarks Work</h6>-->
+                        <!--                                <ul class="info-list">-->
+                        <!--                                    <li>Applied automatically when users download documents</li>-->
+                        <!--                                    <li>Includes username and download timestamp</li>-->
+                        <!--                                    <li>Changes only affect new downloads</li>-->
+                        <!--                                    <li>Helps track document distribution</li>-->
+                        <!--                                </ul>-->
+                        <!--                            </div>-->
+                        <!--                        </div>-->
 
                         <div class="d-flex gap-3 mt-4">
                             <button type="submit" class="btn btn-save-modern" style="background:#1e3a5f;color:#fff;"><i class="bi bi-check-circle me-2"></i>Save Changes</button>
@@ -834,171 +977,157 @@
                     </div>
                 </div>
 
+                <!-- ==================== WATERMARK FULLSCREEN PREVIEW MODAL ==================== -->
+                <div class="modal fade" id="wmFullscreenModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered" style="max-width:90vw;">
+                        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+
+                            <!-- Header -->
+                            <div class="modal-header" style="background:#1e3a5f;color:white;padding:16px 24px;border:none;">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                    <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="bi bi-eye" style="font-size:20px;"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-0 fw-bold" id="wmFullscreenTitle" style="font-size:16px;">Watermark Preview</h5>
+                                        <p class="mb-0" id="wmFullscreenSubtitle" style="font-size:12px;opacity:0.75;">Portrait page — A4 format (210 × 297 mm)</p>
+                                    </div>
+                                    <div class="ms-auto d-flex align-items-center gap-2">
+                                        <button type="button" class="wm-orientation-btn" id="wmToggleOrientationBtn" onclick="wmToggleOrientation()">
+                                            <i class="bi bi-arrow-left-right"></i>
+                                            <span id="wmToggleBtnText">Switch to Landscape</span>
+                                        </button>
+                                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" style="opacity:0.8;"></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Body — document page display area -->
+                            <div class="modal-body" style="background:#d1d5db;min-height:68vh;display:flex;align-items:center;justify-content:center;padding:40px;">
+                                <div id="wmFullscreenPageWrapper" style="position:relative;display:inline-block;">
+                                    <div class="wm-fs-page" id="wmFullscreenPage">
+                                        <!-- Dynamic document lines injected by JS -->
+                                        <div class="wm-fs-lines" id="wmFullscreenLines"></div>
+                                        <!-- Watermark overlay -->
+                                        <div class="wm-fs-watermark-overlay" id="wmFullscreenOverlay">
+                                            <span class="wm-fs-watermark-text" id="wmFullscreenText">Username<br>DD/MM/YYYY</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="modal-footer" style="background:#f9fafb;padding:14px 24px;border-top:1px solid #e5e7eb;">
+                                <div class="d-flex align-items-center gap-3 w-100">
+                                    <div style="width:32px;height:32px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="bi bi-info-circle" style="color:#dc2626;font-size:15px;"></i>
+                                    </div>
+                                    <span style="font-size:13px;color:#6b7280;">
+                            This is a live preview — adjusting <strong>opacity</strong>, <strong>position</strong> or <strong>font size</strong> is reflected here in real time.
+                        </span>
+                                    <button type="button" class="btn btn-sm ms-auto fw-bold" data-bs-dismiss="modal"
+                                            style="background:#1e3a5f;color:white;border-radius:8px;padding:8px 22px;">
+                                        <i class="bi bi-x-circle me-1"></i>Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div><!-- end settings-content -->
         </div><!-- end settings-container -->
     </div>
 </div>
 
-<!-- ==================== WATERMARK FULLSCREEN PREVIEW MODAL ==================== -->
-<div class="modal fade" id="wmFullscreenModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:90vw;">
-        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:none;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
 
-            <!-- Header -->
-            <div class="modal-header" style="background:#1e3a5f;color:white;padding:16px 24px;border:none;">
-                <div class="d-flex align-items-center gap-3 flex-grow-1">
-                    <div style="width:40px;height:40px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi bi-eye" style="font-size:20px;"></i>
-                    </div>
-                    <div>
-                        <h5 class="mb-0 fw-bold" id="wmFullscreenTitle" style="font-size:16px;">Watermark Preview</h5>
-                        <p class="mb-0" id="wmFullscreenSubtitle" style="font-size:12px;opacity:0.75;">Portrait page — A4 format (210 × 297 mm)</p>
-                    </div>
-                    <div class="ms-auto d-flex align-items-center gap-2">
-                        <button type="button" class="wm-orientation-btn" id="wmToggleOrientationBtn" onclick="wmToggleOrientation()">
-                            <i class="bi bi-arrow-left-right"></i>
-                            <span id="wmToggleBtnText">Switch to Landscape</span>
-                        </button>
-                        <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" style="opacity:0.8;"></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Body — document page display area -->
-            <div class="modal-body" style="background:#d1d5db;min-height:68vh;display:flex;align-items:center;justify-content:center;padding:40px;">
-                <div id="wmFullscreenPageWrapper" style="position:relative;display:inline-block;">
-                    <div class="wm-fs-page" id="wmFullscreenPage">
-                        <!-- Dynamic document lines injected by JS -->
-                        <div class="wm-fs-lines" id="wmFullscreenLines"></div>
-                        <!-- Watermark overlay -->
-                        <div class="wm-fs-watermark-overlay" id="wmFullscreenOverlay">
-                            <span class="wm-fs-watermark-text" id="wmFullscreenText">Username<br>DD/MM/YYYY</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div class="modal-footer" style="background:#f9fafb;padding:14px 24px;border-top:1px solid #e5e7eb;">
-                <div class="d-flex align-items-center gap-3 w-100">
-                    <div style="width:32px;height:32px;background:#fee2e2;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="bi bi-info-circle" style="color:#dc2626;font-size:15px;"></i>
-                    </div>
-                    <span style="font-size:13px;color:#6b7280;">
-                        This is a live preview — adjusting <strong>opacity</strong>, <strong>position</strong> or <strong>font size</strong> is reflected here in real time.
-                    </span>
-                    <button type="button" class="btn btn-sm ms-auto fw-bold" data-bs-dismiss="modal"
-                            style="background:#1e3a5f;color:white;border-radius:8px;padding:8px 22px;">
-                        <i class="bi bi-x-circle me-1"></i>Close
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
+<!-- ==================== MODAL OVERLAY ==================== -->
+<div class="modal-overlay-custom" id="modalOverlay" onclick="closeActiveSettingsModal()"></div>
 <!-- ==================== CONFIRMATION MODAL ==================== -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm File Size Reduction</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="confirmationMessage"></p>
-                <p class="text-muted mb-0"><small>Existing files will remain accessible, but new uploads cannot exceed the new limit.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" onclick="confirmSave()"><i class="bi bi-check-circle me-2"></i>Continue Anyway</button>
+<div class="custom-modal" id="confirmationModal">
+    <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Confirm File Size Reduction</h5>
+        <button type="button" class="modal-close-btn-custom" onclick="closeSettingsModal('confirmationModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p id="confirmationMessage"></p>
+        <p class="text-muted mb-0"><small>Existing files will remain accessible, but new uploads cannot exceed the new limit.</small></p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeSettingsModal('confirmationModal')">Cancel</button>
+        <button type="button" class="btn btn-warning" onclick="confirmSave()"><i class="bi bi-check-circle me-2"></i>Continue Anyway</button>
+    </div>
+</div>
+<!-- ==================== PASSWORD VERIFY MODAL ==================== -->
+<div class="custom-modal" id="passwordVerifyModal">
+    <div class="modal-header" style="background:#1e3a5f;color:white;">
+        <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i>Admin Authentication Required</h5>
+        <button type="button" class="modal-close-btn-custom" onclick="closeSettingsModal('passwordVerifyModal')" style="color:white;">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p class="text-muted mb-3">Please enter your password to confirm this bulk delete operation.</p>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Your Password</label>
+            <input type="password" class="form-control" id="adminPasswordInput" placeholder="Enter your password">
+            <div id="passwordError" class="text-danger mt-1" style="display:none;font-size:14px;">
+                <i class="bi bi-exclamation-circle me-1"></i>Incorrect password. Please try again.
             </div>
         </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeSettingsModal('passwordVerifyModal')">Cancel</button>
+        <button type="button" class="btn fw-bold" id="verifyPasswordBtn" style="background:#1e3a5f;color:white;" onclick="verifyPasswordAndProceed()">
+            <i class="bi bi-unlock me-2"></i>Verify & Continue
+        </button>
     </div>
 </div>
 
-<!-- ==================== PASSWORD VERIFY MODAL ==================== -->
-<div class="modal fade" id="passwordVerifyModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background:#1e3a5f;color:white;">
-                <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i>Admin Authentication Required</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted mb-3">Please enter your password to confirm this bulk delete operation.</p>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Your Password</label>
-                    <input type="password" class="form-control" id="adminPasswordInput" placeholder="Enter your password">
-                    <div id="passwordError" class="text-danger mt-1" style="display:none;font-size:14px;">
-                        <i class="bi bi-exclamation-circle me-1"></i>Incorrect password. Please try again.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn fw-bold" id="verifyPasswordBtn" style="background:#1e3a5f;color:white;" onclick="verifyPasswordAndProceed()">
-                    <i class="bi bi-unlock me-2"></i>Verify & Continue
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- ==================== BULK DELETE SELECTION MODAL ==================== -->
-<div class="modal fade" id="bulkDeleteModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background:#1e3a5f;color:white;">
-                <h5 class="modal-title" id="bulkDeleteModalTitle"><i class="bi bi-people me-2"></i>Select Items to Delete</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="max-height:500px;overflow-y:auto;">
-                <div class="alert d-flex align-items-center mb-3" style="background:#fff7ed;border:1px solid #fed7aa;">
-                    <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f59e0b;"></i>
-                    <span id="bulkDeleteWarningText" style="color:#92400e;font-size:14px;">Warning: This action cannot be undone.</span>
-                </div>
-                <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="selectAllItems" onchange="toggleSelectAll()">
-                        <label class="form-check-label fw-bold" for="selectAllItems">Select All</label>
-                    </div>
-                    <span class="badge" style="background:#1e3a5f;font-size:13px;" id="selectedCountBadge">0 selected</span>
-                </div>
-                <div id="bulkDeleteItemsList"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn fw-bold" id="confirmBulkDeleteBtn" style="background:#dc2626;color:white;" onclick="executeBulkDelete()" disabled>
-                    <i class="bi bi-trash3 me-2"></i>
-                    <span id="deleteButtonText">Delete Selected (0)</span>
-                </button>
-            </div>
+<div class="custom-modal modal-lg" id="bulkDeleteModal">
+    <div class="modal-header" style="background:#1e3a5f;color:white;">
+        <h5 class="modal-title" id="bulkDeleteModalTitle"><i class="bi bi-people me-2"></i>Select Items to Delete</h5>
+        <button type="button" class="modal-close-btn-custom" onclick="closeSettingsModal('bulkDeleteModal')" style="color:white;">&times;</button>
+    </div>
+    <div class="modal-body" style="max-height:500px;overflow-y:auto;">
+        <div class="alert d-flex align-items-center mb-3" style="background:#fff7ed;border:1px solid #fed7aa;">
+            <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f59e0b;"></i>
+            <span id="bulkDeleteWarningText" style="color:#92400e;font-size:14px;">Warning: This action cannot be undone.</span>
         </div>
+        <div class="d-flex align-items-center justify-content-between mb-3 p-2 border rounded">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="selectAllItems" onchange="toggleSelectAll()">
+                <label class="form-check-label fw-bold" for="selectAllItems">Select All</label>
+            </div>
+            <span class="badge" style="background:#1e3a5f;font-size:13px;" id="selectedCountBadge">0 selected</span>
+        </div>
+        <div id="bulkDeleteItemsList"></div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeSettingsModal('bulkDeleteModal')">Cancel</button>
+        <button type="button" class="btn fw-bold" id="confirmBulkDeleteBtn" style="background:#dc2626;color:white;" onclick="executeBulkDelete()" disabled>
+            <i class="bi bi-trash3 me-2"></i>
+            <span id="deleteButtonText">Delete Selected (0)</span>
+        </button>
     </div>
 </div>
 
 <!-- ==================== BULK DELETE FINAL CONFIRM MODAL ==================== -->
-<div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Final Confirmation</h5>
-            </div>
-            <div class="modal-body">
-                <p id="finalConfirmText" class="fw-bold"></p>
-                <p class="text-muted">This action is permanent and cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger fw-bold" onclick="confirmAndDelete()">
-                    <i class="bi bi-trash3 me-2"></i>Yes, Delete Permanently
-                </button>
-            </div>
-        </div>
+<div class="custom-modal" id="bulkDeleteConfirmModal">
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Final Confirmation</h5>
+    </div>
+    <div class="modal-body">
+        <p id="finalConfirmText" class="fw-bold"></p>
+        <p class="text-muted">This action is permanent and cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeSettingsModal('bulkDeleteConfirmModal')">Cancel</button>
+        <button type="button" class="btn btn-danger fw-bold" onclick="confirmAndDelete()">
+            <i class="bi bi-trash3 me-2"></i>Yes, Delete Permanently
+        </button>
     </div>
 </div>
+
 
 <script src="/js/bootstrap.bundle.min.js"></script>
 <div th:replace="~{common/navbar :: navbar-js}"></div>
@@ -1013,13 +1142,96 @@
     let bulkDeleteConfirmModal = null;
     let bulkDeleteType = null;
     let selectedItems = new Set();
+    // ==================== CUSTOM MODAL POSITIONING (sidebar-aware) ====================
+let activeSettingsModalId = null;
+
+function centerSettingsModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const mainContent = document.querySelector('.main-content');
+    if (!modal || !mainContent) return;
+
+    const mainRect = mainContent.getBoundingClientRect();
+    const modalWidth = modal.offsetWidth;
+    const modalHeight = modal.offsetHeight;
+
+    const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+    const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+    modal.style.left = `${left}px`;
+    modal.style.top = `${top}px`;
+}
+
+function openSettingsModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+
+    activeSettingsModalId = modalId;
+
+    modal.style.display = 'flex';   // ensure visible
+    overlay.classList.add('active');
+
+    setTimeout(() => {
+        modal.classList.add('active');
+    }, 10);
+
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => centerSettingsModal(modalId), 20);
+}
+
+function closeSettingsModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+
+    modal.classList.remove('active');
+    overlay.classList.remove('active');
+
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+
+    document.body.style.overflow = '';
+    activeSettingsModalId = null;
+}
+
+function closeActiveSettingsModal() {
+    if (activeSettingsModalId) {
+        closeSettingsModal(activeSettingsModalId);
+    }
+}
 
     // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
-        confirmationModal   = new bootstrap.Modal(document.getElementById('confirmationModal'));
-        passwordModal       = new bootstrap.Modal(document.getElementById('passwordVerifyModal'));
-        bulkDeleteModal     = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
-        bulkDeleteConfirmModal = new bootstrap.Modal(document.getElementById('bulkDeleteConfirmModal'));
+    // Re-center custom modals on resize
+window.addEventListener('resize', function() {
+    if (activeSettingsModalId) centerSettingsModal(activeSettingsModalId);
+});
+
+// Re-center on sidebar toggle
+const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+        setTimeout(() => {
+            if (activeSettingsModalId) centerSettingsModal(activeSettingsModalId);
+        }, 350);
+    });
+}
+
+// MutationObserver for sidebar
+const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+if (sidebar) {
+    const observer = new MutationObserver(function() {
+        setTimeout(() => {
+            if (activeSettingsModalId) centerSettingsModal(activeSettingsModalId);
+        }, 350);
+    });
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+}
+
+// Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && activeSettingsModalId) closeSettingsModal(activeSettingsModalId);
+});
 
         loadSettings();
         initializeTagPolicies();
@@ -1100,6 +1312,25 @@
             });
         });
     });
+   function positionFullscreenToMainContent() {
+    const modal = document.getElementById('wmFullscreenModal');
+    const navbar = document.querySelector('.navbar');   // your top nav
+    const mainSidebar = document.getElementById('sidebar'); // ✅ your real sidebar
+
+    if (!modal || !navbar) return;
+
+    const navbarRect = navbar.getBoundingClientRect();
+    const sidebarRect = mainSidebar ? mainSidebar.getBoundingClientRect() : { right: 0 };
+
+    const top = navbarRect.bottom;
+    const left = sidebarRect.right;
+
+    modal.style.position = 'fixed';
+    modal.style.top = top + 'px';
+    modal.style.left = left + 'px';
+    modal.style.width = (window.innerWidth - left) + 'px';
+    modal.style.height = (window.innerHeight - top) + 'px';
+}
 
     // ==================== SECTION SWITCHING ====================
     function switchSection(section) {
@@ -1157,12 +1388,12 @@
 
     function showConfirmation(data) {
         document.getElementById('confirmationMessage').textContent = data.message || `${data.affectedFilesCount} file(s) exceed the new limit`;
-        confirmationModal.show();
+       openSettingsModal('confirmationModal');
     }
 
     function confirmSave() {
         if (!pendingUpdate) return;
-        confirmationModal.hide();
+       closeSettingsModal('confirmationModal');
         showLoading(true);
         fetch(contextPath + 'api/settings/repository/confirm', {
             method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(pendingUpdate)
@@ -1357,14 +1588,21 @@
     let wmFullscreenOrientation   = 'portrait';
     let wmFullscreenModalInstance = null;
 
-    function openWmFullscreen(orientation) {
-        wmFullscreenOrientation = orientation;
-        if (!wmFullscreenModalInstance) {
-            wmFullscreenModalInstance = new bootstrap.Modal(document.getElementById('wmFullscreenModal'));
-        }
-        renderWmFullscreen();
-        wmFullscreenModalInstance.show();
+  function openWmFullscreen(orientation) {
+    wmFullscreenOrientation = orientation;
+
+    if (!wmFullscreenModalInstance) {
+        wmFullscreenModalInstance = new bootstrap.Modal(document.getElementById('wmFullscreenModal'));
     }
+
+    renderWmFullscreen();
+    wmFullscreenModalInstance.show();
+
+    // Align to main-content
+    setTimeout(() => {
+        positionFullscreenToMainContent();
+    }, 50);
+}
 
     function wmToggleOrientation() {
         wmFullscreenOrientation = (wmFullscreenOrientation === 'portrait') ? 'landscape' : 'portrait';
@@ -1505,7 +1743,7 @@
         selectedItems  = new Set();
         document.getElementById('adminPasswordInput').value = '';
         document.getElementById('passwordError').style.display = 'none';
-        passwordModal.show();
+       openSettingsModal('passwordVerifyModal');
     }
 
     function verifyPasswordAndProceed() {
@@ -1523,7 +1761,7 @@
         }).then(r => r.json()).then(data => {
             btn.innerHTML = '<i class="bi bi-unlock me-2"></i>Verify & Continue';
             btn.disabled  = false;
-            if (data.success) { passwordModal.hide(); loadBulkDeleteItems(); }
+            if (data.success) {closeSettingsModal('passwordVerifyModal'); loadBulkDeleteItems(); }
             else {
                 document.getElementById('passwordError').textContent = 'Incorrect password. Please try again.';
                 document.getElementById('passwordError').style.display = 'block';
@@ -1550,7 +1788,7 @@
         const endpoint = isUsers ? 'bulk-delete/users-list' : 'bulk-delete/documents-list';
         fetch(contextPath + 'api/settings/' + endpoint).then(r => r.json()).then(items => {
             renderBulkDeleteItems(items);
-            bulkDeleteModal.show();
+         openSettingsModal('bulkDeleteModal');
         }).catch(() => showAlert('danger', 'Failed to load items'));
     }
 
@@ -1624,12 +1862,12 @@
         const isUsers = (bulkDeleteType === 'users');
         document.getElementById('finalConfirmText').textContent =
             `Are you sure you want to permanently delete ${selectedItems.size} ${isUsers ? 'user(s)' : 'document(s)'}?`;
-        bulkDeleteConfirmModal.show();
+       openSettingsModal('bulkDeleteConfirmModal');
     }
 
     function confirmAndDelete() {
-        bulkDeleteConfirmModal.hide();
-        bulkDeleteModal.hide();
+       closeSettingsModal('bulkDeleteConfirmModal');
+       closeSettingsModal('bulkDeleteModal');
         const isUsers    = (bulkDeleteType === 'users');
         const ids        = Array.from(selectedItems);
         const endpoint   = isUsers ? 'bulk-delete/users'     : 'bulk-delete/documents';
@@ -1669,6 +1907,27 @@
         if (show) overlay.classList.add('active');
         else      overlay.classList.remove('active');
     }
+    /* ==================== FULLSCREEN POSITION SYNC ==================== */
+
+// Recalculate position on window resize
+window.addEventListener('resize', function () {
+    const modal = document.getElementById('wmFullscreenModal');
+    if (modal && modal.classList.contains('show')) {
+        positionFullscreenToMainContent();
+    }
+});
+
+// Recalculate when sidebar toggle buttons are clicked
+document.querySelectorAll('[data-bs-toggle]').forEach(btn => {
+    btn.addEventListener('click', function () {
+        setTimeout(() => {
+            const modal = document.getElementById('wmFullscreenModal');
+            if (modal && modal.classList.contains('show')) {
+                positionFullscreenToMainContent();
+            }
+        }, 350);
+    });
+});
 </script>
 </body>
 </html>

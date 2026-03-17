@@ -31,16 +31,17 @@
         }
         .tag-item {
             background: white;
-            border: 1px solid #4DA3FF;
-            border-radius: 10px;
+            border: 1px solid #e0e6ed;
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             position: relative;
             cursor: pointer;
         }
         .tag-item:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
             border-color: #4DA3FF;
         }
         .tag-badge {
@@ -53,9 +54,8 @@
           color: white;
           font-weight: 500;
           font-size: 0.95rem;
-          padding: 8px 16px 8px 45px;        /* keep left space always */
+          padding: 8px 16px 8px 45px;
           clip-path: polygon(20px 0%, 100% 0%, 100% 100%, 20px 100%, 0 50%);
-          /* ↑ 30px instead of 20% */
           white-space: nowrap;
         }
         .tag-badge::before {
@@ -67,7 +67,7 @@
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background: white;   /* or any color */
+          background: white;
         }
         .tag-icon {
             width: 50px;
@@ -83,11 +83,6 @@
         .tag-meta {
             font-size: 0.9rem;
             color: #666;
-        }
-        .action-menu {
-            position: absolute;
-            top: 20px;
-            right: 20px;
         }
 
         .loading-spinner {
@@ -108,23 +103,8 @@
           color: #dc3545;
           font-size: 0.85rem;
         }
-        /* Tag card styling */
-        .tag-item {
-            background: #fff;
-            border: 1px solid #e0e6ed;
-            border-radius: 12px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-        }
 
-        .tag-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        }
-
-/* Hover action buttons (hidden by default) */
+        /* Hover action buttons */
         .tag-hover-actions {
             position: absolute;
             top: 10px;
@@ -135,14 +115,10 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-
-        /* Show only when hovering on card */
         .tag-item:hover .tag-hover-actions {
             opacity: 1;
             visibility: visible;
         }
-
-        /* Icon buttons */
         .btn-icon {
             border: 1px solid #d1d5db;
             border-radius: 6px;
@@ -154,8 +130,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* Edit button */
         .edit-btn {
             color: #3b82f6;
             border-color: #3b82f6;
@@ -165,8 +139,6 @@
             color: white;
             border-color: #3b82f6;
         }
-
-        /* Delete button */
         .delete-btn {
             color: #ef4444;
             border-color: #ef4444;
@@ -176,6 +148,7 @@
             color: white;
             border-color: #ef4444;
         }
+
         #scrollTopBtn {
             display: none;
             position: fixed;
@@ -194,17 +167,15 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transition: background-color 0.3s;
         }
-
         #scrollTopBtn:hover {
             background-color:#1e3a5f;
         }
 
-        /* Documents Modal Styles */
+        /* Documents Modal List Styles */
         .documents-modal-content {
             max-height: 400px;
             overflow-y: auto;
         }
-
         .document-list-item {
             padding: 12px 15px;
             border-bottom: 1px solid #e5e7eb;
@@ -214,56 +185,183 @@
             align-items: center;
             gap: 10px;
         }
-
         .document-list-item:last-child {
             border-bottom: none;
         }
-
         .document-list-item:hover {
             background-color: #f3f4f6;
         }
-
         .document-list-item i {
             color: #4DA3FF;
             font-size: 1.1rem;
         }
-
         .document-list-item span {
             color: #1a2332;
             font-size: 0.95rem;
             flex: 1;
         }
-
         .document-list-item .open-icon {
             color: #9ca3af;
             font-size: 0.85rem;
             opacity: 0;
             transition: opacity 0.2s ease;
         }
-
         .document-list-item:hover .open-icon {
             opacity: 1;
             color: #4DA3FF;
         }
-
         .no-documents-message {
             text-align: center;
             padding: 40px 20px;
             color: #6b7a99;
         }
-
         .no-documents-message i {
             font-size: 3rem;
             opacity: 0.3;
             margin-bottom: 15px;
             display: block;
         }
-
         .documents-loading {
             text-align: center;
             padding: 40px 20px;
         }
 
+        /* ==================== MODAL OVERLAY ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+  .modal-overlay.active {
+    display: block;
+    animation: overlayFadeIn 0.25s ease forwards;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+        /* ==================== CUSTOM MODAL ==================== */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 550px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 85vh;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            flex-direction: column;
+        }
+        .custom-modal.modal-lg {
+            max-width: 800px;
+        }
+       .custom-modal.active {
+    display: flex;
+    animation: modalSlideIn 0.3s ease forwards;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+        /* Forms inside modals must also be flex */
+        .custom-modal > form {
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            overflow: hidden;
+        }
+
+        .custom-modal .modal-header {
+            color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+            flex-shrink: 0;
+        }
+        .custom-modal .modal-title {
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            font-size: 1.15rem;
+        }
+        .custom-modal .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+        .custom-modal .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-modal .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-modal .modal-body::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.15);
+            border-radius: 3px;
+        }
+        .custom-modal .modal-body::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0,0,0,0.25);
+        }
+        .custom-modal .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .modal-close-btn:hover {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .custom-modal {
+                width: 95% !important;
+                max-width: 95% !important;
+            }
+        }
+        .library-icon {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        margin-right: 0px;
+        transition: transform 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -283,7 +381,9 @@
         <!-- Breadcrumb and Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-tags"></i> Tags Management</h2>
+                <h2 class="mb-1"><img src="/images/tag_black_fill.png"
+                                      class="library-icon"
+                                      alt="Document Library Icon"> Tags Management</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -297,7 +397,7 @@
             </div>
             <!-- Create button - visible to Admin and Manager -->
             <button class="btn" id="createTagBtn"
-                    data-bs-toggle="modal" data-bs-target="#createTagModal"
+                    onclick="openCreateTagModal()"
                     style="display: none; background-color: #4DA3FF; color:#ffffff;">
                 <i class="bi bi-plus-circle me-2"></i> Create Tag
             </button>
@@ -353,121 +453,106 @@
     </div>
 </div>
 
-<!-- Create Tag Modal -->
-<div class="modal fade" id="createTagModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="createTagForm">
-                <div class="modal-header  text-white" style="background-color: #4DA3FF;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle me-2"></i>Create New Tag
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tag Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createTagName" name="tagName"
-                               placeholder="Enter tag name" required minlength="2" maxlength="50">
-                        <small class="text-muted">2-50 characters</small>
-                        </br>
-                        <small class="text-muted">Spaces are not allowed.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #4DA3FF; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Create Tag
-                    </button>
-                </div>
-            </form>
+<!-- ==================== MODAL OVERLAY (shared) ==================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeActiveModal()"></div>
+
+<!-- ==================== CREATE TAG MODAL ==================== -->
+<div class="custom-modal" id="createTagModal">
+    <form id="createTagForm">
+        <div class="modal-header" style="background-color: #4DA3FF;">
+            <h5 class="modal-title">
+                <i class="bi bi-plus-circle me-2"></i>Create New Tag
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('createTagModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Tag Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="createTagName" name="tagName"
+                       placeholder="Enter tag name" required minlength="2" maxlength="50">
+                <small class="text-muted">2-50 characters</small>
+                <br>
+                <small class="text-muted">Spaces are not allowed.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('createTagModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #4DA3FF; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Create Tag
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== EDIT TAG MODAL ==================== -->
+<div class="custom-modal" id="editTagModal">
+    <form id="editTagForm">
+        <input type="hidden" id="editTagId">
+        <div class="modal-header" style="background-color: #4DA3FF;">
+            <h5 class="modal-title">
+                <i class="bi bi-pencil-square me-2"></i>Edit Tag
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('editTagModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Tag Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editTagName" name="tagName"
+                       required minlength="2" maxlength="50">
+                <small class="text-muted">2-50 characters</small>
+                <br>
+                <small class="text-muted">Spaces are not allowed.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editTagModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #4DA3FF; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Update Tag
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== DELETE TAG MODAL ==================== -->
+<div class="custom-modal" id="deleteModal">
+    <div class="modal-header bg-danger" style="background-color: #dc3545 !important;">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle me-2"></i>Delete Tag
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p id="deleteModalMessage">Are you sure you want to delete this tag? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+            <i class="bi bi-trash me-2"></i> Delete
+        </button>
+    </div>
+</div>
+
+<!-- ==================== DOCUMENTS BY TAG MODAL ==================== -->
+<div class="custom-modal modal-lg" id="documentsModal">
+    <div class="modal-header" style="background-color: #4DA3FF;">
+        <h5 class="modal-title">
+            <i class="bi bi-files me-2"></i>Documents using tag: <span id="documentsModalTagName"></span>
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('documentsModal')">&times;</button>
+    </div>
+    <div class="modal-body p-0">
+        <div class="documents-loading" id="documentsLoading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading documents...</p>
+        </div>
+        <div class="documents-modal-content" id="documentsListContainer">
+            <!-- Documents will be loaded here -->
         </div>
     </div>
 </div>
 
-<!-- Edit Tag Modal -->
-<div class="modal fade" id="editTagModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="editTagForm">
-                <input type="hidden" id="editTagId">
-                <div class="modal-header" style="background-color: #4DA3FF; color:#ffffff;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-pencil-square me-2"></i>Edit Tag
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tag Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="editTagName" name="tagName"
-                               required minlength="2" maxlength="50">
-                        <small class="text-muted">2-50 characters</small>
-                        </br>
-                        <small class="text-muted">Spaces are not allowed.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #4DA3FF; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Update Tag
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Tag
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="deleteModalMessage">Are you sure you want to delete this tag? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Documents by Tag Modal -->
-<div class="modal fade" id="documentsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header" style="background-color: #4DA3FF; color:#ffffff;">
-                <h5 class="modal-title">
-                    <i class="bi bi-files me-2"></i>Documents using tag: <span id="documentsModalTagName"></span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="documents-loading" id="documentsLoading">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Loading documents...</p>
-                </div>
-                <div class="documents-modal-content" id="documentsListContainer">
-                    <!-- Documents will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 <!-- Scroll to Top Button -->
 <button id="scrollTopBtn" title="Go to top">
     <i class="bi bi-arrow-up"></i>
@@ -481,10 +566,10 @@
     const API_BASE_URL = '/api/tags';
 
     let allTags = [];
-    let createModal, editModal, deleteModal, documentsModal;
     let deleteTagId = null;
+    let activeModalId = null;
 
-    // Get user role from hidden input (populated by Thymeleaf from navbar)
+    // Get user role from hidden input
     const userRole = document.getElementById('userRole')?.value || 'Viewer';
     const userName = document.getElementById('userName')?.value || 'User';
 
@@ -493,94 +578,231 @@
     console.log('Role:', userRole);
     console.log('============================');
 
-    // Initialize on page load
+    // ==================== MODAL POSITIONING ====================
+
+    function centerModalToMainContent(modalId) {
+        const modal = document.getElementById(modalId);
+        const mainContent = document.querySelector('.main-content');
+        if (!modal || !mainContent) return;
+
+        const mainRect = mainContent.getBoundingClientRect();
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
+
+        const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+        const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.transform = 'none';
+    }
+
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+    if (!modal || !overlay) return;
+
+    if (activeModalId && activeModalId !== modalId) {
+        closeModal(activeModalId);
+    }
+
+    activeModalId = modalId;
+
+    // Step 1: Make modal visible but invisible to measure dimensions
+    modal.style.visibility = 'hidden';
+    modal.style.display = 'flex';
+
+    // Step 2: Position it correctly while still invisible
+    centerModalToMainContent(modalId);
+
+    // Step 3: Hide it again, remove inline display
+    modal.style.display = '';
+    modal.style.visibility = '';
+
+    // Step 4: Now show with animation — appears at correct position
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById('modalOverlay');
+
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.left = '';
+            modal.style.top = '';
+            modal.style.transform = '';
+        }
+        if (overlay) {
+            overlay.classList.remove('active');
+        }
+
+        document.body.style.overflow = '';
+        activeModalId = null;
+
+        // Cleanup per modal
+        if (modalId === 'createTagModal') {
+            document.getElementById('createTagForm').reset();
+            clearInlineErrors('createTagModal');
+        } else if (modalId === 'editTagModal') {
+            document.getElementById('editTagForm').reset();
+            document.getElementById('editTagId').value = '';
+            clearInlineErrors('editTagModal');
+        } else if (modalId === 'deleteModal') {
+            deleteTagId = null;
+        }
+    }
+
+    function closeActiveModal() {
+        if (activeModalId) closeModal(activeModalId);
+    }
+
+    function clearInlineErrors(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.querySelectorAll('.inline-error').forEach(el => el.textContent = '');
+        }
+    }
+
+    // ==================== INITIALIZATION ====================
+
     document.addEventListener('DOMContentLoaded', async function() {
-        // Initialize modals
-        createModal = new bootstrap.Modal(document.getElementById('createTagModal'));
-        editModal = new bootstrap.Modal(document.getElementById('editTagModal'));
-        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        documentsModal = new bootstrap.Modal(document.getElementById('documentsModal'));
-
-        // Apply role-based restrictions
         applyRoleBasedRestrictions();
-
-        // Load tags
         await loadTags();
-
-        // Setup event listeners
         setupEventListeners();
-    });
-    // Scroll to top button
-        const scrollTopBtn = document.getElementById("scrollTopBtn");
-        if (scrollTopBtn) {
-            window.onscroll = function() {
-                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-                    scrollTopBtn.style.display = "block";
-                } else {
-                    scrollTopBtn.style.display = "none";
-                }
-            };
 
-            scrollTopBtn.addEventListener("click", function() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
+        // Re-center modal on resize
+        window.addEventListener('resize', function() {
+            if (activeModalId) centerModalToMainContent(activeModalId);
+        });
+
+        // Re-center on sidebar toggle
+        const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                setTimeout(() => {
+                    if (activeModalId) centerModalToMainContent(activeModalId);
+                }, 350);
             });
         }
 
+        // MutationObserver for sidebar changes
+        const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+        if (sidebar) {
+            const observer = new MutationObserver(function() {
+                setTimeout(() => {
+                    if (activeModalId) centerModalToMainContent(activeModalId);
+                }, 350);
+            });
+            observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+    });
+
+    // Scroll to top button
+    const scrollTopBtn = document.getElementById("scrollTopBtn");
+    if (scrollTopBtn) {
+        window.onscroll = function() {
+            scrollTopBtn.style.display =
+                (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
+        };
+        scrollTopBtn.addEventListener("click", function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
     // Apply role-based restrictions
     function applyRoleBasedRestrictions() {
-        // Admin and Manager can create/edit/delete
         const canManage = userRole === 'Admin' || userRole === 'Manager';
-
-        console.log('Can manage (Admin or Manager)?', canManage);
-
-        // Show/hide create button based on role
         const createBtn = document.getElementById('createTagBtn');
-
-        if (canManage) {
-            if (createBtn) createBtn.style.display = 'block';
-        } else {
-            if (createBtn) createBtn.style.display = 'none';
-        }
+        if (createBtn) createBtn.style.display = canManage ? 'block' : 'none';
     }
 
     // Setup all event listeners
     function setupEventListeners() {
-        // Create form submit
         document.getElementById('createTagForm').addEventListener('submit', handleCreateTag);
-
-        // Edit form submit
         document.getElementById('editTagForm').addEventListener('submit', handleEditTag);
-
-        // Delete confirmation
         document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteTag);
-
-        // Search functionality
         document.getElementById('searchInput').addEventListener('keyup', handleSearch);
 
-        // Reset create form when modal is closed
-        document.getElementById('createTagModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('createTagForm').reset();
-        });
-
-        // Reset edit form when modal is closed
-        document.getElementById('editTagModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('editTagForm').reset();
-            document.getElementById('editTagId').value = '';
+        // Escape key closes active modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && activeModalId) closeActiveModal();
         });
     }
 
-    // Load all tags
+    // ==================== MODAL OPEN FUNCTIONS ====================
+
+    function openCreateTagModal() {
+        openModal('createTagModal');
+    }
+
+    function openEditModal(tagId, tagName) {
+        document.getElementById('editTagId').value = tagId;
+        document.getElementById('editTagName').value = tagName;
+        openModal('editTagModal');
+    }
+
+    function openDeleteModal(tagId, tagName, documentCount) {
+        deleteTagId = tagId;
+
+        if (documentCount > 0) {
+            document.getElementById('deleteModalMessage').innerHTML =
+                `Are you sure you want to delete the tag "<strong>${tagName}</strong>"?
+                <br><br>
+                <span class="text-warning"><i class="bi bi-exclamation-triangle"></i>
+                This tag is being used by ${documentCount} document(s).
+                The tag will be removed from all documents, but the documents will remain intact.</span>`;
+        } else {
+            document.getElementById('deleteModalMessage').textContent =
+                `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`;
+        }
+
+        openModal('deleteModal');
+    }
+
+    async function openDocumentsModal(tagId, tagName) {
+        document.getElementById('documentsModalTagName').textContent = tagName;
+        document.getElementById('documentsLoading').style.display = 'block';
+        document.getElementById('documentsListContainer').innerHTML = '';
+
+        openModal('documentsModal');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${tagId}/documents`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const documents = await response.json();
+            document.getElementById('documentsLoading').style.display = 'none';
+            displayDocumentsInModal(documents);
+
+            // Re-center after content loads
+            setTimeout(() => centerModalToMainContent('documentsModal'), 10);
+
+        } catch (error) {
+            console.error('Error loading documents:', error);
+            document.getElementById('documentsLoading').style.display = 'none';
+            document.getElementById('documentsListContainer').innerHTML = `
+                <div class="no-documents-message">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <p>Failed to load documents. Please try again.</p>
+                </div>`;
+        }
+    }
+
+    // ==================== DATA LOADING ====================
+
     async function loadTags() {
         showLoading(true);
         try {
             const response = await fetch(API_BASE_URL, {
                 credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
             if (!response.ok) {
@@ -592,7 +814,6 @@
             }
 
             allTags = await response.json();
-            console.log('Tags loaded:', allTags.length);
             displayTags(allTags);
             updateTagCount(allTags.length);
 
@@ -604,7 +825,6 @@
         }
     }
 
-    // Display tags in the list
     function displayTags(tags) {
         const tagsList = document.getElementById('tagsList');
         const emptyState = document.getElementById('emptyState');
@@ -619,136 +839,62 @@
         tagsList.innerHTML = '';
 
         tags.forEach(tag => {
-            const tagItem = createTagElement(tag);
-            tagsList.appendChild(tagItem);
+            tagsList.appendChild(createTagElement(tag));
         });
     }
-   // Create tag element
-function createTagElement(tag) {
-    const div = document.createElement('div');
-    div.className = 'tag-item position-relative';
-    div.setAttribute('data-tag-id', tag.id);
 
-    const createdDate = formatDate(tag.createdAt);
-    const updatedDate = formatDate(tag.updatedAt);
-    const updatedBy = tag.updatedByUsername || 'N/A';
-    const createdBy = tag.createdByUsername || 'Unknown';
+    function createTagElement(tag) {
+        const div = document.createElement('div');
+        div.className = 'tag-item position-relative';
+        div.setAttribute('data-tag-id', tag.id);
 
-    // Admin and Manager can edit/delete
-    const canManage = userRole === 'Admin' || userRole === 'Manager';
+        const createdDate = formatDate(tag.createdAt);
+        const updatedDate = formatDate(tag.updatedAt);
+        const updatedBy = tag.updatedByUsername || 'N/A';
+        const createdBy = tag.createdByUsername || 'Unknown';
+        const canManage = userRole === 'Admin' || userRole === 'Manager';
 
-    // Hover action buttons (instead of dropdown)
-    const actionsHTML = canManage ? `
-        <div class="tag-hover-actions">
-            <button class="btn-icon edit-btn" title="Edit"
-                onclick="event.stopPropagation(); openEditModal(${tag.id}, '${escapeHtml(tag.tagName).replace(/'/g, "\\'")}')">
-                <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn-icon delete-btn" title="Delete"
-                onclick="event.stopPropagation(); openDeleteModal(${tag.id}, '${escapeHtml(tag.tagName).replace(/'/g, "\\'")}', ${tag.documentCount || 0})">
-                <i class="bi bi-trash"></i>
-            </button>
-        </div>
-    ` : '';
+        const actionsHTML = canManage ? `
+            <div class="tag-hover-actions">
+                <button class="btn-icon edit-btn" title="Edit"
+                    onclick="event.stopPropagation(); openEditModal(${tag.id}, '${escapeHtml(tag.tagName).replace(/'/g, "\\'")}')">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn-icon delete-btn" title="Delete"
+                    onclick="event.stopPropagation(); openDeleteModal(${tag.id}, '${escapeHtml(tag.tagName).replace(/'/g, "\\'")}', ${tag.documentCount || 0})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>` : '';
 
-    div.innerHTML = `
-        <div class="d-flex align-items-start">
-            <!-- Tag Icon -->
-            <div class="tag-icon me-3">
-                <i class="bi bi-tag-fill"></i>
-            </div>
-
-            <!-- Tag Details -->
-            <div class="flex-grow-1">
-                <div class="mb-2">
-                    <span class="tag-badge">${escapeHtml(tag.tagName)}</span>
+        div.innerHTML = `
+            <div class="d-flex align-items-start">
+                <div class="tag-icon me-3">
+                    <i class="bi bi-tag-fill"></i>
                 </div>
-                <div class="tag-meta">
-                    <span class="me-3">
-                        <i class="bi bi-person me-1"></i>
-                        Created by <strong>${escapeHtml(createdBy)}</strong>
-                    </span>
-                    <span class="me-3">
-                        <i class="bi bi-calendar me-1"></i>
-                        On <span>${createdDate}</span>
-                    </span>
-                    <span class="me-3">
-                        <i class="bi bi-files me-1"></i>
-                        <strong>${tag.documentCount || 0}</strong> document(s)
-                    </span>
-                    <span class="me-3">
-                        <i class="bi bi-clock me-1"></i>
-                        Updated By <strong>${escapeHtml(updatedBy)}</strong>
-                    </span>
-                    <span class="me-3">
-                        <i class="bi bi-calendar-check me-1"></i>
-                        Updated On <span>${updatedDate}</span>
-                    </span>
+                <div class="flex-grow-1">
+                    <div class="mb-2">
+                        <span class="tag-badge">${escapeHtml(tag.tagName)}</span>
+                    </div>
+                    <div class="tag-meta">
+                        <span class="me-3"><i class="bi bi-person me-1"></i> Created by <strong>${escapeHtml(createdBy)}</strong></span>
+                        <span class="me-3"><i class="bi bi-calendar me-1"></i> On <span>${createdDate}</span></span>
+                        <span class="me-3"><i class="bi bi-files me-1"></i> <strong>${tag.documentCount || 0}</strong> document(s)</span>
+                        <span class="me-3"><i class="bi bi-clock me-1"></i> Updated By <strong>${escapeHtml(updatedBy)}</strong></span>
+                        <span class="me-3"><i class="bi bi-calendar-check me-1"></i> Updated On <span>${updatedDate}</span></span>
+                    </div>
                 </div>
-            </div>
+                ${actionsHTML}
+            </div>`;
 
-            ${actionsHTML}
-        </div>
-    `;
-
-    // Add click event to open documents modal
-    div.addEventListener('click', function(e) {
-        // Don't trigger if clicking on action buttons
-        if (e.target.closest('.tag-hover-actions')) {
-            return;
-        }
-        openDocumentsModal(tag.id, tag.tagName);
-    });
-
-    return div;
-}
-
-    // Open documents modal
-    async function openDocumentsModal(tagId, tagName) {
-        // Set the tag name in modal title
-        document.getElementById('documentsModalTagName').textContent = tagName;
-
-        // Show loading state
-        document.getElementById('documentsLoading').style.display = 'block';
-        document.getElementById('documentsListContainer').innerHTML = '';
-
-        // Show modal
-        documentsModal.show();
-
-        try {
-            // Fetch documents for this tag
-            const response = await fetch(`${API_BASE_URL}/${tagId}/documents`, {
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        div.addEventListener('click', function(e) {
+            if (!e.target.closest('.tag-hover-actions')) {
+                openDocumentsModal(tag.id, tag.tagName);
             }
+        });
 
-            const documents = await response.json();
-
-            // Hide loading
-            document.getElementById('documentsLoading').style.display = 'none';
-
-            // Display documents
-            displayDocumentsInModal(documents);
-
-        } catch (error) {
-            console.error('Error loading documents:', error);
-            document.getElementById('documentsLoading').style.display = 'none';
-            document.getElementById('documentsListContainer').innerHTML = `
-                <div class="no-documents-message">
-                    <i class="bi bi-exclamation-circle"></i>
-                    <p>Failed to load documents. Please try again.</p>
-                </div>
-            `;
-        }
+        return div;
     }
 
-    // Display documents in modal
     function displayDocumentsInModal(documents) {
         const container = document.getElementById('documentsListContainer');
 
@@ -757,8 +903,7 @@ function createTagElement(tag) {
                 <div class="no-documents-message">
                     <i class="bi bi-file-earmark-x"></i>
                     <p>No documents using this tag</p>
-                </div>
-            `;
+                </div>`;
             return;
         }
 
@@ -769,80 +914,66 @@ function createTagElement(tag) {
                     <i class="bi bi-file-earmark-text"></i>
                     <span>${escapeHtml(doc.title)}</span>
                     <i class="bi bi-box-arrow-up-right open-icon"></i>
-                </div>
-            `;
+                </div>`;
         });
 
         container.innerHTML = html;
     }
 
-    // Open document in DocViewer
     function openDocument(docId) {
         window.open(`/DocViewer?id=${docId}`, '_blank');
     }
 
-    // Handle create tag
-async function handleCreateTag(e) {
-    e.preventDefault();
+    // ==================== FORM HANDLERS ====================
 
-    const input = document.getElementById('createTagName');
-    let tagName = input.value.trim().toLowerCase().replace(/\s+/g, '');
-    const errorEl = getOrCreateErrorElement(input);
+    async function handleCreateTag(e) {
+        e.preventDefault();
 
-    // Remove old error text
-    errorEl.textContent = '';
+        const input = document.getElementById('createTagName');
+        let tagName = input.value.trim().toLowerCase().replace(/\s+/g, '');
+        const errorEl = getOrCreateErrorElement(input);
+        errorEl.textContent = '';
 
-    // Validation: length
-    if (tagName.length < 2 || tagName.length > 50) {
-        errorEl.textContent = 'Tag name must be between 2 and 50 characters (no spaces).';
-        return;
-    }
-
-    // Validation: check duplicate
-    const exists = allTags.some(t => t.tagName.toLowerCase() === tagName);
-    if (exists) {
-        errorEl.textContent = `Tag "${tagName}" already exists.`;
-        return;
-    }
-
-    try {
-        const response = await fetch(API_BASE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ tagName })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to create tag');
+        if (tagName.length < 2 || tagName.length > 50) {
+            errorEl.textContent = 'Tag name must be between 2 and 50 characters (no spaces).';
+            return;
         }
 
-        createModal.hide();
-        input.value = '';
-        await loadTags();
-        showAlert('Tag created successfully!', 'success');
+        const exists = allTags.some(t => t.tagName.toLowerCase() === tagName);
+        if (exists) {
+            errorEl.textContent = `Tag "${tagName}" already exists.`;
+            return;
+        }
 
-    } catch (error) {
-        errorEl.textContent = error.message || 'Failed to create tag.';
-    }
-}
-// Open edit modal
-    function openEditModal(tagId, tagName) {
-        document.getElementById('editTagId').value = tagId;
-        document.getElementById('editTagName').value = tagName;
-        editModal.show();
+        try {
+            const response = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ tagName })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create tag');
+            }
+
+            closeModal('createTagModal');
+            await loadTags();
+            showAlert('Tag created successfully!', 'success');
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Failed to create tag.';
+        }
     }
 
-// Handle edit tag
-async function handleEditTag(e) {
+   async function handleEditTag(e) {
     e.preventDefault();
 
     const input = document.getElementById('editTagName');
     let tagName = input.value.trim().toLowerCase().replace(/\s+/g, '');
     const tagId = document.getElementById('editTagId').value;
     const errorEl = getOrCreateErrorElement(input);
-
     errorEl.textContent = '';
 
     if (tagName.length < 2 || tagName.length > 50) {
@@ -855,6 +986,9 @@ async function handleEditTag(e) {
         errorEl.textContent = `Tag "${tagName}" already exists.`;
         return;
     }
+
+    // Save scroll position before DOM rebuild
+    const scrollPos = window.scrollY;
 
     try {
         const response = await fetch(`${API_BASE_URL}/${tagId}`, {
@@ -869,50 +1003,23 @@ async function handleEditTag(e) {
             throw new Error(errorData.message || 'Failed to update tag');
         }
 
-        editModal.hide();
+        closeModal('editTagModal');
         await loadTags();
         showAlert('Tag updated successfully!', 'success');
+
+        // Restore scroll position after DOM rebuild
+        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
 
     } catch (error) {
         errorEl.textContent = error.message || 'Failed to update tag.';
     }
 }
 
-// Helper function to show inline error message below input
-function getOrCreateErrorElement(input) {
-    let errorEl = input.parentElement.querySelector('.text-danger.inline-error');
-    if (!errorEl) {
-        errorEl = document.createElement('div');
-        errorEl.className = 'text-danger inline-error mt-1 small';
-        input.parentElement.appendChild(errorEl);
-    }
-    return errorEl;
-}
-
-    // Open delete modal
-    function openDeleteModal(tagId, tagName, documentCount) {
-    deleteTagId = tagId;
-
-    // Show different message based on document count
-    if (documentCount > 0) {
-        document.getElementById('deleteModalMessage').innerHTML =
-            `Are you sure you want to delete the tag "<strong>${tagName}</strong>"?
-
-
-            <span class="text-warning"><i class="fas fa-exclamation-triangle"></i>
-            This tag is being used by ${documentCount} document(s).
-            The tag will be removed from all documents, but the documents will remain intact.</span>`;
-    } else {
-        document.getElementById('deleteModalMessage').textContent =
-            `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`;
-    }
-
-    deleteModal.show();
-}
-
-// Handle delete tag
-async function handleDeleteTag() {
+   async function handleDeleteTag() {
     if (!deleteTagId) return;
+
+    // Save scroll position before DOM rebuild
+    const scrollPos = window.scrollY;
 
     try {
         const response = await fetch(`${API_BASE_URL}/${deleteTagId}`, {
@@ -926,18 +1033,22 @@ async function handleDeleteTag() {
         }
 
         showAlert('Tag deleted successfully!', 'success');
-        deleteModal.hide();
+        closeModal('deleteModal');
         deleteTagId = null;
         await loadTags();
+
+        // Restore scroll position after DOM rebuild
+        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
 
     } catch (error) {
         console.error('Error deleting tag:', error);
         showAlert(error.message || 'Failed to delete tag. Please try again.', 'danger');
-        deleteModal.hide();
+        closeModal('deleteModal');
     }
 }
 
-    // Handle search
+    // ==================== UTILITY FUNCTIONS ====================
+
     function handleSearch() {
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
         const tagItems = document.querySelectorAll('.tag-item');
@@ -945,45 +1056,41 @@ async function handleDeleteTag() {
 
         tagItems.forEach(item => {
             const text = item.textContent.toLowerCase();
-            if (text.includes(searchTerm)) {
-                item.style.display = '';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
+            const isVisible = text.includes(searchTerm);
+            item.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
         });
 
         updateTagCount(visibleCount);
     }
 
-    // Update tag count
     function updateTagCount(count) {
         document.getElementById('tagCount').textContent = count;
         document.getElementById('totalTagsCount').textContent = count;
     }
 
-    // Date formatting function
+    function getOrCreateErrorElement(input) {
+        let errorEl = input.parentElement.querySelector('.text-danger.inline-error');
+        if (!errorEl) {
+            errorEl = document.createElement('div');
+            errorEl.className = 'text-danger inline-error mt-1 small';
+            input.parentElement.appendChild(errorEl);
+        }
+        return errorEl;
+    }
+
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';
-
         try {
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return dateString;
-
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = months[date.getMonth()];
-            const year = date.getFullYear();
-
-            return `${month} ${day}, ${year}`;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
         } catch (error) {
             return dateString;
         }
     }
 
-    // Show alert message
     function showAlert(message, type) {
         const alertContainer = document.getElementById('alertContainer');
         const alertDiv = document.createElement('div');
@@ -991,51 +1098,25 @@ async function handleDeleteTag() {
 
         const icon = type === 'success' ? 'check-circle-fill' :
                      type === 'danger' ? 'exclamation-circle-fill' :
-                     type === 'warning' ? 'exclamation-triangle-fill' :
-                     'info-circle-fill';
+                     type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill';
 
         alertDiv.innerHTML = `
-            <i class="bi bi-${icon} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+            <i class="bi bi-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
 
         alertContainer.appendChild(alertDiv);
-
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
+        setTimeout(() => alertDiv.remove(), 5000);
     }
 
-    // Show/hide loading spinner
     function showLoading(show) {
         document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
         document.getElementById('tagsContainer').style.display = show ? 'none' : 'block';
     }
 
-    // Escape HTML to prevent XSS
     function escapeHtml(text) {
         if (!text) return '';
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return String(text).replace(/[&<>"']/g, m => map[m]);
-    }
-</script>
-<script>
-    function goBack() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
-            window.history.back();
-        } else {
-            // Fallback if there's no referrer (like direct load)
-            window.location.href = '/documents';
-        }
     }
 </script>
 </body>

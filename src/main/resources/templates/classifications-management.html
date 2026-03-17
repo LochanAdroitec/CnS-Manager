@@ -88,7 +88,7 @@
             font-size: 0.85rem;
         }
 
-        /* Hover action buttons (hidden by default) */
+        /* Hover action buttons */
         .classification-hover-actions {
             position: absolute;
             top: 10px;
@@ -99,14 +99,10 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-
-        /* Show only when hovering on card */
         .classification-item:hover .classification-hover-actions {
             opacity: 1;
             visibility: visible;
         }
-
-        /* Icon buttons */
         .btn-icon {
             border: 1px solid #d1d5db;
             border-radius: 6px;
@@ -118,8 +114,6 @@
             align-items: center;
             justify-content: center;
         }
-
-        /* Edit button */
         .edit-btn {
             color: #3b82f6;
             border-color: #3b82f6;
@@ -127,10 +121,7 @@
         .edit-btn:hover {
             background: #3b82f6;
             color: white;
-            border-color: #3b82f6;
         }
-
-        /* Delete button */
         .delete-btn {
             color: #ef4444;
             border-color: #ef4444;
@@ -138,8 +129,8 @@
         .delete-btn:hover {
             background: #ef4444;
             color: white;
-            border-color: #ef4444;
         }
+
         #scrollTopBtn {
             display: none;
             position: fixed;
@@ -158,17 +149,15 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             transition: background-color 0.3s;
         }
-
         #scrollTopBtn:hover {
             background-color:#1e3a5f;
         }
 
-        /* Documents Modal Styles */
+        /* Documents Modal List */
         .documents-modal-content {
             max-height: 400px;
             overflow-y: auto;
         }
-
         .document-list-item {
             padding: 12px 15px;
             border-bottom: 1px solid #e5e7eb;
@@ -178,55 +167,126 @@
             align-items: center;
             gap: 10px;
         }
-
-        .document-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .document-list-item:hover {
-            background-color: #f3f4f6;
-        }
-
-        .document-list-item i {
-            color: #1e3a5f;
-            font-size: 1.1rem;
-        }
-
-        .document-list-item span {
-            color: #1a2332;
-            font-size: 0.95rem;
-            flex: 1;
-        }
-
+        .document-list-item:last-child { border-bottom: none; }
+        .document-list-item:hover { background-color: #f3f4f6; }
+        .document-list-item i { color: #1e3a5f; font-size: 1.1rem; }
+        .document-list-item span { color: #1a2332; font-size: 0.95rem; flex: 1; }
         .document-list-item .open-icon {
-            color: #9ca3af;
-            font-size: 0.85rem;
-            opacity: 0;
-            transition: opacity 0.2s ease;
+            color: #9ca3af; font-size: 0.85rem; opacity: 0; transition: opacity 0.2s ease;
+        }
+        .document-list-item:hover .open-icon { opacity: 1; color: #1e3a5f; }
+        .no-documents-message { text-align: center; padding: 40px 20px; color: #6b7a99; }
+        .no-documents-message i { font-size: 3rem; opacity: 0.3; margin-bottom: 15px; display: block; }
+        .documents-loading { text-align: center; padding: 40px 20px; }
+
+        /* ==================== MODAL OVERLAY ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+       .modal-overlay.active {
+    display: block;
+    animation: overlayFadeIn 0.25s ease forwards;
+}
+
+@keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+        /* ==================== CUSTOM MODAL ==================== */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 550px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 85vh;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            flex-direction: column;
+        }
+        .custom-modal.modal-lg { max-width: 800px; }
+  .custom-modal.active {
+    display: flex;
+    animation: modalSlideIn 0.3s ease forwards;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+        .custom-modal > form {
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            overflow: hidden;
         }
 
-        .document-list-item:hover .open-icon {
-            opacity: 1;
-            color: #1e3a5f;
+        .custom-modal .modal-header {
+            color: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+            flex-shrink: 0;
         }
+        .custom-modal .modal-title {
+            font-weight: 600; color: #ffffff; margin: 0; font-size: 1.15rem;
+        }
+        .custom-modal .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0;
+        }
+        .custom-modal .modal-body::-webkit-scrollbar { width: 6px; }
+        .custom-modal .modal-body::-webkit-scrollbar-track { background: transparent; }
+        .custom-modal .modal-body::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.15); border-radius: 3px; }
+        .custom-modal .modal-body::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.25); }
+        .custom-modal .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 0 0 12px 12px;
+        }
+        .modal-close-btn {
+            background: none; border: none; color: white;
+            font-size: 1.5rem; cursor: pointer; padding: 0;
+            line-height: 1; opacity: 0.8; transition: opacity 0.2s;
+        }
+        .modal-close-btn:hover { opacity: 1; }
 
-        .no-documents-message {
-            text-align: center;
-            padding: 40px 20px;
-            color: #6b7a99;
+        @media (max-width: 768px) {
+            .custom-modal { width: 95% !important; max-width: 95% !important; }
         }
-
-        .no-documents-message i {
-            font-size: 3rem;
-            opacity: 0.3;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .documents-loading {
-            text-align: center;
-            padding: 40px 20px;
-        }
+        .library-icon {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        margin-right: 0px;
+        transition: transform 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -247,7 +307,9 @@
         <!-- Breadcrumb and Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-diagram-3"></i> Classification Management</h2>
+                <h2 class="mb-1"><img src="/images/classification_black_fill.png"
+                                      class="library-icon"
+                                      alt="Document Library Icon"> Classification Management</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -260,8 +322,8 @@
                 </nav>
             </div>
             <!-- Create button - Only visible to Admin -->
-            <button class="btn " id="createClassificationBtn"
-                    data-bs-toggle="modal" data-bs-target="#createClassificationModal"
+            <button class="btn" id="createClassificationBtn"
+                    onclick="openCreateClassificationModal()"
                     style="display: none; background-color: #1e3a5f; color:#ffffff;">
                 <i class="bi bi-plus-circle me-2"></i> Create Classification
             </button>
@@ -296,6 +358,7 @@
             </div>
             <p class="mt-3 text-muted">Loading classifications...</p>
         </div>
+
         <!-- Edition Upgrade Message (INLINE) -->
         <div id="inlineEditionUpgrade"
              style="display:none; background:#fff;
@@ -303,7 +366,9 @@
             box-shadow:0 10px 30px rgba(0,0,0,0.15);
             text-align:center;">
 
-            <div style="font-size:56px; margin-bottom:20px;">🔖</div>
+            <div style="font-size:56px; margin-bottom:20px;"><img src="/images/classification_black_fill.png" style="height:60px; width:60px;"
+                                                                  class="library-icon"
+                                                                  alt="Document Library Icon"></div>
 
             <h3 style="color:#1e3a5f; margin-bottom:15px;">
                 Classification Management
@@ -327,7 +392,6 @@
             </p>
         </div>
 
-
         <!-- Classifications List Container -->
         <div class="classifications-container" id="classificationsContainer">
             <h5 class="mb-3">
@@ -348,120 +412,102 @@
     </div>
 </div>
 
-<!-- Create Classification Modal -->
-<div class="modal fade" id="createClassificationModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="createClassificationForm">
-                <div class="modal-header text-white" style="background-color: #1e3a5f">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle me-2"></i>Create New Classification
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Classification Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createClassificationName" name="classificationName"
-                               placeholder="Enter classification name" required minlength="2" maxlength="100">
-                        <small class="text-muted">2-100 characters</small>
+<!-- ==================== MODAL OVERLAY (shared) ==================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeActiveModal()"></div>
 
-
-                        <small class="text-muted">Spaces are not allowed. Name will be converted to lowercase.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Create Classification
-                    </button>
-                </div>
-            </form>
+<!-- ==================== CREATE CLASSIFICATION MODAL ==================== -->
+<div class="custom-modal" id="createClassificationModal">
+    <form id="createClassificationForm">
+        <div class="modal-header" style="background-color: #1e3a5f;">
+            <h5 class="modal-title">
+                <i class="bi bi-plus-circle me-2"></i>Create New Classification
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('createClassificationModal')">&times;</button>
         </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Classification Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="createClassificationName" name="classificationName"
+                       placeholder="Enter classification name" required minlength="2" maxlength="100">
+                <small class="text-muted">2-100 characters</small>
+                <br>
+                <small class="text-muted">Spaces are not allowed. Name will be converted to lowercase.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('createClassificationModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Create Classification
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== EDIT CLASSIFICATION MODAL ==================== -->
+<div class="custom-modal" id="editClassificationModal">
+    <form id="editClassificationForm">
+        <input type="hidden" id="editClassificationId">
+        <div class="modal-header" style="background-color: #1e3a5f;">
+            <h5 class="modal-title">
+                <i class="bi bi-pencil-square me-2"></i>Edit Classification
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('editClassificationModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="mb-3">
+                <label class="form-label">Classification Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editClassificationName" name="classificationName"
+                       required minlength="2" maxlength="100">
+                <small class="text-muted">2-100 characters</small>
+                <br>
+                <small class="text-muted">Spaces are not allowed. Name will be converted to lowercase.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editClassificationModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Update Classification
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== DELETE CLASSIFICATION MODAL ==================== -->
+<div class="custom-modal" id="deleteModal">
+    <div class="modal-header" style="background-color: #dc3545 !important;">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle me-2"></i>Delete Classification
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p id="deleteModalMessage">Are you sure you want to delete this classification? This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+            <i class="bi bi-trash me-2"></i> Delete
+        </button>
     </div>
 </div>
 
-<!-- Edit Classification Modal -->
-<div class="modal fade" id="editClassificationModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form id="editClassificationForm">
-                <input type="hidden" id="editClassificationId">
-                <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-pencil-square me-2"></i>Edit Classification
-                    </h5>
-                    <button type="button"  class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Classification Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="editClassificationName" name="classificationName"
-                               required minlength="2" maxlength="100">
-                        <small class="text-muted">2-100 characters</small>
-
-
-                        <small class="text-muted">Spaces are not allowed. Name will be converted to lowercase.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Update Classification
-                    </button>
-                </div>
-            </form>
-        </div>
+<!-- ==================== DOCUMENTS BY CLASSIFICATION MODAL ==================== -->
+<div class="custom-modal modal-lg" id="documentsModal">
+    <div class="modal-header" style="background-color: #1e3a5f;">
+        <h5 class="modal-title">
+            <i class="bi bi-files me-2"></i>Documents using classification: <span id="documentsModalClassificationName"></span>
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('documentsModal')">&times;</button>
     </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Classification
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal-body p-0">
+        <div class="documents-loading" id="documentsLoading">
+            <div class="spinner-border" role="status" style="color: #1e3a5f;">
+                <span class="visually-hidden">Loading...</span>
             </div>
-            <div class="modal-body">
-                <p id="deleteModalMessage">Are you sure you want to delete this classification? This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete
-                </button>
-            </div>
+            <p class="mt-2 text-muted">Loading documents...</p>
         </div>
-    </div>
-</div>
-
-<!-- Documents by Classification Modal -->
-<div class="modal fade" id="documentsModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
-                <h5 class="modal-title">
-                    <i class="bi bi-files me-2"></i>Documents using classification: <span id="documentsModalClassificationName"></span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div class="documents-loading" id="documentsLoading">
-                    <div class="spinner-border" role="status" style="color: #1e3a5f;">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Loading documents...</p>
-                </div>
-                <div class="documents-modal-content" id="documentsListContainer">
-                    <!-- Documents will be loaded here -->
-                </div>
-            </div>
+        <div class="documents-modal-content" id="documentsListContainer">
+            <!-- Documents will be loaded here -->
         </div>
     </div>
 </div>
@@ -479,112 +525,246 @@
     const API_BASE_URL = '/api/classifications';
 
     let allClassifications = [];
-    let createModal, editModal, deleteModal, documentsModal;
     let deleteClassificationId = null;
+    let activeModalId = null;
 
-    // Get user role from hidden input (populated by Thymeleaf from navbar)
     const userRole = document.getElementById('userRole')?.value || 'Viewer';
     const userName = document.getElementById('userName')?.value || 'User';
 
     console.log('====== CLASSIFICATION MANAGEMENT ======');
     console.log('User:', userName);
     console.log('Role:', userRole);
-    console.log('============================');
+    console.log('=======================================');
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async function() {
+    // ==================== MODAL POSITIONING ====================
 
+    function centerModalToMainContent(modalId) {
+        const modal = document.getElementById(modalId);
+        const mainContent = document.querySelector('.main-content');
+        if (!modal || !mainContent) return;
 
-        const accessAllowed = await checkClassificationManagementAccess();
-    if (!accessAllowed) {
-        return; // ⛔ STOP for Essential Edition
+        const mainRect = mainContent.getBoundingClientRect();
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
+
+        const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+        const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.transform = 'none';
     }
-        // Initialize modals
-        createModal = new bootstrap.Modal(document.getElementById('createClassificationModal'));
-        editModal = new bootstrap.Modal(document.getElementById('editClassificationModal'));
-        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        documentsModal = new bootstrap.Modal(document.getElementById('documentsModal'));
 
-        // Apply role-based restrictions
-        applyRoleBasedRestrictions();
+   function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+    if (!modal || !overlay) return;
 
-        // Load classifications
-        await loadClassifications();
+    if (activeModalId && activeModalId !== modalId) {
+        closeModal(activeModalId);
+    }
 
-        // Setup event listeners
-        setupEventListeners();
-    });
+    activeModalId = modalId;
 
-    // Apply role-based restrictions
-    function applyRoleBasedRestrictions() {
-        // Only Admin can create/edit/delete
-        const isAdmin = userRole === 'Admin';
+    // Step 1: Make modal visible but invisible to measure dimensions
+    modal.style.visibility = 'hidden';
+    modal.style.display = 'flex';
 
-        console.log('Can manage (Admin only)?', isAdmin);
+    // Step 2: Position it correctly while still invisible
+    centerModalToMainContent(modalId);
 
-        // Show/hide create button based on role
-        const createBtn = document.getElementById('createClassificationBtn');
+    // Step 3: Hide it again, remove inline display
+    modal.style.display = '';
+    modal.style.visibility = '';
 
-        if (isAdmin) {
-            if (createBtn) createBtn.style.display = 'block';
-        } else {
-            if (createBtn) createBtn.style.display = 'none';
+    // Step 4: Now show with animation — appears at correct position
+    modal.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const overlay = document.getElementById('modalOverlay');
+
+        if (modal) {
+            modal.classList.remove('active');
+            modal.style.left = '';
+            modal.style.top = '';
+            modal.style.transform = '';
+        }
+        if (overlay) overlay.classList.remove('active');
+
+        document.body.style.overflow = '';
+        activeModalId = null;
+
+        if (modalId === 'createClassificationModal') {
+            document.getElementById('createClassificationForm').reset();
+            clearInlineErrors('createClassificationModal');
+        } else if (modalId === 'editClassificationModal') {
+            document.getElementById('editClassificationForm').reset();
+            document.getElementById('editClassificationId').value = '';
+            clearInlineErrors('editClassificationModal');
+        } else if (modalId === 'deleteModal') {
+            deleteClassificationId = null;
         }
     }
-    // Scroll to top button
-        const scrollTopBtn = document.getElementById("scrollTopBtn");
-        if (scrollTopBtn) {
-            window.onscroll = function() {
-                if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-                    scrollTopBtn.style.display = "block";
-                } else {
-                    scrollTopBtn.style.display = "none";
-                }
-            };
 
-            scrollTopBtn.addEventListener("click", function() {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
+    function closeActiveModal() {
+        if (activeModalId) closeModal(activeModalId);
+    }
+
+    function clearInlineErrors(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.querySelectorAll('.inline-error').forEach(el => el.textContent = '');
+    }
+
+    // ==================== INITIALIZATION ====================
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const accessAllowed = await checkClassificationManagementAccess();
+        if (!accessAllowed) return;
+
+        applyRoleBasedRestrictions();
+        await loadClassifications();
+        setupEventListeners();
+
+        window.addEventListener('resize', function() {
+            if (activeModalId) centerModalToMainContent(activeModalId);
+        });
+
+        const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                setTimeout(() => {
+                    if (activeModalId) centerModalToMainContent(activeModalId);
+                }, 350);
             });
         }
 
-    // Setup all event listeners
-    function setupEventListeners() {
-        // Create form submit
-        document.getElementById('createClassificationForm').addEventListener('submit', handleCreateClassification);
+        const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+        if (sidebar) {
+            const observer = new MutationObserver(function() {
+                setTimeout(() => {
+                    if (activeModalId) centerModalToMainContent(activeModalId);
+                }, 350);
+            });
+            observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
+    });
 
-        // Edit form submit
-        document.getElementById('editClassificationForm').addEventListener('submit', handleEditClassification);
-
-        // Delete confirmation
-        document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteClassification);
-
-        // Search functionality
-        document.getElementById('searchInput').addEventListener('keyup', handleSearch);
-
-        // Reset create form when modal is closed
-        document.getElementById('createClassificationModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('createClassificationForm').reset();
-        });
-
-        // Reset edit form when modal is closed
-        document.getElementById('editClassificationModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('editClassificationForm').reset();
-            document.getElementById('editClassificationId').value = '';
+    // Scroll to top
+    const scrollTopBtn = document.getElementById("scrollTopBtn");
+    if (scrollTopBtn) {
+        window.onscroll = function() {
+            scrollTopBtn.style.display =
+                (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) ? "block" : "none";
+        };
+        scrollTopBtn.addEventListener("click", function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 
-    // Load all classifications
+    function applyRoleBasedRestrictions() {
+        const isAdmin = userRole === 'Admin';
+        const createBtn = document.getElementById('createClassificationBtn');
+        if (createBtn) createBtn.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    function setupEventListeners() {
+        document.getElementById('createClassificationForm').addEventListener('submit', handleCreateClassification);
+        document.getElementById('editClassificationForm').addEventListener('submit', handleEditClassification);
+        document.getElementById('confirmDeleteBtn').addEventListener('click', handleDeleteClassification);
+        document.getElementById('searchInput').addEventListener('keyup', handleSearch);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && activeModalId) closeActiveModal();
+        });
+    }
+
+    // ==================== MODAL OPEN FUNCTIONS ====================
+
+    function openCreateClassificationModal() {
+        if (userRole !== 'Admin') {
+            showAlert('Only Admin users can create classifications.', 'danger');
+            return;
+        }
+        openModal('createClassificationModal');
+    }
+
+    function openEditModal(classificationId, classificationName) {
+        if (userRole !== 'Admin') {
+            showAlert('Only Admin users can edit classifications.', 'danger');
+            return;
+        }
+        document.getElementById('editClassificationId').value = classificationId;
+        document.getElementById('editClassificationName').value = classificationName;
+        openModal('editClassificationModal');
+    }
+
+    function openDeleteModal(classificationId, classificationName, documentCount) {
+        if (userRole !== 'Admin') {
+            showAlert('Only Admin users can delete classifications.', 'danger');
+            return;
+        }
+
+        deleteClassificationId = classificationId;
+
+        if (documentCount > 0) {
+            document.getElementById('deleteModalMessage').innerHTML =
+                `Are you sure you want to delete the classification "<strong>${classificationName}</strong>"?
+                <br><br>
+                <span class="text-warning"><i class="bi bi-exclamation-triangle"></i>
+                This classification is being used by ${documentCount} document(s).
+                The classification will be removed from all documents, but the documents will remain intact.</span>`;
+        } else {
+            document.getElementById('deleteModalMessage').textContent =
+                `Are you sure you want to delete the classification "${classificationName}"? This action cannot be undone.`;
+        }
+
+        openModal('deleteModal');
+    }
+
+    async function openDocumentsModal(classificationId, classificationName) {
+        document.getElementById('documentsModalClassificationName').textContent = classificationName;
+        document.getElementById('documentsLoading').style.display = 'block';
+        document.getElementById('documentsListContainer').innerHTML = '';
+
+        openModal('documentsModal');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/${classificationId}/documents`, {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+            const documents = await response.json();
+            document.getElementById('documentsLoading').style.display = 'none';
+            displayDocumentsInModal(documents);
+
+            setTimeout(() => centerModalToMainContent('documentsModal'), 10);
+
+        } catch (error) {
+            console.error('Error loading documents:', error);
+            document.getElementById('documentsLoading').style.display = 'none';
+            document.getElementById('documentsListContainer').innerHTML = `
+                <div class="no-documents-message">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <p>Failed to load documents. Please try again.</p>
+                </div>`;
+        }
+    }
+
+    // ==================== DATA LOADING ====================
+
     async function loadClassifications() {
         showLoading(true);
         try {
             const response = await fetch(API_BASE_URL, {
                 credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
+                headers: { 'Accept': 'application/json' }
             });
 
             if (!response.ok) {
@@ -596,7 +776,6 @@
             }
 
             allClassifications = await response.json();
-            console.log('Classifications loaded:', allClassifications.length);
             displayClassifications(allClassifications);
             updateClassificationCount(allClassifications.length);
 
@@ -608,27 +787,21 @@
         }
     }
 
-    // Display classifications in the list
     function displayClassifications(classifications) {
-        const classificationsList = document.getElementById('classificationsList');
+        const list = document.getElementById('classificationsList');
         const emptyState = document.getElementById('emptyState');
 
         if (classifications.length === 0) {
-            classificationsList.innerHTML = '';
+            list.innerHTML = '';
             emptyState.style.display = 'block';
             return;
         }
 
         emptyState.style.display = 'none';
-        classificationsList.innerHTML = '';
-
-        classifications.forEach(classification => {
-            const classificationItem = createClassificationElement(classification);
-            classificationsList.appendChild(classificationItem);
-        });
+        list.innerHTML = '';
+        classifications.forEach(c => list.appendChild(createClassificationElement(c)));
     }
 
-    // Create classification element with hover actions
     function createClassificationElement(classification) {
         const div = document.createElement('div');
         div.className = 'classification-item position-relative';
@@ -638,11 +811,8 @@
         const updatedDate = formatDate(classification.updatedAt);
         const updatedBy = classification.updatedByUsername || 'N/A';
         const createdBy = classification.createdByUsername || 'Unknown';
-
-        // Only Admin can edit/delete
         const isAdmin = userRole === 'Admin';
 
-        // Hover action buttons (instead of dropdown)
         const actionsHTML = isAdmin ? `
             <div class="classification-hover-actions">
                 <button class="btn-icon edit-btn" title="Edit"
@@ -653,107 +823,37 @@
                     onclick="event.stopPropagation(); openDeleteModal(${classification.id}, '${escapeHtml(classification.classificationName).replace(/'/g, "\\'")}', ${classification.documentCount || 0})">
                     <i class="bi bi-trash"></i>
                 </button>
-            </div>
-        ` : '';
+            </div>` : '';
 
         div.innerHTML = `
             <div class="d-flex align-items-start">
-                <!-- Classification Icon -->
                 <div class="classification-icon me-3">
                     <i class="bi bi-diagram-3-fill"></i>
                 </div>
-
-                <!-- Classification Details -->
                 <div class="flex-grow-1">
                     <div class="mb-2">
                         <span class="classification-badge">${escapeHtml(classification.classificationName)}</span>
                     </div>
                     <div class="classification-meta">
-                        <span class="me-3">
-                            <i class="bi bi-person me-1"></i>
-                            Created by <strong>${escapeHtml(createdBy)}</strong>
-                        </span>
-                        <span class="me-3">
-                            <i class="bi bi-calendar me-1"></i>
-                            On <span>${createdDate}</span>
-                        </span>
-                        <span class="me-3">
-                            <i class="bi bi-files me-1"></i>
-                            <strong>${classification.documentCount || 0}</strong> document(s)
-                        </span>
-                        <span class="me-3">
-                            <i class="bi bi-clock me-1"></i>
-                            Updated By <strong>${escapeHtml(updatedBy)}</strong>
-                        </span>
-                        <span class="me-3">
-                            <i class="bi bi-calendar-check me-1"></i>
-                            Updated On <span>${updatedDate}</span>
-                        </span>
+                        <span class="me-3"><i class="bi bi-person me-1"></i> Created by <strong>${escapeHtml(createdBy)}</strong></span>
+                        <span class="me-3"><i class="bi bi-calendar me-1"></i> On <span>${createdDate}</span></span>
+                        <span class="me-3"><i class="bi bi-files me-1"></i> <strong>${classification.documentCount || 0}</strong> document(s)</span>
+                        <span class="me-3"><i class="bi bi-clock me-1"></i> Updated By <strong>${escapeHtml(updatedBy)}</strong></span>
+                        <span class="me-3"><i class="bi bi-calendar-check me-1"></i> Updated On <span>${updatedDate}</span></span>
                     </div>
                 </div>
-
                 ${actionsHTML}
-            </div>
-        `;
+            </div>`;
 
-        // Add click event to open documents modal
         div.addEventListener('click', function(e) {
-            // Don't trigger if clicking on action buttons
-            if (e.target.closest('.classification-hover-actions')) {
-                return;
+            if (!e.target.closest('.classification-hover-actions')) {
+                openDocumentsModal(classification.id, classification.classificationName);
             }
-            openDocumentsModal(classification.id, classification.classificationName);
         });
 
         return div;
     }
 
-    // Open documents modal
-    async function openDocumentsModal(classificationId, classificationName) {
-        // Set the classification name in modal title
-        document.getElementById('documentsModalClassificationName').textContent = classificationName;
-
-        // Show loading state
-        document.getElementById('documentsLoading').style.display = 'block';
-        document.getElementById('documentsListContainer').innerHTML = '';
-
-        // Show modal
-        documentsModal.show();
-
-        try {
-            // Fetch documents for this classification
-            const response = await fetch(`${API_BASE_URL}/${classificationId}/documents`, {
-                credentials: 'same-origin',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const documents = await response.json();
-
-            // Hide loading
-            document.getElementById('documentsLoading').style.display = 'none';
-
-            // Display documents
-            displayDocumentsInModal(documents);
-
-        } catch (error) {
-            console.error('Error loading documents:', error);
-            document.getElementById('documentsLoading').style.display = 'none';
-            document.getElementById('documentsListContainer').innerHTML = `
-                <div class="no-documents-message">
-                    <i class="bi bi-exclamation-circle"></i>
-                    <p>Failed to load documents. Please try again.</p>
-                </div>
-            `;
-        }
-    }
-
-    // Display documents in modal
     function displayDocumentsInModal(documents) {
         const container = document.getElementById('documentsListContainer');
 
@@ -762,8 +862,7 @@
                 <div class="no-documents-message">
                     <i class="bi bi-file-earmark-x"></i>
                     <p>No documents using this classification</p>
-                </div>
-            `;
+                </div>`;
             return;
         }
 
@@ -774,43 +873,35 @@
                     <i class="bi bi-file-earmark-text"></i>
                     <span>${escapeHtml(doc.title)}</span>
                     <i class="bi bi-box-arrow-up-right open-icon"></i>
-                </div>
-            `;
+                </div>`;
         });
-
         container.innerHTML = html;
     }
 
-    // Open document in DocViewer
     function openDocument(docId) {
         window.open(`/DocViewer?id=${docId}`, '_blank');
     }
 
-    // Handle create classification (Admin only)
+    // ==================== FORM HANDLERS ====================
+
     async function handleCreateClassification(e) {
         e.preventDefault();
 
-        // Check if user is Admin
         if (userRole !== 'Admin') {
             showAlert('Only Admin users can create classifications.', 'danger');
             return;
         }
 
         const input = document.getElementById('createClassificationName');
-        // Remove spaces and convert to lowercase
         let classificationName = input.value.trim().toLowerCase().replace(/\s+/g, '');
         const errorEl = getOrCreateErrorElement(input);
-
-        // Remove old error text
         errorEl.textContent = '';
 
-        // Validation: length
         if (classificationName.length < 2 || classificationName.length > 100) {
             errorEl.textContent = 'Classification name must be between 2 and 100 characters (no spaces).';
             return;
         }
 
-        // Validation: check duplicate
         const exists = allClassifications.some(c => c.classificationName.toLowerCase() === classificationName);
         if (exists) {
             errorEl.textContent = `Classification "${classificationName}" already exists.`;
@@ -830,8 +921,7 @@
                 throw new Error(errorData.message || 'Failed to create classification');
             }
 
-            createModal.hide();
-            input.value = '';
+            closeModal('createClassificationModal');
             await loadClassifications();
             showAlert('Classification created successfully!', 'success');
 
@@ -840,71 +930,143 @@
         }
     }
 
-    // Open edit modal (Admin only)
-    function openEditModal(classificationId, classificationName) {
-        // Check if user is Admin
-        if (userRole !== 'Admin') {
-            showAlert('Only Admin users can edit classifications.', 'danger');
-            return;
-        }
+  async function handleEditClassification(e) {
+    e.preventDefault();
 
-        document.getElementById('editClassificationId').value = classificationId;
-        document.getElementById('editClassificationName').value = classificationName;
-        editModal.show();
+    if (userRole !== 'Admin') {
+        showAlert('Only Admin users can edit classifications.', 'danger');
+        return;
     }
 
-    // Handle edit classification (Admin only)
-    async function handleEditClassification(e) {
-        e.preventDefault();
+    const input = document.getElementById('editClassificationName');
+    let classificationName = input.value.trim().toLowerCase().replace(/\s+/g, '');
+    const classificationId = document.getElementById('editClassificationId').value;
+    const errorEl = getOrCreateErrorElement(input);
+    errorEl.textContent = '';
 
-        // Check if user is Admin
-        if (userRole !== 'Admin') {
-            showAlert('Only Admin users can edit classifications.', 'danger');
-            return;
+    if (classificationName.length < 2 || classificationName.length > 100) {
+        errorEl.textContent = 'Classification name must be between 2 and 100 characters (no spaces).';
+        return;
+    }
+
+    const exists = allClassifications.some(c => c.classificationName.toLowerCase() === classificationName && c.id != classificationId);
+    if (exists) {
+        errorEl.textContent = `Classification "${classificationName}" already exists.`;
+        return;
+    }
+
+    const scrollPos = window.scrollY;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/${classificationId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ classificationName })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update classification');
         }
 
-        const input = document.getElementById('editClassificationName');
-        // Remove spaces and convert to lowercase
-        let classificationName = input.value.trim().toLowerCase().replace(/\s+/g, '');
-        const classificationId = document.getElementById('editClassificationId').value;
-        const errorEl = getOrCreateErrorElement(input);
+        closeModal('editClassificationModal');
+        await loadClassifications();
+        showAlert('Classification updated successfully!', 'success');
 
-        errorEl.textContent = '';
+        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
 
-        if (classificationName.length < 2 || classificationName.length > 100) {
-            errorEl.textContent = 'Classification name must be between 2 and 100 characters (no spaces).';
-            return;
+    } catch (error) {
+        errorEl.textContent = error.message || 'Failed to update classification.';
+    }
+}
+
+   async function handleDeleteClassification() {
+    if (!deleteClassificationId) return;
+
+    if (userRole !== 'Admin') {
+        showAlert('Only Admin users can delete classifications.', 'danger');
+        closeModal('deleteModal');
+        return;
+    }
+
+    const scrollPos = window.scrollY;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/${deleteClassificationId}`, {
+            method: 'DELETE',
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete classification');
         }
 
-        const exists = allClassifications.some(c => c.classificationName.toLowerCase() === classificationName && c.id != classificationId);
-        if (exists) {
-            errorEl.textContent = `Classification "${classificationName}" already exists.`;
-            return;
-        }
+        showAlert('Classification deleted successfully!', 'success');
+        closeModal('deleteModal');
+        deleteClassificationId = null;
+        await loadClassifications();
 
+        requestAnimationFrame(() => window.scrollTo(0, scrollPos));
+
+    } catch (error) {
+        console.error('Error deleting classification:', error);
+        showAlert(error.message || 'Failed to delete classification. Please try again.', 'danger');
+        closeModal('deleteModal');
+    }
+}
+
+    // ==================== EDITION CHECK ====================
+
+    async function checkClassificationManagementAccess() {
         try {
-            const response = await fetch(`${API_BASE_URL}/${classificationId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ classificationName })
-            });
+            const response = await fetch('/api/classifications/check-management-access');
+            const data = await response.json();
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to update classification');
+            if (!data.managementAllowed) {
+                document.getElementById('classificationsContainer').style.display = 'none';
+                document.getElementById('searchInput').closest('.search-box').style.display = 'none';
+
+                document.getElementById('inlineEditionUpgrade').style.display = 'block';
+                let editionName = data.edition;
+                if (editionName === 'ED1') editionName = 'Essential Edition';
+                else if (editionName === 'ED2') editionName = 'Professional Edition';
+
+                document.getElementById('inlineEdition').textContent = editionName;
+                document.getElementById('inlineLicenseDays').textContent = data.daysRemaining || 0;
+
+                return false;
             }
-
-            editModal.hide();
-            await loadClassifications();
-            showAlert('Classification updated successfully!', 'success');
-
-        } catch (error) {
-            errorEl.textContent = error.message || 'Failed to update classification.';
+            return true;
+        } catch (err) {
+            console.error('License check failed', err);
+            showAlert('Unable to verify license. Please try again.', 'danger');
+            return false;
         }
     }
 
-    // Helper function to show inline error message below input
+    // ==================== UTILITY FUNCTIONS ====================
+
+    function handleSearch() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const items = document.querySelectorAll('.classification-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            const isVisible = item.textContent.toLowerCase().includes(searchTerm);
+            item.style.display = isVisible ? '' : 'none';
+            if (isVisible) visibleCount++;
+        });
+
+        updateClassificationCount(visibleCount);
+    }
+
+    function updateClassificationCount(count) {
+        document.getElementById('classificationCount').textContent = count;
+        document.getElementById('totalClassificationsCount').textContent = count;
+    }
+
     function getOrCreateErrorElement(input) {
         let errorEl = input.parentElement.querySelector('.text-danger.inline-error');
         if (!errorEl) {
@@ -915,114 +1077,18 @@
         return errorEl;
     }
 
-    // Open delete modal (Admin only)
-    function openDeleteModal(classificationId, classificationName, documentCount) {
-        // Check if user is Admin
-        if (userRole !== 'Admin') {
-            showAlert('Only Admin users can delete classifications.', 'danger');
-            return;
-        }
-
-        deleteClassificationId = classificationId;
-
-        // Show different message based on document count
-        if (documentCount > 0) {
-            document.getElementById('deleteModalMessage').innerHTML =
-                `Are you sure you want to delete the classification "<strong>${classificationName}</strong>"?
-
-
-                <span class="text-warning"><i class="fas fa-exclamation-triangle"></i>
-                This classification is being used by ${documentCount} document(s).
-                The classification will be removed from all documents, but the documents will remain intact.</span>`;
-        } else {
-            document.getElementById('deleteModalMessage').textContent =
-                `Are you sure you want to delete the classification "${classificationName}"? This action cannot be undone.`;
-        }
-
-        deleteModal.show();
-    }
-
-    // Handle delete classification (Admin only)
-    async function handleDeleteClassification() {
-        if (!deleteClassificationId) return;
-
-        // Check if user is Admin
-        if (userRole !== 'Admin') {
-            showAlert('Only Admin users can delete classifications.', 'danger');
-            deleteModal.hide();
-            return;
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/${deleteClassificationId}`, {
-                method: 'DELETE',
-                credentials: 'same-origin'
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete classification');
-            }
-
-            showAlert('Classification deleted successfully!', 'success');
-            deleteModal.hide();
-            deleteClassificationId = null;
-            await loadClassifications();
-
-        } catch (error) {
-            console.error('Error deleting classification:', error);
-            showAlert(error.message || 'Failed to delete classification. Please try again.', 'danger');
-            deleteModal.hide();
-        }
-    }
-
-    // Handle search
-    function handleSearch() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const classificationItems = document.querySelectorAll('.classification-item');
-        let visibleCount = 0;
-
-        classificationItems.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            if (text.includes(searchTerm)) {
-                item.style.display = '';
-                visibleCount++;
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        updateClassificationCount(visibleCount);
-    }
-
-    // Update classification count
-    function updateClassificationCount(count) {
-        document.getElementById('classificationCount').textContent = count;
-        document.getElementById('totalClassificationsCount').textContent = count;
-    }
-
-    // Date formatting function
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';
-
         try {
             const date = new Date(dateString);
             if (isNaN(date.getTime())) return dateString;
-
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = months[date.getMonth()];
-            const year = date.getFullYear();
-
-            return `${month} ${day}, ${year}`;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return `${months[date.getMonth()]} ${String(date.getDate()).padStart(2, '0')}, ${date.getFullYear()}`;
         } catch (error) {
             return dateString;
         }
     }
 
-    // Show alert message
     function showAlert(message, type) {
         const alertContainer = document.getElementById('alertContainer');
         const alertDiv = document.createElement('div');
@@ -1030,86 +1096,25 @@
 
         const icon = type === 'success' ? 'check-circle-fill' :
                      type === 'danger' ? 'exclamation-circle-fill' :
-                     type === 'warning' ? 'exclamation-triangle-fill' :
-                     'info-circle-fill';
+                     type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill';
 
         alertDiv.innerHTML = `
-            <i class="bi bi-${icon} me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+            <i class="bi bi-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
 
         alertContainer.appendChild(alertDiv);
-
-        // Auto-dismiss after 5 seconds
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
+        setTimeout(() => alertDiv.remove(), 5000);
     }
-    async function checkClassificationManagementAccess() {
-    try {
-        const response = await fetch('/api/classifications/check-management-access');
-        const data = await response.json();
 
-        if (!data.managementAllowed) {
-            // 🔴 Hide classification UI
-            document.getElementById('classificationsContainer').style.display = 'none';
-            document.getElementById('searchInput').closest('.search-box').style.display = 'none';
-
-            // 🟢 Show inline upgrade message
-            document.getElementById('inlineEditionUpgrade').style.display = 'block';
-           let editionName = data.edition;
-
-            if (editionName === 'ED1') {
-                editionName = 'Essential Edition';
-            } else if (editionName === 'ED2') {
-                editionName = 'Professional Edition';
-            }
-
-            document.getElementById('inlineEdition').textContent = editionName;
-            document.getElementById('inlineLicenseDays').textContent = data.daysRemaining || 0;
-
-            return false;
-        }
-
-        return true;
-    } catch (err) {
-        console.error('License check failed', err);
-        showAlert('Unable to verify license. Please try again.', 'danger');
-        return false;
-    }
-}
-
-
-
-    // Show/hide loading spinner
     function showLoading(show) {
         document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
         document.getElementById('classificationsContainer').style.display = show ? 'none' : 'block';
     }
 
-    // Escape HTML to prevent XSS
     function escapeHtml(text) {
         if (!text) return '';
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return String(text).replace(/[&<>"']/g, m => map[m]);
-    }
-</script>
-<script>
-    function goBack() {
-        if (document.referrer && document.referrer !== window.location.href) {
-            // Go to the referring page if available
-            window.history.back();
-        } else {
-            // Fallback if there's no referrer (like direct load)
-            window.location.href = '/documents';
-        }
     }
 </script>
 </body>

@@ -14,7 +14,7 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background-color:#f4f6f9;padding-top:70px}
-        .wizard-container{max-width:1400px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);overflow:hidden}
+        .wizard-container{width:100%;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);overflow:hidden}
         .wizard-header{background-color:#1e3a5f;padding:30px;color:#fff}
         .wizard-header h2{margin:0;font-size:24px;font-weight:600}
         .wizard-header p{margin:5px 0 0;opacity:.9;font-size:14px}
@@ -304,11 +304,12 @@
         .log-icon.error{background:#fee2e2;color:#ef4444}
         .log-icon.processing{background:#dbeafe;color:#3b82f6}
 
-        .custom-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;animation:fadeIn .3s}
-        .custom-modal-overlay.show{display:flex}
-        .custom-modal{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:600px;width:90%;max-height:80vh;animation:slideUp .3s;overflow:hidden;display:flex;flex-direction:column}
+       .custom-modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9998}
+.custom-modal-overlay.show{display:block}
+.custom-modal{position:fixed;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);max-width:600px;width:90%;max-height:85vh;animation:slideUp .3s;overflow:hidden;display:none;flex-direction:column;z-index:9999}
+.custom-modal.show{display:flex}
         @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-        .modal-header-custom{padding:25px 30px;background-color:#1e3a5f;color:#fff;display:flex;align-items:center;gap:15px}
+      .modal-header-custom{padding:25px 30px;background-color:#1e3a5f;color:#fff;display:flex;align-items:center;gap:15px;flex-shrink:0;border-radius:16px 16px 0 0}
         .modal-header-warning{background-color:#1e3a5f;}
         .modal-header-danger{background-color:#1e3a5f;}
         .modal-icon{width:50px;height:50px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px}
@@ -317,7 +318,11 @@
         .modal-title-custom p{margin:5px 0 0;font-size:13px;opacity:.9}
         .modal-close-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
         .modal-close-btn:hover{background:rgba(255,255,255,0.3);transform:rotate(90deg)}
-        .modal-body-custom{padding:30px;overflow-y:auto;flex:1}
+        .modal-body-custom{padding:30px;overflow-y:auto;flex:1;min-height:0}
+.modal-body-custom::-webkit-scrollbar{width:6px}
+.modal-body-custom::-webkit-scrollbar-track{background:transparent}
+.modal-body-custom::-webkit-scrollbar-thumb{background-color:rgba(0,0,0,0.15);border-radius:3px}
+.modal-body-custom::-webkit-scrollbar-thumb:hover{background-color:rgba(0,0,0,0.25)}
         .protected-files-list{max-height:200px;overflow-y:auto;background:#f9fafb;border-radius:8px;padding:10px;margin-top:15px}
         .protected-file-item{padding:10px;background:#fff;border-radius:6px;margin-bottom:8px;border-left:3px solid #f59e0b}
         .protected-file-item:last-child{margin-bottom:0}
@@ -330,7 +335,7 @@
         .oversized-file-name{font-weight:600;color:#1a2332;margin-bottom:3px;font-size:14px}
         .oversized-file-size{font-size:12px;color:#6b7280}
         .oversized-file-size span{display:inline-block;background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;margin-right:4px;font-size:11px}
-        .modal-footer-custom{padding:20px 30px;background:#f9fafb;display:flex;justify-content:flex-end;gap:12px}
+       .modal-footer-custom{padding:20px 30px;background:#f9fafb;display:flex;justify-content:flex-end;gap:12px;flex-shrink:0;border-radius:0 0 16px 16px}
         .modal-btn{padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .3s}
         .modal-btn-secondary{background:#fff;color:#374151;border:2px solid #e5e7eb}
         .modal-btn-secondary:hover{background:#1e3a5f}
@@ -371,6 +376,13 @@
             color: #059669;
             font-weight: 600;
         }
+        .library-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
 
     </style>
 </head>
@@ -392,7 +404,9 @@
 
         <div class="wizard-container">
             <div class="wizard-header">
-                <h2><i class="bi bi-folder-symlink me-2"></i>Bulk Upload Documents</h2>
+                <h2><img src="/images/bulk_upload_white_fill.png"
+                         class="library-icon"
+                         alt="Document Library Icon"></i>Bulk Upload Documents</h2>
                 <p>Upload multiple documents at once using folder selection and Excel metadata</p>
             </div>
             <!-- Edition Restriction Message (Initially Hidden) -->
@@ -470,9 +484,9 @@
                     <!-- Step 1 -->
                     <div class="wizard-step-content active" data-step="1">
                         <div class="drop-zone" id="dropZone">
-                            <svg class="drop-zone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            <img src="/images/bulk_upload_blue_fill.png"
+                                 class="drop-zone-icon"
+                                 alt="Document Library Icon">
                             </svg>
                             <div class="drop-zone-text">Select Folder with PDF Files</div>
                             <div class="drop-zone-info">Choose a folder containing all your PDF documents</div>
@@ -696,7 +710,7 @@
         </div>
 
         <!-- Unsaved changes modal -->
-        <div class="custom-modal-overlay" id="confirmationModal">
+        <div class="custom-modal-overlay" id="confirmationModal" onclick="if(event.target===this) closeCustomModal('confirmationModal')">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-danger">
                     <div class="modal-icon">
@@ -725,7 +739,7 @@
         </div>
 
         <!-- Upload Valid Confirmation Modal -->
-        <div class="custom-modal-overlay" id="uploadValidConfirmModal">
+        <div class="custom-modal-overlay" id="uploadValidConfirmModal" onclick="if(event.target===this) closeCustomModal('uploadValidConfirmModal')">
             <div class="custom-modal" style="max-width:700px;">
                 <div class="modal-header-custom modal-header-warning">
                     <div class="modal-icon">
@@ -769,7 +783,7 @@
         </div>
 
         <!-- PDF protection modal -->
-        <div class="custom-modal-overlay" id="pdfProtectionModal">
+        <div class="custom-modal-overlay" id="pdfProtectionModal" onclick="if(event.target===this) closeCustomModal('pdfProtectionModal')">
             <div class="custom-modal">
                 <div class="modal-header-custom modal-header-warning">
                     <div class="modal-icon">
@@ -808,7 +822,7 @@
         </div>
 
         <!-- ====== CHANGE 1: Oversized Files Modal ====== -->
-        <div class="custom-modal-overlay" id="oversizedFilesModal">
+        <div class="custom-modal-overlay" id="oversizedFilesModal" onclick="if(event.target===this) closeCustomModal('oversizedFilesModal')">
             <div class="custom-modal" style="max-width:650px;">
                 <div class="modal-header-custom modal-header-danger">
                     <div class="modal-icon">
@@ -846,7 +860,7 @@
         </div>
 
         <!-- ====== EXCESS TAGS MODAL (Step 3 – after Excel upload) ====== -->
-        <div class="custom-modal-overlay" id="excessTagsModal">
+        <div class="custom-modal-overlay" id="excessTagsModal" onclick="if(event.target===this) closeCustomModal('excessTagsModal')">
             <div class="custom-modal" style="max-width:680px;">
                 <div class="modal-header-custom modal-header-warning">
                     <div class="modal-icon">
@@ -933,6 +947,64 @@
         { value: '11', label: '11 (Nov)' },
         { value: '12', label: '12 (Dec)' }
     ];
+    // ==================== MODAL POSITIONING (sidebar-aware) ====================
+let activeCustomModalId = null;
+
+function centerModalToMainContent(modalId) {
+    const modal = document.querySelector(`#${modalId} .custom-modal`) || document.getElementById(modalId).querySelector('.custom-modal');
+    // For bulk upload, modal IS the .custom-modal inside the overlay
+    const overlay = document.getElementById(modalId);
+    let modalEl = overlay;
+    if (overlay.classList.contains('custom-modal-overlay')) {
+        modalEl = overlay.querySelector('.custom-modal');
+    }
+    if (!modalEl) return;
+
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) return;
+
+    const mainRect = mainContent.getBoundingClientRect();
+    const modalWidth = modalEl.offsetWidth;
+    const modalHeight = modalEl.offsetHeight;
+
+    const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+    const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+    modalEl.style.left = `${left}px`;
+    modalEl.style.top = `${top}px`;
+}
+
+function openCustomModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    activeCustomModalId = modalId;
+    overlay.classList.add('show');
+
+    const modalEl = overlay.querySelector('.custom-modal');
+    if (modalEl) modalEl.classList.add('show');
+
+    document.body.style.overflow = 'hidden';
+
+    setTimeout(() => centerModalToMainContent(modalId), 10);
+}
+
+function closeCustomModal(modalId) {
+    const overlay = document.getElementById(modalId);
+    if (!overlay) return;
+
+    overlay.classList.remove('show');
+
+    const modalEl = overlay.querySelector('.custom-modal');
+    if (modalEl) {
+        modalEl.classList.remove('show');
+        modalEl.style.left = '';
+        modalEl.style.top = '';
+    }
+
+    document.body.style.overflow = '';
+    activeCustomModalId = null;
+}
 
     // ===================== PAGE LOAD - LICENSE CHECK =====================
     document.addEventListener('DOMContentLoaded', async function () {
@@ -1003,7 +1075,7 @@
     function showEditionBadge(edition) {
         const header = document.querySelector('.wizard-header p');
         if (header && edition === 'ED2') {
-            header.innerHTML += ' <span style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 10px;">✨ Professional Edition</span>';
+            header.innerHTML += ' <span style="color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 10px;">✨ Professional Edition</span>';
         }
     }
 
@@ -1063,6 +1135,36 @@
         } catch (error) {
             console.error('❌ Error fetching app settings:', error);
         }
+    // Re-center modal on window resize
+window.addEventListener('resize', function() {
+    if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+});
+
+// Re-center on sidebar toggle
+const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+        setTimeout(() => {
+            if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+        }, 350);
+    });
+}
+
+// MutationObserver for sidebar class/style changes
+const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+if (sidebar) {
+    const observer = new MutationObserver(function() {
+        setTimeout(() => {
+            if (activeCustomModalId) centerModalToMainContent(activeCustomModalId);
+        }, 350);
+    });
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+}
+
+// Escape key closes active modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && activeCustomModalId) closeCustomModal(activeCustomModalId);
+});
     }
 
     // ===================== FETCH TAGS AND CLASSIFICATIONS =====================
@@ -1137,7 +1239,7 @@
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function () {
                 if (formChanged && !isSubmitting) {
-                    document.getElementById('confirmationModal').classList.add('show');
+                   openCustomModal('confirmationModal');
                 } else {
                     navigateAway();
                 }
@@ -1838,8 +1940,8 @@
 
         // ====== CHANGE 5: Position panel using getBoundingClientRect (fixed positioning) ======
         const displayRect = container.querySelector('.multi-select-display').getBoundingClientRect();
-        panel.style.top = (displayRect.bottom + window.scrollY + 4) + 'px';
-        panel.style.left = (displayRect.left + window.scrollX) + 'px';
+        panel.style.top = (displayRect.bottom + 4) + 'px';
+        panel.style.left = displayRect.left + 'px';
         panel.style.width = Math.max(displayRect.width, 200) + 'px';
 
         // Search box
@@ -1972,11 +2074,40 @@
         requestAnimationFrame(() => {
             const panelRect = panel.getBoundingClientRect();
             if (panelRect.bottom > window.innerHeight) {
-                panel.style.top = (displayRect.top + window.scrollY - panelRect.height - 4) + 'px';
+                panel.style.top = (displayRect.top - panelRect.height - 4) + 'px';
             }
         });
+
+    // Close panel on scroll outside
+    const tableWrapper = document.querySelector('.self-validation-table-wrapper');
+    const pdfViewerArea = document.querySelector('.main-content');
+
+    function onOutsideScroll(e) {
+        // If scrolling inside the panel itself, don't close
+        if (panel.contains(e.target)) return;
+        panel.remove();
+        cleanup();
     }
 
+    function cleanup() {
+        if (tableWrapper) tableWrapper.removeEventListener('scroll', onOutsideScroll);
+        if (pdfViewerArea) pdfViewerArea.removeEventListener('scroll', onOutsideScroll);
+        window.removeEventListener('scroll', onOutsideScroll, true);
+    }
+
+    if (tableWrapper) tableWrapper.addEventListener('scroll', onOutsideScroll);
+    if (pdfViewerArea) pdfViewerArea.addEventListener('scroll', onOutsideScroll);
+    window.addEventListener('scroll', onOutsideScroll, true);
+
+    // Also cleanup when panel is removed by click-outside handler
+    const observer = new MutationObserver(() => {
+        if (!document.body.contains(panel)) {
+            cleanup();
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+}
     function captureSelfValidationDataFromTable() {
         const rows = document.querySelectorAll('#selfValidationTable tbody tr');
         const result = [];
@@ -2140,11 +2271,11 @@
             `;
             list.appendChild(item);
         });
-        document.getElementById('oversizedFilesModal').classList.add('show');
+       openCustomModal('oversizedFilesModal');
     }
 
     function closeOversizedFilesModal() {
-        document.getElementById('oversizedFilesModal').classList.remove('show');
+       closeCustomModal('oversizedFilesModal');
     }
 
     function cancelOversizedFiles() {
@@ -2177,11 +2308,11 @@
             `;
             list.appendChild(item);
         });
-        document.getElementById('pdfProtectionModal').classList.add('show');
+       openCustomModal('pdfProtectionModal');
         window.tempAllFiles = allFiles;
     }
 
-    function closePdfProtectionModal() { document.getElementById('pdfProtectionModal').classList.remove('show'); }
+    function closePdfProtectionModal() {closeCustomModal('pdfProtectionModal'); }
 
     function cancelProtectedPdfs() {
         const folderInput = document.getElementById('folderInput');
@@ -2486,18 +2617,18 @@
             list.appendChild(item);
         });
 
-        document.getElementById('excessTagsModal').classList.add('show');
+       openCustomModal('excessTagsModal');
     }
 
     function cancelExcessTagsModal() {
-        document.getElementById('excessTagsModal').classList.remove('show');
+       closeCustomModal('excessTagsModal');
         pendingExcessTagsDocs = [];
         // Reset the Excel upload so user can fix and re-upload
         changeExcelFile();
     }
 
     function closeExcessTagsModalAndContinue() {
-        document.getElementById('excessTagsModal').classList.remove('show');
+       closeCustomModal('excessTagsModal');
         // The actual truncation happens during parseExcelAndBuildTable (tags are sliced to maxTagsPerDocument)
         pendingExcessTagsDocs = [];
         showCustomAlert(
@@ -2696,11 +2827,11 @@
                 }
             }
         }
-        document.getElementById('uploadValidConfirmModal').classList.add('show');
+       openCustomModal('uploadValidConfirmModal');
     }
 
-    function closeUploadValidConfirmModal() { document.getElementById('uploadValidConfirmModal').classList.remove('show'); }
-    function closeConfirmationModal() { document.getElementById('confirmationModal').classList.remove('show'); }
+    function closeUploadValidConfirmModal() {closeCustomModal('uploadValidConfirmModal'); }
+    function closeConfirmationModal() {closeCustomModal('confirmationModal'); }
 
     function navigateAway() {
         formChanged = false; isSubmitting = true;
@@ -2710,7 +2841,7 @@
 
     function showNavigationConfirmation(targetUrl) {
         pendingNavigationUrl = targetUrl;
-        document.getElementById('confirmationModal').classList.add('show');
+       openCustomModal('confirmationModal');
         const confirmBtn = document.getElementById('confirmCancelBtn');
         const newConfirmBtn = confirmBtn.cloneNode(true);
         confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
@@ -2757,7 +2888,7 @@
 
     function goBack() {
         if (formChanged && !isSubmitting) {
-            document.getElementById('confirmationModal').classList.add('show');
+            openCustomModal('confirmationModal');
             document.getElementById('confirmCancelBtn').onclick = function () {
                 navigationConfirmed = true; formChanged = false; isSubmitting = true;
                 closeConfirmationModal();

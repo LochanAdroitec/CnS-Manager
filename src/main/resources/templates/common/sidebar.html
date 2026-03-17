@@ -20,13 +20,17 @@
             <ul class="nav flex-column">
                 <li class="nav-item mb-2">
                     <a th:href="@{/documents}" class="nav-link text-white" title="Document Library">
-                        <i class="bi bi-collection sidebar-icon"></i>
+                        <img src="/images/library.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Document Library</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/my-bookmarks}" class="nav-link text-white" title="My Bookmarks">
-                        <i class="bi bi-bookmark sidebar-icon"></i>
+                        <img src="/images/bookmark_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">My Bookmarks</span>
                     </a>
                 </li>
@@ -40,19 +44,25 @@
             <ul class="nav flex-column">
                 <li class="nav-item mb-2">
                     <a th:href="@{/upload}" class="nav-link text-white" title="Upload Document">
-                        <i class="bi bi-file-earmark-arrow-up sidebar-icon"></i>
+                        <img src="/images/upload_doc_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Upload Document</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/tags-management}" class="nav-link text-white" title="Tags Management">
-                        <i class="bi bi-tags sidebar-icon"></i>
+                        <img src="/images/tag_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Tags</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2" id="classification-mgmt-container">
                     <a th:href="@{/classifications-management}" id="classificationMgmtLink" class="nav-link text-white" title="Classifications Management">
-                        <i class="bi bi-diagram-3 sidebar-icon"></i>
+                        <img src="/images/classification_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Classifications</span>
                         <span id="classification-edition-badge" class="edition-badge" style="display: none;"></span>
                     </a>
@@ -67,32 +77,42 @@
             <ul class="nav flex-column">
                 <li class="nav-item mb-2" id="bulk-upload-container">
                     <a th:href="@{/bulk-upload}" id="bulkUploadLink" class="nav-link text-white" title="Bulk Upload Documents">
-                        <i class="bi bi-folder-symlink sidebar-icon"></i>
+                        <img src="/images/bulk_upload_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Bulk Upload</span>
                         <span id="edition-badge" class="edition-badge" style="display: none;"></span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/users}" class="nav-link text-white" title="User Management">
-                        <i class="bi bi-people sidebar-icon"></i>
+                        <img src="/images/user_management_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">User Management</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/access-control}" class="nav-link text-white" title="Access Control">
-                        <i class="bi bi-shield-lock sidebar-icon"></i>
+                        <img src="/images/access_control_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Access Control</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/settings}" class="nav-link text-white" title="Settings">
-                        <i class="bi bi-gear-fill sidebar-icon"></i>
+                        <img src="/images/setting_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Settings</span>
                     </a>
                 </li>
                 <li class="nav-item mb-2">
                     <a th:href="@{/activity-logs}" class="nav-link text-white" title="Activity Logs">
-                        <i class="bi bi-activity sidebar-icon"></i>
+                        <img src="/images/Activity_logs_white_fill.png"
+                             class="sidebar-icon-image"
+                             alt="Document Library Icon">
                         <span class="sidebar-text">Activity Logs</span>
                     </a>
                 </li>
@@ -221,17 +241,34 @@
         transform: none;
         background-color: transparent;
     }
+    /* Sidebar Icon */
+    .sidebar-icon-image {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        margin: 5px;
+        transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover .sidebar-icon-image{
+        transform: scale(1.1);
+    }
 
     /* Sidebar Icon */
     .sidebar-icon {
-        min-width: 24px;
-        margin-right: 12px;
-        font-size: 18px;
+        min-width: 25px;
+        margin-left: 6px;
+        margin-right:6px
+        font-size: 40px;
         transition: all 0.3s ease;
+    }
+    .nav-link:hover .sidebar-icon{
+        transform: scale(1.1);
     }
 
     /* Sidebar Text */
     .sidebar-text {
+        font-size: 18px;
         white-space: nowrap;
         transition: all 0.3s ease;
     }

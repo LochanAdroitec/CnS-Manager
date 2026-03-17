@@ -824,51 +824,122 @@
         }
 
         /* ==================== PRESENT MODE ==================== */
-        .present-mode {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            z-index: 10000 !important;
-            background: #000 !important;
-            padding: 20px !important;
-        }
+        /* ==================== PRESENT MODE ==================== */
+.present-mode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10000;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-        .present-mode .pdf-pages-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100%;
-        }
+.present-mode-viewer {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #000;
+    scroll-behavior: auto !important;
+}
 
-        .present-mode-controls {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 10px 20px;
-            border-radius: 8px;
-            display: none;
-            align-items: center;
-            gap: 15px;
-            z-index: 10001;
-        }
-        .present-mode-controls.show { display: flex; }
+.present-mode-viewer .pdf-pages-container {
+    padding: 0;
+    gap: 0;
+    margin: 0 auto;
+}
 
-        .present-mode-controls button {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-        .present-mode-controls button:hover { background: rgba(255,255,255,0.2); }
-        .present-mode-controls .page-info { color: white; font-size: 14px; }
+.present-mode-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: none;
+    align-items: center;
+    gap: 15px;
+    z-index: 10001;
+}
+.present-mode-controls.show { display: flex; }
+
+.present-mode-controls button {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.present-mode-controls button:hover { background: rgba(255,255,255,0.2); }
+.present-mode-controls .page-info { color: white; font-size: 14px; }
+        /* ==================== DOWNLOAD PROGRESS ==================== */
+.download-progress-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    display: none;
+}
+.download-progress-container.active { display: block; }
+
+body.light-mode .download-progress-container {
+    background: #f1f5f9;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 8px;
+    background: #5f6368;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+body.light-mode .progress-bar-wrapper { background: #e2e8f0; }
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4285f4, #667eea);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+.progress-bar-fill.indeterminate {
+    width: 30%;
+    animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+@keyframes progressIndeterminate {
+    0% { margin-left: 0%; width: 30%; }
+    50% { margin-left: 35%; width: 30%; }
+    100% { margin-left: 70%; width: 30%; }
+}
+
+.download-status-text {
+    font-size: 13px;
+    color: #9aa0a6;
+    text-align: center;
+}
+body.light-mode .download-status-text { color: #64748b; }
+
+.download-complete-icon {
+    color: #48bb78;
+    font-size: 24px;
+    animation: checkPop 0.4s ease;
+}
+@keyframes checkPop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
     </style>
 </head>
 <body>
@@ -1052,9 +1123,9 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2>Download PDF</h2>
-            <button class="modal-close" onclick="closeDownloadModal()">×</button>
+            <button class="modal-close" id="downloadModalCloseBtn" onclick="closeDownloadModal()">×</button>
         </div>
-        <div class="modal-body modal-body-center">
+        <div class="modal-body modal-body-center" id="downloadModalBody">
             <div class="modal-icon">
                 <i class="bi bi-shield-fill-check"></i>
             </div>
@@ -1062,8 +1133,8 @@
             <p class="modal-text">This PDF will be downloaded with watermarks for security purposes.</p>
         </div>
         <div class="modal-footer">
-            <button class="btn-cancel" onclick="closeDownloadModal()">Cancel</button>
-            <button class="btn-primary" onclick="confirmDownload()">Download with Watermark</button>
+            <button class="btn-cancel" id="downloadCancelBtn" onclick="closeDownloadModal()">Cancel</button>
+            <button class="btn-primary" id="downloadConfirmBtn" onclick="confirmDownload()">Download with Watermark</button>
         </div>
     </div>
 </div>
@@ -1094,6 +1165,11 @@
 </script>
 
 <script>
+    <script th:inline="javascript">
+     window.username = [[${username}]];
+</script>
+
+<script>
     // ==================== GLOBAL STATE ====================
     let isCurrentlyBookmarked = false;
     let isDarkMode = true;
@@ -1117,6 +1193,7 @@
     let pageHeights = new Map();
     let zoomIndicatorTimeout = null;
     let isInitialLoad = true;
+    let presentViewerArea = null;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.js';
 
@@ -1176,11 +1253,9 @@
         }, { passive: false });
     });
 
-    // ==================== THEME TOGGLE (UPDATED - NO NOTIFICATIONS) ====================
+    // ==================== THEME TOGGLE ====================
     function loadThemePreference() {
         const savedTheme = localStorage.getItem('pdfViewerTheme');
-        console.log('Loading theme preference:', savedTheme);
-
         if (savedTheme === 'light') {
             isDarkMode = false;
             document.body.classList.add('light-mode');
@@ -1194,9 +1269,6 @@
 
     function toggleTheme() {
         isDarkMode = !isDarkMode;
-
-        console.log('Toggling theme to:', isDarkMode ? 'dark' : 'light');
-
         if (isDarkMode) {
             document.body.classList.remove('light-mode');
             localStorage.setItem('pdfViewerTheme', 'dark');
@@ -1204,7 +1276,6 @@
             document.body.classList.add('light-mode');
             localStorage.setItem('pdfViewerTheme', 'light');
         }
-
         updateThemeButton();
     }
 
@@ -1362,11 +1433,8 @@
         const pageData = pageRegistry.get(pageNumber);
         if (pageData) {
             const viewer = document.getElementById('pdfViewerArea');
-
             viewer.scrollTop = pageData.top;
-
             currentVisiblePage = pageNumber;
-
             updateActiveThumbnailInstant(pageNumber);
 
             requestAnimationFrame(() => {
@@ -1374,7 +1442,6 @@
                     isManualJump = false;
                 });
             });
-
         } else {
             console.error('Page data not found:', pageNumber);
             isManualJump = false;
@@ -1468,41 +1535,34 @@
         }
         setupLazyLoading();
     }
+
     // ==================== WATERMARK SETTINGS ====================
-    /**
-     * Load watermark settings from backend
-     */
-   async function loadWatermarkSettings() {
-    try {
-        const response = await fetch('/api/settings/watermark');
-        if (!response.ok) {
-            console.warn('Could not load watermark settings, using defaults');
-            return;
+    async function loadWatermarkSettings() {
+        try {
+            const response = await fetch('/api/settings/watermark');
+            if (!response.ok) {
+                console.warn('Could not load watermark settings, using defaults');
+                return;
+            }
+
+            const settings = await response.json();
+            watermarkEnabled = settings.watermarkEnabled || false;
+            watermarkOpacity = settings.watermarkOpacity || 30;
+            watermarkPosition = settings.watermarkPosition || 'Diagonal';
+
+            console.log('✅ Watermark settings loaded:', {
+                enabled: watermarkEnabled,
+                opacity: watermarkOpacity,
+                position: watermarkPosition,
+            });
+
+        } catch (error) {
+            console.error('Error loading watermark settings:', error);
+            watermarkEnabled = true;
+            watermarkOpacity = 30;
+            watermarkPosition = 'Diagonal';
         }
-
-        const settings = await response.json();
-
-        watermarkEnabled = settings.watermarkEnabled || false;
-        watermarkOpacity = settings.watermarkOpacity || 30;
-        watermarkPosition = settings.watermarkPosition || 'Diagonal';
-
-
-        console.log('✅ Watermark settings loaded:', {
-            enabled: watermarkEnabled,
-            opacity: watermarkOpacity,
-            position: watermarkPosition,
-
-        });
-
-    } catch (error) {
-        console.error('Error loading watermark settings:', error);
-        // Use defaults if fetch fails
-        watermarkEnabled = true;
-        watermarkOpacity = 30;
-        watermarkPosition = 'Diagonal';
-
     }
-}
 
     // ==================== PAGE RENDERING ====================
     async function renderPage(pageNum) {
@@ -1545,34 +1605,34 @@
         }
     }
 
-  function addWatermark(ctx, canvas) {
-    if (!ctx || !canvas) return;
+    function addWatermark(ctx, canvas) {
+        if (!ctx || !canvas) return;
 
-    const watermarkText = window.username || 'User';
-    const fontSize = 50;
-    const opacity = 0.3;
-    const gapX = 300;
-    const gapY = 200;
+        const watermarkText = window.username || 'User';
+        const fontSize = 50;
+        const opacity = 0.3;
+        const gapX = 300;
+        const gapY = 200;
 
-    ctx.save();
-    ctx.globalAlpha = opacity;
-    ctx.font = fontSize + 'px Arial';
-    ctx.fillStyle = '#FF0000';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+        ctx.save();
+        ctx.globalAlpha = opacity;
+        ctx.font = fontSize + 'px Arial';
+        ctx.fillStyle = '#FF0000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(-Math.PI / 4);
-    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(-Math.PI / 4);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
-    for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
-        for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
-            ctx.fillText(watermarkText, x, y);
+        for (let y = -canvas.height; y < canvas.height * 2; y += gapY) {
+            for (let x = -canvas.width; x < canvas.width * 2; x += gapX) {
+                ctx.fillText(watermarkText, x, y);
+            }
         }
-    }
 
-    ctx.restore();
-}
+        ctx.restore();
+    }
 
     async function reRenderAllPages() {
         const pagesToRerender = Array.from(renderedPages.keys());
@@ -1649,27 +1709,16 @@
 
         wrappers.forEach((wrapper) => {
             const pageNum = parseInt(wrapper.getAttribute('data-page-number'));
+            const relativeTop = wrapper.offsetTop;
             const height = wrapper.offsetHeight;
-            const top = wrapper.offsetTop;
 
             pageRegistry.set(pageNum, {
-                top: top,
-                bottom: top + height,
+                top: relativeTop,
+                bottom: relativeTop + height,
                 height: height,
                 element: wrapper
             });
         });
-
-        if (pageRegistry.size > 0) {
-            const firstThree = Array.from(pageRegistry.entries()).slice(0, 3);
-            console.log('✓ Page registry built:',
-                firstThree.map(([page, data]) => ({
-                    page,
-                    top: Math.round(data.top),
-                    height: Math.round(data.height)
-                }))
-            );
-        }
     }
 
     function detectCurrentPage() {
@@ -1696,7 +1745,6 @@
         if (detectedPage !== currentVisiblePage) {
             currentVisiblePage = detectedPage;
             document.getElementById('pageJumpInput').value = detectedPage;
-
             updateActiveThumbnail(detectedPage);
         }
     }
@@ -1729,12 +1777,9 @@
                 const pageData = pageRegistry.get(targetPage);
                 if (pageData) {
                     const viewer = document.getElementById('pdfViewerArea');
-
                     viewer.scrollTop = pageData.top;
-
                     currentVisiblePage = targetPage;
                     document.getElementById('pageJumpInput').value = targetPage;
-
                     updateActiveThumbnailInstant(targetPage);
 
                     requestAnimationFrame(() => {
@@ -1780,7 +1825,6 @@
         const activeThumbnail = document.getElementById(`thumbnail-${pageNum}`);
         if (activeThumbnail) {
             activeThumbnail.classList.add('active');
-
             activeThumbnail.scrollIntoView({
                 behavior: 'instant',
                 block: 'center'
@@ -1789,8 +1833,6 @@
     }
 
     function updateActiveThumbnail(pageNum) {
-        console.log(`📍 Updating active thumbnail to page ${pageNum}`);
-
         document.querySelectorAll('.thumbnail-item').forEach(item => {
             item.classList.remove('active');
         });
@@ -1798,15 +1840,10 @@
         const activeThumbnail = document.getElementById(`thumbnail-${pageNum}`);
         if (activeThumbnail) {
             activeThumbnail.classList.add('active');
-
             activeThumbnail.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center'
             });
-
-            console.log(`✓ Thumbnail ${pageNum} activated and scrolled into view`);
-        } else {
-            console.warn(`❌ Thumbnail element not found for page ${pageNum}`);
         }
     }
 
@@ -1829,37 +1866,195 @@
         isPresentMode = true;
         presentCurrentPage = currentVisiblePage || 1;
 
-        const viewerArea = document.getElementById('pdfViewerArea');
         const controls = document.getElementById('presentModeControls');
 
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        }
+        // Create dedicated present mode overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'presentModeOverlay';
+        overlay.className = 'present-mode-overlay';
 
-        viewerArea.classList.add('present-mode');
+        // Create fresh scrollable viewer inside overlay
+        const presentViewer = document.createElement('div');
+        presentViewer.id = 'presentModeViewer';
+        presentViewer.className = 'present-mode-viewer';
+
+        // Create pages container inside present viewer
+        const presentPagesContainer = document.createElement('div');
+        presentPagesContainer.className = 'pdf-pages-container';
+        presentPagesContainer.id = 'presentPagesContainer';
+
+        presentViewer.appendChild(presentPagesContainer);
+        overlay.appendChild(presentViewer);
+        document.body.appendChild(overlay);
+
+        // Move controls into overlay
+        overlay.appendChild(controls);
+        presentViewerArea = presentViewer;
+
+        // Setup scroll tracking for present mode page counter
+        requestAnimationFrame(() => setupPresentPageTracking());
+
+        // Render all pages into present container
+        renderPresentPages(presentPagesContainer, presentCurrentPage);
+
         controls.classList.add('show');
-
-        document.querySelector('.unified-nav').style.display = 'none';
-        document.getElementById('sidebar').style.display = 'none';
-        document.getElementById('thumbnailSidebar').style.display = 'none';
-        document.getElementById('toggleSidebarBtn').style.display = 'none';
-
         updatePresentPageInfo();
 
-        buildPageRegistry();
-        const pageData = pageRegistry.get(presentCurrentPage);
-        if (pageData) viewerArea.scrollTop = pageData.top;
+        // Request fullscreen on overlay
+        if (overlay.requestFullscreen) {
+            overlay.requestFullscreen();
+        } else if (overlay.webkitRequestFullscreen) {
+            overlay.webkitRequestFullscreen();
+        }
 
         document.addEventListener('keydown', handlePresentModeKeys);
+    }
+
+    async function renderPresentPages(container, targetPage) {
+        container.innerHTML = '';
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const pageDims = pageHeights.get(pageNum);
+            const scaledWidth = pageDims.width * scale;
+            const scaledHeight = pageDims.height * scale;
+
+            const pageWrapper = document.createElement('div');
+            pageWrapper.className = 'pdf-canvas-wrapper';
+            pageWrapper.id = `present-page-wrapper-${pageNum}`;
+            pageWrapper.setAttribute('data-page-number', pageNum);
+            pageWrapper.style.width = `${scaledWidth}px`;
+            // CRITICAL: Set exact height immediately so offsetTop is accurate
+            // for ALL pages even before canvases render
+            pageWrapper.style.height = `${scaledHeight}px`;
+            pageWrapper.style.minHeight = `${scaledHeight}px`;
+            pageWrapper.style.marginBottom = '10px';
+
+            const pageLabel = document.createElement('div');
+            pageLabel.className = 'page-number-label';
+            pageLabel.textContent = `Page ${pageNum}`;
+            pageWrapper.appendChild(pageLabel);
+
+            container.appendChild(pageWrapper);
+
+            // Copy canvas from main viewer if already rendered
+            const existingData = renderedPages.get(pageNum);
+            if (existingData && existingData.canvas) {
+                const clonedCanvas = document.createElement('canvas');
+                clonedCanvas.width = existingData.canvas.width;
+                clonedCanvas.height = existingData.canvas.height;
+                clonedCanvas.style.width = '100%';
+                clonedCanvas.style.height = 'auto';
+                const cloneCtx = clonedCanvas.getContext('2d');
+                cloneCtx.drawImage(existingData.canvas, 0, 0);
+                pageWrapper.insertBefore(clonedCanvas, pageLabel);
+                pageWrapper.classList.remove('loading');
+            } else {
+                // Render fresh if not yet loaded
+                pageWrapper.classList.add('loading');
+                renderPageIntoWrapper(pageNum, pageWrapper);
+            }
+        }
+
+        // All wrappers have exact heights set — offsetTop is immediately correct
+        requestAnimationFrame(() => {
+            scrollPresentToPage(targetPage);
+        });
+    }
+
+    function scrollPresentToPage(pageNum) {
+        if (!presentViewerArea) return;
+
+        if (pageNum === 1) {
+            presentViewerArea.scrollTop = 0;
+            return;
+        }
+
+        const wrapper = document.getElementById(`present-page-wrapper-${pageNum}`);
+        if (wrapper) {
+            // Use getBoundingClientRect relative to presentViewerArea for accuracy
+            const viewerRect = presentViewerArea.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const scrollTo = presentViewerArea.scrollTop + (wrapperRect.top - viewerRect.top);
+            presentViewerArea.scrollTop = scrollTo;
+            console.log(`Present: scrolled to page ${pageNum}, scrollTop=${scrollTo}`);
+        }
+    }
+
+    async function renderPageIntoWrapper(pageNum, pageWrapper) {
+        try {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: scale });
+
+            pageWrapper.classList.remove('loading');
+
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.width = '100%';
+            canvas.style.height = 'auto';
+
+            const pageLabel = pageWrapper.querySelector('.page-number-label');
+            pageWrapper.insertBefore(canvas, pageLabel);
+
+            const ctx = canvas.getContext('2d');
+            await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+            addWatermark(ctx, canvas);
+        } catch (err) {
+            console.error(`Error rendering present page ${pageNum}:`, err);
+        }
+    }
+
+    // ==================== PRESENT MODE PAGE TRACKING ====================
+    function setupPresentPageTracking() {
+        if (!presentViewerArea) return;
+
+        let ticking = false;
+        presentViewerArea.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    detectPresentCurrentPage();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    }
+
+    function detectPresentCurrentPage() {
+        if (!presentViewerArea) return;
+
+        const scrollTop = presentViewerArea.scrollTop;
+        const viewportHeight = presentViewerArea.clientHeight;
+        const viewportCenter = scrollTop + (viewportHeight / 2);
+
+        let detectedPage = 1;
+        let minDistance = Infinity;
+
+        for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
+            const wrapper = document.getElementById(`present-page-wrapper-${pageNum}`);
+            if (!wrapper) continue;
+
+            const pageTop = wrapper.offsetTop;
+            const pageHeight = wrapper.offsetHeight;
+            const pageCenter = pageTop + (pageHeight / 2);
+            const distance = Math.abs(pageCenter - viewportCenter);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+                detectedPage = pageNum;
+            }
+        }
+
+        if (detectedPage !== presentCurrentPage) {
+            presentCurrentPage = detectedPage;
+            updatePresentPageInfo();
+        }
     }
 
     function exitPresentMode() {
         isPresentMode = false;
 
-        const viewerArea = document.getElementById('pdfViewerArea');
+        const overlay = document.getElementById('presentModeOverlay');
         const controls = document.getElementById('presentModeControls');
 
         if (document.exitFullscreen) {
@@ -1868,17 +2063,31 @@
             document.webkitExitFullscreen();
         }
 
-        viewerArea.classList.remove('present-mode');
+        // Move controls back to body before removing overlay
         controls.classList.remove('show');
+        document.body.appendChild(controls);
 
-        document.querySelector('.unified-nav').style.display = 'flex';
-        document.getElementById('sidebar').style.display = 'flex';
-        document.getElementById('thumbnailSidebar').style.display = 'flex';
-        document.getElementById('toggleSidebarBtn').style.display = 'flex';
+        // Remove overlay
+        if (overlay) overlay.remove();
+        presentViewerArea = null;
+
+        // Sync main viewer back to the page we were on in present mode
+        setTimeout(() => {
+            buildPageRegistry();
+            const pageData = pageRegistry.get(presentCurrentPage);
+            const viewerArea = document.getElementById('pdfViewerArea');
+            if (pageData) {
+                viewerArea.scrollTop = pageData.top;
+            }
+            currentVisiblePage = presentCurrentPage;
+            document.getElementById('pageJumpInput').value = presentCurrentPage;
+            updateActiveThumbnailInstant(presentCurrentPage);
+        }, 300);
 
         document.removeEventListener('keydown', handlePresentModeKeys);
     }
 
+    // Fullscreen change listeners — handles browser Escape key exiting fullscreen
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
 
@@ -1892,9 +2101,7 @@
     function presentPrevPage() {
         if (presentCurrentPage > 1) {
             presentCurrentPage--;
-            buildPageRegistry();
-            const pageData = pageRegistry.get(presentCurrentPage);
-            if (pageData) document.getElementById('pdfViewerArea').scrollTop = pageData.top;
+            scrollPresentToPage(presentCurrentPage);
             updatePresentPageInfo();
         }
     }
@@ -1902,9 +2109,7 @@
     function presentNextPage() {
         if (pdfDoc && presentCurrentPage < pdfDoc.numPages) {
             presentCurrentPage++;
-            buildPageRegistry();
-            const pageData = pageRegistry.get(presentCurrentPage);
-            if (pageData) document.getElementById('pdfViewerArea').scrollTop = pageData.top;
+            scrollPresentToPage(presentCurrentPage);
             updatePresentPageInfo();
         }
     }
@@ -1934,7 +2139,7 @@
         }
     }
 
-    // ==================== DOCUMENT INFO (UPDATED WITH EMPTY STATE STYLING) ====================
+    // ==================== DOCUMENT INFO ====================
     function updateDocumentInfo(info) {
         const title = info.title || 'Document';
         const productCode = info.productCode || '';
@@ -1948,7 +2153,6 @@
         document.getElementById('sidebarEdition').textContent = edition || 'N/A';
         document.getElementById('sidebarPublishDate').textContent = info.publishDate || 'N/A';
 
-        // Notes with empty state styling
         const notesContainer = document.getElementById('sidebarNotes');
         if (info.notes && info.notes.trim() !== '' && info.notes !== 'No notes available') {
             notesContainer.textContent = info.notes;
@@ -1957,7 +2161,6 @@
             notesContainer.innerHTML = '<span class="empty-state-text">No notes available</span>';
         }
 
-        // Tags with empty state styling
         const tagsContainer = document.getElementById('sidebarTags');
         if (info.tagNames && info.tagNames.trim() !== '') {
             const tagsArray = info.tagNames.split(',').map(tag => tag.trim());
@@ -1966,7 +2169,6 @@
             tagsContainer.innerHTML = '<span class="empty-state-text">No tags</span>';
         }
 
-        // Classifications with empty state styling
         const clsContainer = document.getElementById('sidebarClassifications');
         if (info.classificationNames && info.classificationNames.trim() !== '') {
             const clsArray = info.classificationNames.split(',').map(c => c.trim());
@@ -1975,7 +2177,6 @@
             clsContainer.innerHTML = '<span class="empty-state-text">No classifications</span>';
         }
 
-        // Groups with empty state styling
         const groupsContainer = document.getElementById('sidebarGroups');
         if (info.groupNames && info.groupNames.trim() !== '') {
             const groupsArray = info.groupNames.split(',').map(g => g.trim());
@@ -2147,78 +2348,162 @@
             showNotification("Network error", "error");
         }
     }
-    // ==================== WATERMARK SETTINGS (FOR DOWNLOAD MODAL ONLY) ====================
-/**
- * Load watermark settings to display in download modal
- */
-async function loadWatermarkSettingsForModal() {
-    try {
-        const response = await fetch('/api/settings/watermark');
-        if (!response.ok) {
-            console.warn('Could not load watermark settings');
-            return;
+
+    // ==================== WATERMARK SETTINGS FOR DOWNLOAD MODAL ====================
+    async function loadWatermarkSettingsForModal() {
+        try {
+            const response = await fetch('/api/settings/watermark');
+            if (!response.ok) {
+                console.warn('Could not load watermark settings');
+                return;
+            }
+
+            const settings = await response.json();
+            const watermarkEnabled = settings.watermarkEnabled || false;
+            const watermarkOpacity = settings.watermarkOpacity || 30;
+            const watermarkPosition = settings.watermarkPosition || 'Diagonal';
+            const watermarkFontSize = settings.watermarkFontSize || 100;
+
+            return { watermarkEnabled, watermarkOpacity, watermarkPosition, watermarkFontSize };
+        } catch (error) {
+            console.error('Error loading watermark settings:', error);
+            return { watermarkEnabled: true, watermarkOpacity: 30, watermarkPosition: 'Diagonal', watermarkFontSize: 100 };
         }
-
-        const settings = await response.json();
-
-        // These variables are LOCAL to this function for download modal display only
-        const watermarkEnabled = settings.watermarkEnabled || false;
-        const watermarkOpacity = settings.watermarkOpacity || 30;
-        const watermarkPosition = settings.watermarkPosition || 'Diagonal';
-        const watermarkFontSize = settings.watermarkFontSize || 100; // ⭐ KEEP THIS for download modal
-
-        console.log('✅ Watermark settings loaded for download modal:', settings);
-
-        // Return the settings so they can be used in showDownloadModal
-        return { watermarkEnabled, watermarkOpacity, watermarkPosition, watermarkFontSize };
-    } catch (error) {
-        console.error('Error loading watermark settings:', error);
-        return { watermarkEnabled: true, watermarkOpacity: 30, watermarkPosition: 'Diagonal', watermarkFontSize: 100 };
     }
-}
 
     // ==================== DOWNLOAD FUNCTIONS ====================
- async function showDownloadModal() {
-    // Load current watermark settings for modal display only
-    const settings = await loadWatermarkSettingsForModal();
+    async function showDownloadModal() {
+        const settings = await loadWatermarkSettingsForModal();
 
-    const modal = document.getElementById('downloadModal');
-    const modalBody = modal.querySelector('.modal-body');
+        const modal = document.getElementById('downloadModal');
+        const modalBody = document.getElementById('downloadModalBody');
 
-    if (settings.watermarkEnabled) {
-        // Show watermark info with font size
-        modalBody.innerHTML = `
-            <div class="modal-icon">
-                <i class="bi bi-shield-fill-check"></i>
-            </div>
-            <h3 class="modal-title-large">Watermarked Download</h3>
-            <p class="modal-text">This PDF will be downloaded with watermarks for security purposes.</p>
-        `;
-    } else {
-        // Show no watermark info
-        modalBody.innerHTML = `
-            <div class="modal-icon" style="background: #10b981;">
-                <i class="bi bi-download"></i>
-            </div>
-            <h3 class="modal-title-large">Download PDF</h3>
-            <p class="modal-text">This document will be downloaded without watermarks.</p>
-        `;
+        if (settings.watermarkEnabled) {
+            modalBody.innerHTML = `
+                <div class="modal-icon">
+                    <i class="bi bi-shield-fill-check"></i>
+                </div>
+                <h3 class="modal-title-large">Watermarked Download</h3>
+                <p class="modal-text">This PDF will be downloaded with watermarks for security purposes.</p>
+            `;
+        } else {
+            modalBody.innerHTML = `
+                <div class="modal-icon" style="background: #10b981;">
+                    <i class="bi bi-download"></i>
+                </div>
+                <h3 class="modal-title-large">Download PDF</h3>
+                <p class="modal-text">This document will be downloaded without watermarks.</p>
+            `;
+        }
+
+        resetDownloadModalState();
+        modal.classList.add('active');
     }
-
-    modal.classList.add('active');
-}
-
 
     function closeDownloadModal() {
         document.getElementById('downloadModal').classList.remove('active');
+        resetDownloadModalState();
+    }
+
+    function resetDownloadModalState() {
+        const confirmBtn = document.getElementById('downloadConfirmBtn');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+        const closeBtn = document.getElementById('downloadModalCloseBtn');
+        const progressContainer = document.getElementById('downloadProgressContainer');
+
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = 'Download with Watermark';
+            confirmBtn.className = 'btn-primary';
+            confirmBtn.style.background = '';
+        }
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (closeBtn) closeBtn.disabled = false;
+        if (progressContainer) {
+            progressContainer.classList.remove('active');
+            progressContainer.remove();
+        }
     }
 
     async function confirmDownload() {
+        const confirmBtn = document.getElementById('downloadConfirmBtn');
+        const cancelBtn = document.getElementById('downloadCancelBtn');
+        const closeBtn = document.getElementById('downloadModalCloseBtn');
+        const modalBody = document.getElementById('downloadModalBody');
+
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite;vertical-align:middle;margin-right:8px;"></span> Downloading...';
+        cancelBtn.disabled = true;
+        closeBtn.disabled = true;
+
+        let progressContainer = document.getElementById('downloadProgressContainer');
+        if (!progressContainer) {
+            progressContainer = document.createElement('div');
+            progressContainer.id = 'downloadProgressContainer';
+            progressContainer.className = 'download-progress-container';
+            progressContainer.innerHTML = `
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill indeterminate" id="downloadProgressBar"></div>
+                </div>
+                <div class="download-status-text" id="downloadStatusText">Preparing your document...</div>
+            `;
+            modalBody.appendChild(progressContainer);
+        }
+
+        progressContainer.classList.add('active');
+        const progressBar = document.getElementById('downloadProgressBar');
+        const statusText = document.getElementById('downloadStatusText');
+
+        const messages = [
+            'Preparing your document...',
+            'Applying watermark...',
+            'Generating PDF...',
+            'Almost ready...'
+        ];
+        let msgIndex = 0;
+        const msgInterval = setInterval(() => {
+            msgIndex = Math.min(msgIndex + 1, messages.length - 1);
+            statusText.textContent = messages[msgIndex];
+        }, 1200);
+
         try {
             const response = await fetch(`/documents/download/${documentId}`);
             if (!response.ok) throw new Error('Download failed');
 
-            const blob = await response.blob();
+            const contentLength = response.headers.get('content-length');
+            let blob;
+
+            if (contentLength) {
+                progressBar.classList.remove('indeterminate');
+                const total = parseInt(contentLength, 10);
+                let loaded = 0;
+                const reader = response.body.getReader();
+                const chunks = [];
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    loaded += value.length;
+                    const percent = Math.round((loaded / total) * 100);
+                    progressBar.style.width = percent + '%';
+                    statusText.textContent = `Downloading... ${percent}%`;
+                }
+
+                blob = new Blob(chunks);
+            } else {
+                blob = await response.blob();
+            }
+
+            clearInterval(msgInterval);
+
+            progressBar.classList.remove('indeterminate');
+            progressBar.style.width = '100%';
+            statusText.innerHTML = '<span class="download-complete-icon"><i class="bi bi-check-circle-fill"></i></span> Download complete!';
+
+            confirmBtn.innerHTML = '<i class="bi bi-check-circle" style="margin-right:8px;"></i> Downloaded';
+            confirmBtn.style.background = '#48bb78';
+
             const contentDisposition = response.headers.get('content-disposition');
             let filename = 'watermarked_document.pdf';
             if (contentDisposition) {
@@ -2232,13 +2517,28 @@ async function loadWatermarkSettingsForModal() {
             a.download = filename;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
 
-            closeDownloadModal();
-            showNotification('PDF downloaded successfully', 'success');
+            setTimeout(() => {
+                closeDownloadModal();
+                showNotification('PDF downloaded successfully', 'success');
+            }, 1500);
+
         } catch (error) {
-            showNotification('Failed to download PDF', 'error');
+            clearInterval(msgInterval);
+            console.error('Download error:', error);
+
+            progressBar.classList.remove('indeterminate');
+            progressBar.style.width = '100%';
+            progressBar.style.background = '#f56565';
+            statusText.innerHTML = '<i class="bi bi-exclamation-circle" style="color:#f56565;margin-right:8px;"></i> Download failed. Please try again.';
+
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="bi bi-arrow-clockwise" style="margin-right:8px;"></i> Retry';
+            confirmBtn.style.background = '';
+            cancelBtn.disabled = false;
+            closeBtn.disabled = false;
         }
     }
 
@@ -2285,6 +2585,10 @@ async function loadWatermarkSettingsForModal() {
 
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
+            if (e.target.id === 'downloadModal') {
+                const confirmBtn = document.getElementById('downloadConfirmBtn');
+                if (confirmBtn && confirmBtn.disabled) return;
+            }
             e.target.classList.remove('active');
         }
     });
@@ -2375,6 +2679,18 @@ async function loadWatermarkSettingsForModal() {
                 return false;
             }
 
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
+                e.preventDefault();
+                showSecurityNotification('default');
+                return false;
+            }
+
+            if (e.key === 'F5' || (e.ctrlKey && e.key === 'F5')) {
+                e.preventDefault();
+                showSecurityNotification('default');
+                return false;
+            }
+
             if (e.key === 'PrintScreen') {
                 e.preventDefault();
                 applySecurityBlur();
@@ -2393,6 +2709,25 @@ async function loadWatermarkSettingsForModal() {
             }
 
             if (e.altKey && e.key === 'PrintScreen') {
+                e.preventDefault();
+                applySecurityBlur();
+                showSecurityNotification('screenshot');
+                navigator.clipboard.writeText('').catch(() => {});
+                setTimeout(removeSecurityBlur, 3000);
+                return false;
+            }
+            // PrtScn alone
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+                applySecurityBlur();
+                showSecurityNotification('screenshot');
+                navigator.clipboard.writeText('').catch(() => {});
+                setTimeout(removeSecurityBlur, 3000);
+                return false;
+            }
+
+            // Win + PrtScn (Windows key = metaKey)
+            if (e.metaKey && e.key === 'PrintScreen') {
                 e.preventDefault();
                 applySecurityBlur();
                 showSecurityNotification('screenshot');
@@ -2451,6 +2786,7 @@ async function loadWatermarkSettingsForModal() {
             return false;
         };
     })();
+</script>
 </script>
 </body>
 </html>

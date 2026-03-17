@@ -310,15 +310,135 @@
             margin-bottom: 20px;
         }
 
-        /* Modal Styles */
+        /* ==================== MODAL OVERLAY ==================== */
+       .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.5);
+    z-index: 9998;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.25s ease;
+}
+        .modal-overlay.active {
+             opacity: 1;
+             pointer-events: auto;
+        }
+
+        /* ==================== CUSTOM MODAL (replaces Bootstrap modals) ==================== */
+   .custom-modal {
+        position: fixed;
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 800px;
+        z-index: 9999;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        max-height: 85vh;
+        overflow: hidden;
+        flex-direction: column;
+
+        display: none;          /* hidden by default */
+        opacity: 0;
+        transform: translateY(-40px) scale(0.95);
+        pointer-events: none;
+        will-change: transform, opacity;
+        transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+
+    .custom-modal.visible {
+        display: flex;          /* layout ready, but still invisible */
+    }
+
+    .custom-modal.active {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+    }
+        .custom-modal.modal-sm {
+            max-width: 500px;
+        }
+        /* Modal Header - stays pinned at top */
         .modal-header {
             color:#ffffff;
             border-bottom: 1px solid #e5e7eb;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+            flex-shrink: 0; /* Never shrink */
         }
 
         .modal-title {
             font-weight: 600;
             color: #ffffff;
+            margin: 0;
+            font-size: 1.15rem;
+        }
+
+        /* Modal Body - only this part scrolls */
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            min-height: 0; /* Required for flex scroll */
+        }
+
+        /* Hide scrollbar but keep scroll functionality */
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.15);
+            border-radius: 3px;
+        }
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0,0,0,0.25);
+        }
+
+        /* Modal Footer - stays pinned at bottom */
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0; /* Never shrink */
+            background: white;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .modal-close-btn:hover {
+            opacity: 1;
+        }
+
+        /* Forms inside modals must also be flex to preserve header/body/footer layout */
+        .custom-modal > form {
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh;
+            overflow: hidden;
         }
 
         .documents-list, .users-list {
@@ -537,7 +657,19 @@
                 flex-direction: column;
                 align-items: flex-start;
             }
+
+            .custom-modal {
+                width: 95% !important;
+                max-width: 95% !important;
+            }
         }
+        .library-icon {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        margin-right: 0px;
+        transition: transform 0.3s ease;
+    }
     </style>
 </head>
 <body>
@@ -558,7 +690,9 @@
         <!-- Breadcrumb and Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-shield-lock"></i> Access Control</h2>
+                <h2 class="mb-1"><img src="/images/access_control_black_fill.png"
+                                      class="library-icon"
+                                      alt="Document Library Icon"> Access Control</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -573,7 +707,7 @@
 
             <!-- Create group button  -->
             <button class="btn" id="createGroupBtn"
-                    data-bs-toggle="modal" data-bs-target="#createGroupModal"
+                    onclick="openCreateGroupModal()"
                     style="display: none; background-color: #1e3a5f; color:#ffffff;">
                 <i class="bi bi-plus-circle me-2"></i>
                 Create Group
@@ -630,7 +764,7 @@
             <h5>No access groups found</h5>
             <p>Create your first access group to manage document permissions</p>
             <button class="btn" id="emptyCreateBtn"
-                    data-bs-toggle="modal" data-bs-target="#createGroupModal"
+                    onclick="openCreateGroupModal()"
                     style="display: none; background-color: #1e3a5f; color:#ffffff;">
                 <i class="bi bi-plus-circle me-2"></i>
                 Create Group
@@ -638,260 +772,243 @@
         </div>
     </div>
 </div>
-</div>
 
-<!-- Create Group Modal -->
-<div class="modal fade" id="createGroupModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <form id="createGroupForm">
-                <div class="modal-header" style="background-color: #1e3a5f;">
-                    <h5 class="modal-title" >
-                        <i class="bi bi-plus-circle me-2"></i>Create New Access Group
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white"  data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Group Name -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="createGroupName" name="groupName"
-                               placeholder="Enter group name" required minlength="3" maxlength="100">
-                        <small class="text-muted">3-100 characters</small>
-                    </div>
+<!-- ==================== MODAL OVERLAY (shared by all modals) ==================== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeActiveModal()"></div>
 
-                    <!-- Group Description -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" id="createGroupDescription" name="description"
-                                  placeholder="Enter group description" rows="2" maxlength="200"></textarea>
-                        <small class="text-muted">Optional, up to 200 characters</small>
-                    </div>
-
-                    <!-- Tabs for Documents and Users -->
-                    <div class="tab-buttons">
-                        <button type="button" class="tab-button active" data-tab="documents">
-                            <i class="bi bi-file-earmark me-2"></i>Documents
-                            <span class="counter-badge" id="createDocsCount">0</span>
-                        </button>
-                        <button type="button" class="tab-button" data-tab="users">
-                            <i class="bi bi-people me-2"></i>Users
-                            <span class="counter-badge" id="createUsersCount">0</span>
-                        </button>
-                    </div>
-
-                    <!-- Documents Tab -->
-                    <div class="tab-content-section active" id="createDocumentsTab">
-                        <div class="search-in-modal">
-                            <input type="text" class="form-control" id="createSearchDocuments"
-                                   placeholder="Search documents...">
-                        </div>
-
-                        <div class="select-all-container">
-                            <input type="checkbox" id="createSelectAllDocs">
-                            <label for="createSelectAllDocs">Select All Documents</label>
-                        </div>
-
-                        <div class="documents-list" id="createDocumentsList">
-                            <!-- Documents will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Users Tab -->
-                    <div class="tab-content-section" id="createUsersTab">
-                        <div class="search-in-modal">
-                            <input type="text" class="form-control" id="createSearchUsers"
-                                   placeholder="Search users...">
-                        </div>
-
-                        <div class="select-all-container">
-                            <input type="checkbox" id="createSelectAllUsers">
-                            <label for="createSelectAllUsers">Select All Users</label>
-                        </div>
-
-                        <div class="users-list" id="createUsersList">
-                            <!-- Users will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Create Group
-                    </button>
-                </div>
-            </form>
+<!-- ==================== CREATE GROUP MODAL ==================== -->
+<div class="custom-modal" id="createGroupModal">
+    <form id="createGroupForm">
+        <div class="modal-header" style="background-color: #1e3a5f;">
+            <h5 class="modal-title">
+                <i class="bi bi-plus-circle me-2"></i>Create New Access Group
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('createGroupModal')">&times;</button>
         </div>
-    </div>
-</div>
-
-<!-- View Group Details Modal with Tabs -->
-<div class="modal fade" id="viewGroupModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
-                <h5 class="modal-title">
-                    <i class="bi bi-eye me-2"></i>Group Details
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-body">
+            <!-- Group Name -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="createGroupName" name="groupName"
+                       placeholder="Enter group name" required minlength="3" maxlength="100">
+                <small class="text-muted">3-100 characters</small>
             </div>
-            <div class="modal-body">
-                <!-- Group Info -->
-                <div class="mb-4">
-                    <h6 class="text-muted mb-1">Group Name</h6>
-                    <h5 id="viewGroupName" class="mb-0"></h5>
-                </div>
-                <div class="mb-4">
-                    <h6 class="text-muted mb-1">Description</h6>
-                    <p id="viewGroupDescription" class="mb-0"></p>
-                </div>
 
-                <!-- Tabs for Documents and Users -->
-                <div class="tab-buttons">
-                    <button type="button" class="tab-button active" data-tab="documents">
-                        <i class="bi bi-file-earmark me-2"></i>Documents
-                        <span class="counter-badge" id="viewDocsCount">0</span>
-                    </button>
-                    <button type="button" class="tab-button" data-tab="users">
-                        <i class="bi bi-people me-2"></i>Users
-                        <span class="counter-badge" id="viewUsersCount">0</span>
-                    </button>
-                </div>
-
-                <!-- Documents Tab -->
-                <div class="tab-content-section active" id="viewDocumentsTab">
-                    <div class="view-items-list" id="viewDocumentsList">
-                        <!-- Documents will be loaded here -->
-                    </div>
-                </div>
-
-                <!-- Users Tab -->
-                <div class="tab-content-section" id="viewUsersTab">
-                    <div class="view-items-list" id="viewUsersList">
-                        <!-- Users will be loaded here -->
-                    </div>
-                </div>
+            <!-- Group Description -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Description</label>
+                <textarea class="form-control" id="createGroupDescription" name="description"
+                          placeholder="Enter group description" rows="2" maxlength="200"></textarea>
+                <small class="text-muted">Optional, up to 200 characters</small>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Edit Group Modal with Name, Description, Documents and Users Tabs -->
-<div class="modal fade" id="editGroupModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <form id="editGroupForm">
-                <input type="hidden" id="editGroupId">
-                <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
-                    <h5 class="modal-title">
-                        <i class="bi bi-pencil-square me-2"></i>Edit Access Group
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Group Name -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="editGroupName" name="groupName"
-                               required minlength="3" maxlength="100">
-                        <small class="text-muted">3-100 characters</small>
-                    </div>
-
-                    <!-- Group Description -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">Description</label>
-                        <textarea class="form-control" id="editGroupDescription" name="description"
-                                  rows="2" maxlength="200"></textarea>
-                        <small class="text-muted">Optional, up to 200 characters</small>
-                    </div>
-
-                    <!-- Tabs for Documents and Users -->
-                    <div class="tab-buttons">
-                        <button type="button" class="tab-button active" data-tab="documents">
-                            <i class="bi bi-file-earmark me-2"></i>Documents
-                            <span class="counter-badge" id="editDocsCount">0</span>
-                        </button>
-                        <button type="button" class="tab-button" data-tab="users">
-                            <i class="bi bi-people me-2"></i>Users
-                            <span class="counter-badge" id="editUsersCount">0</span>
-                        </button>
-                    </div>
-
-                    <!-- Documents Tab -->
-                    <div class="tab-content-section active" id="editDocumentsTab">
-                        <div class="search-in-modal">
-                            <input type="text" class="form-control" id="editSearchDocuments"
-                                   placeholder="Search documents...">
-                        </div>
-
-                        <div class="select-all-container">
-                            <input type="checkbox" id="editSelectAllDocs">
-                            <label for="editSelectAllDocs">Select All Documents</label>
-                        </div>
-
-                        <div class="documents-list" id="editDocumentsList">
-                            <!-- Documents will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Users Tab -->
-                    <div class="tab-content-section" id="editUsersTab">
-                        <div class="search-in-modal">
-                            <input type="text" class="form-control" id="editSearchUsers"
-                                   placeholder="Search users...">
-                        </div>
-
-                        <div class="select-all-container">
-                            <input type="checkbox" id="editSelectAllUsers">
-                            <label for="editSelectAllUsers">Select All Users</label>
-                        </div>
-
-                        <div class="users-list" id="editUsersList">
-                            <!-- Users will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
-                        <i class="bi bi-check-circle me-2"></i>Update Group
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1"
-     data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Access Group
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="deleteModalMessage">Are you sure you want to delete this access group? This action cannot be undone.</p>
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>Warning:</strong> Users in this group will lose access to the associated documents.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
-                    <i class="bi bi-trash me-2"></i> Delete Group
+            <!-- Tabs for Documents and Users -->
+            <div class="tab-buttons">
+                <button type="button" class="tab-button active" data-tab="documents">
+                    <i class="bi bi-file-earmark me-2"></i>Documents
+                    <span class="counter-badge" id="createDocsCount">0</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="users">
+                    <i class="bi bi-people me-2"></i>Users
+                    <span class="counter-badge" id="createUsersCount">0</span>
                 </button>
             </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-content-section active" id="createDocumentsTab">
+                <div class="search-in-modal">
+                    <input type="text" class="form-control" id="createSearchDocuments"
+                           placeholder="Search documents...">
+                </div>
+
+                <div class="select-all-container">
+                    <input type="checkbox" id="createSelectAllDocs">
+                    <label for="createSelectAllDocs">Select All Documents</label>
+                </div>
+
+                <div class="documents-list" id="createDocumentsList">
+                    <!-- Documents will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content-section" id="createUsersTab">
+                <div class="search-in-modal">
+                    <input type="text" class="form-control" id="createSearchUsers"
+                           placeholder="Search users...">
+                </div>
+
+                <div class="select-all-container">
+                    <input type="checkbox" id="createSelectAllUsers">
+                    <label for="createSelectAllUsers">Select All Users</label>
+                </div>
+
+                <div class="users-list" id="createUsersList">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
         </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('createGroupModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Create Group
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== VIEW GROUP DETAILS MODAL ==================== -->
+<div class="custom-modal" id="viewGroupModal">
+    <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
+        <h5 class="modal-title">
+            <i class="bi bi-eye me-2"></i>Group Details
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('viewGroupModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+        <!-- Group Info -->
+        <div class="mb-4">
+            <h6 class="text-muted mb-1">Group Name</h6>
+            <h5 id="viewGroupName" class="mb-0"></h5>
+        </div>
+        <div class="mb-4">
+            <h6 class="text-muted mb-1">Description</h6>
+            <p id="viewGroupDescription" class="mb-0"></p>
+        </div>
+
+        <!-- Tabs for Documents and Users -->
+        <div class="tab-buttons">
+            <button type="button" class="tab-button active" data-tab="documents">
+                <i class="bi bi-file-earmark me-2"></i>Documents
+                <span class="counter-badge" id="viewDocsCount">0</span>
+            </button>
+            <button type="button" class="tab-button" data-tab="users">
+                <i class="bi bi-people me-2"></i>Users
+                <span class="counter-badge" id="viewUsersCount">0</span>
+            </button>
+        </div>
+
+        <!-- Documents Tab -->
+        <div class="tab-content-section active" id="viewDocumentsTab">
+            <div class="view-items-list" id="viewDocumentsList">
+                <!-- Documents will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div class="tab-content-section" id="viewUsersTab">
+            <div class="view-items-list" id="viewUsersList">
+                <!-- Users will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('viewGroupModal')">Close</button>
+    </div>
+</div>
+
+<!-- ==================== EDIT GROUP MODAL ==================== -->
+<div class="custom-modal" id="editGroupModal">
+    <form id="editGroupForm">
+        <input type="hidden" id="editGroupId">
+        <div class="modal-header" style="background-color: #1e3a5f; color:#ffffff;">
+            <h5 class="modal-title">
+                <i class="bi bi-pencil-square me-2"></i>Edit Access Group
+            </h5>
+            <button type="button" class="modal-close-btn" onclick="closeModal('editGroupModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- Group Name -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Group Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editGroupName" name="groupName"
+                       required minlength="3" maxlength="100">
+                <small class="text-muted">3-100 characters</small>
+            </div>
+
+            <!-- Group Description -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Description</label>
+                <textarea class="form-control" id="editGroupDescription" name="description"
+                          rows="2" maxlength="200"></textarea>
+                <small class="text-muted">Optional, up to 200 characters</small>
+            </div>
+
+            <!-- Tabs for Documents and Users -->
+            <div class="tab-buttons">
+                <button type="button" class="tab-button active" data-tab="documents">
+                    <i class="bi bi-file-earmark me-2"></i>Documents
+                    <span class="counter-badge" id="editDocsCount">0</span>
+                </button>
+                <button type="button" class="tab-button" data-tab="users">
+                    <i class="bi bi-people me-2"></i>Users
+                    <span class="counter-badge" id="editUsersCount">0</span>
+                </button>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-content-section active" id="editDocumentsTab">
+                <div class="search-in-modal">
+                    <input type="text" class="form-control" id="editSearchDocuments"
+                           placeholder="Search documents...">
+                </div>
+
+                <div class="select-all-container">
+                    <input type="checkbox" id="editSelectAllDocs">
+                    <label for="editSelectAllDocs">Select All Documents</label>
+                </div>
+
+                <div class="documents-list" id="editDocumentsList">
+                    <!-- Documents will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div class="tab-content-section" id="editUsersTab">
+                <div class="search-in-modal">
+                    <input type="text" class="form-control" id="editSearchUsers"
+                           placeholder="Search users...">
+                </div>
+
+                <div class="select-all-container">
+                    <input type="checkbox" id="editSelectAllUsers">
+                    <label for="editSelectAllUsers">Select All Users</label>
+                </div>
+
+                <div class="users-list" id="editUsersList">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('editGroupModal')">Cancel</button>
+            <button type="submit" class="btn" style="background-color: #1e3a5f; color:#ffffff;">
+                <i class="bi bi-check-circle me-2"></i>Update Group
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ==================== DELETE CONFIRMATION MODAL ==================== -->
+<div class="custom-modal modal-sm" id="deleteModal">
+    <div class="modal-header bg-danger text-white" style="background-color: #dc3545 !important;">
+        <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle me-2"></i>Delete Access Group
+        </h5>
+        <button type="button" class="modal-close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+        <p id="deleteModalMessage">Are you sure you want to delete this access group? This action cannot be undone.</p>
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Warning:</strong> Users in this group will lose access to the associated documents.
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">
+            <i class="bi bi-trash me-2"></i> Delete Group
+        </button>
     </div>
 </div>
 
@@ -911,11 +1028,11 @@
     let allGroups = [];
     let allDocuments = [];
     let allUsers = [];
-    let createModal, viewGroupModal, editGroupModal, deleteModal;
     let deleteGroupId = null;
     let currentEditGroupData = null;
+    let activeModalId = null; // Track which modal is currently open
 
-    // ✅ NEW: Edition permissions
+    // Edition permissions
     let editionPermissions = {
         isLicenseValid: false,
         edition: 'ED1',
@@ -938,15 +1055,157 @@
     console.log('Role:', userRole);
     console.log('============================');
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async function() {
-        // Initialize modals
-        createModal = new bootstrap.Modal(document.getElementById('createGroupModal'));
-        viewGroupModal = new bootstrap.Modal(document.getElementById('viewGroupModal'));
-        editGroupModal = new bootstrap.Modal(document.getElementById('editGroupModal'));
-        deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    // ==================== MODAL POSITIONING (same approach as User Management) ====================
 
-        // ✅ Load edition permissions first
+    function centerModalToMainContent(modalId) {
+        const modal = document.getElementById(modalId);
+        const mainContent = document.querySelector('.main-content');
+
+        if (!modal || !mainContent) return;
+
+        // Get main-content dimensions and position
+        const mainRect = mainContent.getBoundingClientRect();
+
+        // Calculate center position relative to main-content
+        const modalWidth = modal.offsetWidth;
+        const modalHeight = modal.offsetHeight;
+
+        // Center horizontally within main-content
+        const left = mainRect.left + (mainRect.width / 2) - (modalWidth / 2);
+
+        // Center vertically within viewport (accounting for navbar)
+        const top = Math.max(80, (window.innerHeight / 2) - (modalHeight / 2));
+
+        modal.style.left = `${left}px`;
+        modal.style.top = `${top}px`;
+        modal.style.transform = 'none';
+    }
+
+  function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+    if (!modal || !overlay) return;
+
+    if (activeModalId && activeModalId !== modalId) {
+        closeModal(activeModalId);
+    }
+
+    activeModalId = modalId;
+
+    // Step 1: Make it laid out (display: flex) so we can measure & position
+    modal.classList.add('visible');
+
+    // Step 2: Position it centered BEFORE it becomes visible
+    centerModalToMainContent(modalId);
+
+    // Step 3: Trigger the fade-in + scale on the next frame
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            modal.classList.add('active');
+            overlay.classList.add('active');
+        });
+    });
+
+    document.body.style.overflow = 'hidden';
+}
+
+  function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const overlay = document.getElementById('modalOverlay');
+
+    if (modal) {
+        // Step 1: Start the fade-out animation
+        modal.classList.remove('active');
+
+        // Step 2: After transition ends, hide completely and clean up
+        const onTransitionEnd = () => {
+            modal.removeEventListener('transitionend', onTransitionEnd);
+            modal.classList.remove('visible');
+            modal.style.left = '';
+            modal.style.top = '';
+            modal.style.transform = '';
+
+            // Run cleanup specific to each modal
+            cleanupModal(modalId);
+        };
+
+        modal.addEventListener('transitionend', onTransitionEnd, { once: false });
+
+        // Safety fallback in case transitionend doesn't fire
+        setTimeout(() => {
+            if (modal.classList.contains('visible') && !modal.classList.contains('active')) {
+                modal.classList.remove('visible');
+                modal.style.left = '';
+                modal.style.top = '';
+                modal.style.transform = '';
+                cleanupModal(modalId);
+            }
+        }, 350);
+    }
+
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
+
+    document.body.style.overflow = '';
+    activeModalId = null;
+}
+
+function cleanupModal(modalId) {
+    if (modalId === 'createGroupModal') {
+        document.getElementById('createGroupForm').reset();
+        document.getElementById('createDocumentsList').innerHTML = '';
+        document.getElementById('createUsersList').innerHTML = '';
+        document.getElementById('createDocsCount').textContent = '0';
+        document.getElementById('createUsersCount').textContent = '0';
+        resetModalTabs('create');
+    } else if (modalId === 'editGroupModal') {
+        document.getElementById('editGroupForm').reset();
+        document.getElementById('editGroupId').value = '';
+        document.getElementById('editDocumentsList').innerHTML = '';
+        document.getElementById('editUsersList').innerHTML = '';
+        currentEditGroupData = null;
+
+        const helpText = document.getElementById('editNameRestriction');
+        if (helpText) helpText.remove();
+
+        const groupNameInput = document.getElementById('editGroupName');
+        const groupDescInput = document.getElementById('editGroupDescription');
+        groupNameInput.readOnly = false;
+        groupDescInput.readOnly = false;
+        groupNameInput.style.backgroundColor = '';
+        groupNameInput.style.cursor = '';
+        groupDescInput.style.backgroundColor = '';
+        groupDescInput.style.cursor = '';
+
+        resetModalTabs('edit');
+    } else if (modalId === 'deleteModal') {
+        deleteGroupId = null;
+    } else if (modalId === 'viewGroupModal') {
+        resetModalTabs('view');
+    }
+}
+
+    function resetModalTabs(prefix) {
+        const modalId = prefix === 'view' ? 'viewGroupModal' :
+                        prefix === 'create' ? 'createGroupModal' : 'editGroupModal';
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        const tabButtons = modal.querySelectorAll('.tab-button');
+        const tabContents = modal.querySelectorAll('.tab-content-section');
+        tabButtons.forEach((btn, idx) => {
+            btn.classList.toggle('active', idx === 0);
+        });
+        tabContents.forEach((content, idx) => {
+            content.classList.toggle('active', idx === 0);
+        });
+    }
+
+    // ==================== INITIALIZATION ====================
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        // Load edition permissions first
         await loadEditionPermissions();
 
         // Apply role-based restrictions
@@ -961,6 +1220,38 @@
 
         // Setup event listeners
         setupEventListeners();
+
+        // Listen for window resize to re-center active modal
+        window.addEventListener('resize', function() {
+            if (activeModalId) {
+                centerModalToMainContent(activeModalId);
+            }
+        });
+
+        // Listen for sidebar toggle events to re-center modal
+        const sidebarToggle = document.querySelector('[data-bs-toggle="offcanvas"]');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', function() {
+                setTimeout(() => {
+                    if (activeModalId) {
+                        centerModalToMainContent(activeModalId);
+                    }
+                }, 350); // Match sidebar animation duration
+            });
+        }
+
+        // Also observe sidebar class changes via MutationObserver for robustness
+        const sidebar = document.querySelector('.sidebar, .offcanvas, [class*="sidebar"]');
+        if (sidebar) {
+            const observer = new MutationObserver(function() {
+                setTimeout(() => {
+                    if (activeModalId) {
+                        centerModalToMainContent(activeModalId);
+                    }
+                }, 350);
+            });
+            observer.observe(sidebar, { attributes: true, attributeFilter: ['class', 'style'] });
+        }
     });
 
     // Scroll to top button
@@ -982,7 +1273,7 @@
         });
     }
 
-    // ✅ NEW FUNCTION: Load edition permissions
+    // Load edition permissions
     async function loadEditionPermissions() {
         try {
             const response = await fetch('/api/access-groups/edition-permissions', {
@@ -1012,12 +1303,11 @@
 
         } catch (error) {
             console.error('Error loading edition permissions:', error);
-            // Default to ED1 with restrictions
             editionPermissions.canCreateGroups = false;
         }
     }
 
-    // ✅ NEW FUNCTION: Show edition info banner
+    // Show edition info banner
     function showEditionInfoBanner() {
         const alertContainer = document.getElementById('alertContainer');
         const bannerDiv = document.createElement('div');
@@ -1031,7 +1321,7 @@
         alertContainer.appendChild(bannerDiv);
     }
 
-    // ✅ UPDATED: Apply role-based AND edition-based restrictions
+    // Apply role-based AND edition-based restrictions
     function applyRoleBasedRestrictions() {
         const isAdmin = userRole === 'Admin';
         const canCreate = isAdmin && editionPermissions.canCreateGroups;
@@ -1044,7 +1334,6 @@
         const createBtn = document.getElementById('createGroupBtn');
         const emptyCreateBtn = document.getElementById('emptyCreateBtn');
 
-        // Show create button only if Admin AND has ED2 license
         if (canCreate) {
             if (createBtn) createBtn.style.display = 'flex';
             if (emptyCreateBtn) emptyCreateBtn.style.display = 'inline-flex';
@@ -1068,13 +1357,9 @@
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', handleSearch);
 
-        // Tab switching for create modal
+        // Tab switching for all modals
         setupTabSwitching('create');
-
-        // Tab switching for view modal
         setupTabSwitching('view');
-
-        // Tab switching for edit modal
         setupTabSwitching('edit');
 
         // Search in create modal
@@ -1117,38 +1402,18 @@
             updateSelectedCount('edit', 'users');
         });
 
-        // Reset forms when modals are closed
-        document.getElementById('createGroupModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('createGroupForm').reset();
-            document.getElementById('createDocumentsList').innerHTML = '';
-            document.getElementById('createUsersList').innerHTML = '';
+        // Escape key closes active modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && activeModalId) {
+                closeActiveModal();
+            }
         });
-
-        document.getElementById('editGroupModal').addEventListener('hidden.bs.modal', function() {
-        document.getElementById('editGroupForm').reset();
-        document.getElementById('editGroupId').value = '';
-        document.getElementById('editDocumentsList').innerHTML = '';
-        document.getElementById('editUsersList').innerHTML = '';
-        currentEditGroupData = null;
-
-        // ✅ NEW: Clean up restriction message and styles
-        const helpText = document.getElementById('editNameRestriction');
-        if (helpText) helpText.remove();
-
-        const groupNameInput = document.getElementById('editGroupName');
-        const groupDescInput = document.getElementById('editGroupDescription');
-        groupNameInput.readOnly = false;
-        groupDescInput.readOnly = false;
-        groupNameInput.style.backgroundColor = '';
-        groupNameInput.style.cursor = '';
-        groupDescInput.style.backgroundColor = '';
-        groupDescInput.style.cursor = '';
-    });
     }
 
     // Setup tab switching
     function setupTabSwitching(prefix) {
-        const modalId = prefix === 'view' ? 'viewGroupModal' : `${prefix}GroupModal`;
+        const modalId = prefix === 'view' ? 'viewGroupModal' :
+                        prefix === 'create' ? 'createGroupModal' : 'editGroupModal';
         const modal = document.getElementById(modalId);
         const tabButtons = modal.querySelectorAll('.tab-button');
         const tabContents = modal.querySelectorAll('.tab-content-section');
@@ -1157,11 +1422,9 @@
             button.addEventListener('click', function() {
                 const targetTab = this.getAttribute('data-tab');
 
-                // Update active states
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
 
-                // Show/hide content
                 tabContents.forEach(content => {
                     if (content.id === `${prefix}${capitalizeFirst(targetTab)}Tab`) {
                         content.classList.add('active');
@@ -1172,6 +1435,8 @@
             });
         });
     }
+
+    // ==================== DATA LOADING ====================
 
     // Load all groups
     async function loadGroups() {
@@ -1193,9 +1458,7 @@
             allGroups = await response.json();
             console.log('Groups loaded:', allGroups.length);
 
-            // Update total groups count
             updateTotalGroupsCount(allGroups.length);
-
             displayGroups(allGroups);
 
         } catch (error) {
@@ -1206,7 +1469,6 @@
         }
     }
 
-    // Update total groups count
     function updateTotalGroupsCount(count) {
         document.getElementById('totalGroupsCount').textContent = count;
         document.getElementById('allGroupsCount').textContent = count;
@@ -1250,7 +1512,8 @@
         }
     }
 
-    // Display groups in the list
+    // ==================== DISPLAY GROUPS ====================
+
     function displayGroups(groups) {
         const groupsList = document.getElementById('groupsList');
         const emptyState = document.getElementById('emptyState');
@@ -1273,7 +1536,6 @@
         });
     }
 
-    // ✅ UPDATED: Create group card with edition-aware delete button
     function createGroupCard(group) {
         const div = document.createElement('div');
         div.className = 'group-card';
@@ -1350,7 +1612,6 @@
             </div>
         `;
 
-        // Make the card clickable to open view modal
         div.addEventListener('click', function(e) {
             if (!e.target.closest('.group-actions')) {
                 openViewGroupModal(group.id);
@@ -1360,7 +1621,7 @@
         return div;
     }
 
-    // ✅ NEW FUNCTION: Show edition restriction alert
+    // Show edition restriction alert
     function showEditionRestrictionAlert(action) {
         let message = '';
 
@@ -1375,175 +1636,18 @@
         showAlert(message, 'warning');
     }
 
-    // Open create modal and populate documents/users
-    document.getElementById('createGroupBtn').addEventListener('click', function() {
+    // ==================== MODAL OPEN FUNCTIONS ====================
+
+    // Open create modal
+    function openCreateGroupModal() {
         populateDocumentsList('create');
         populateUsersList('create');
-    });
-
-    document.getElementById('emptyCreateBtn').addEventListener('click', function() {
-        populateDocumentsList('create');
-        populateUsersList('create');
-    });
-
-    // Populate documents list
-    function populateDocumentsList(prefix, selectedDocIds = []) {
-        const container = document.getElementById(`${prefix}DocumentsList`);
-        container.innerHTML = '';
-
-        if (allDocuments.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center p-3">No documents available</p>';
-            return;
-        }
-
-        allDocuments.forEach(doc => {
-            const isChecked = selectedDocIds.includes(doc.id);
-            const item = document.createElement('div');
-            item.className = 'document-checkbox-item';
-            item.innerHTML = `
-                <input type="checkbox" id="${prefix}Doc${doc.id}"
-                       value="${doc.id}" ${isChecked ? 'checked' : ''}
-                       onchange="updateSelectedCount('${prefix}', 'documents')">
-                <label for="${prefix}Doc${doc.id}">
-                    <i class="bi bi-file-earmark-text me-2"></i>
-                    ${escapeHtml(doc.title)}
-                </label>
-            `;
-            container.appendChild(item);
-        });
-
-        updateSelectedCount(prefix, 'documents');
-    }
-
-    // Populate users list
-    function populateUsersList(prefix, selectedUserIds = []) {
-        const container = document.getElementById(`${prefix}UsersList`);
-        container.innerHTML = '';
-
-        if (allUsers.length === 0) {
-            container.innerHTML = '<p class="text-muted text-center p-3">No users available</p>';
-            return;
-        }
-
-        allUsers.forEach(user => {
-            const isChecked = selectedUserIds.includes(user.id);
-            const item = document.createElement('div');
-            item.className = 'user-checkbox-item';
-            item.innerHTML = `
-                <input type="checkbox" id="${prefix}User${user.id}"
-                       value="${user.id}" ${isChecked ? 'checked' : ''}
-                       onchange="updateSelectedCount('${prefix}', 'users')">
-                <label for="${prefix}User${user.id}">
-                    <i class="bi bi-person me-2"></i>
-                    ${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span>
-                </label>
-            `;
-            container.appendChild(item);
-        });
-
-        updateSelectedCount(prefix, 'users');
-    }
-
-    // Update selected count
-    function updateSelectedCount(prefix, type) {
-        const container = document.getElementById(`${prefix}${capitalizeFirst(type)}List`);
-        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
-        const count = checkboxes.length;
-
-        const countElement = document.getElementById(`${prefix}${type === 'documents' ? 'Docs' : 'Users'}Count`);
-        if (countElement) {
-            countElement.textContent = count;
-        }
-    }
-
-    // Filter checkbox list
-    function filterCheckboxList(containerId, searchTerm) {
-        const container = document.getElementById(containerId);
-        const items = container.querySelectorAll('.document-checkbox-item, .user-checkbox-item');
-
-        searchTerm = searchTerm.toLowerCase();
-
-        items.forEach(item => {
-            const text = item.textContent.toLowerCase();
-            item.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    }
-
-    // Toggle select all
-    function toggleSelectAll(containerId, checked) {
-        const container = document.getElementById(containerId);
-        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-
-        checkboxes.forEach(checkbox => {
-            // Only change visible checkboxes
-            if (checkbox.parentElement.style.display !== 'none') {
-                checkbox.checked = checked;
-            }
-        });
-    }
-
-    // ✅ UPDATED: Handle create group with edition check
-    async function handleCreateGroup(e) {
-        e.preventDefault();
-
-        // Check edition permission
-        if (!editionPermissions.canCreateGroups) {
-            showEditionRestrictionAlert('create');
-            return;
-        }
-
-        const groupName = document.getElementById('createGroupName').value.trim();
-        const description = document.getElementById('createGroupDescription').value.trim();
-        const errorEl = getOrCreateErrorElement(document.getElementById('createGroupName'));
-
-        errorEl.textContent = '';
-
-        if (groupName.length < 3 || groupName.length > 100) {
-            errorEl.textContent = 'Group name must be between 3 and 100 characters.';
-            return;
-        }
-
-        // Get selected documents
-        const selectedDocs = Array.from(
-            document.querySelectorAll('#createDocumentsList input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
-
-        // Get selected users
-        const selectedUsers = Array.from(
-            document.querySelectorAll('#createUsersList input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
-
-        try {
-            const response = await fetch(API_BASE_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({
-                    groupName: groupName,
-                    description: description,
-                    documentIds: selectedDocs,
-                    userIds: selectedUsers
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create group');
-            }
-
-            createModal.hide();
-            await loadGroups();
-            showAlert('Access group created successfully!', 'success');
-
-        } catch (error) {
-            errorEl.textContent = error.message || 'Failed to create group.';
-        }
+        openModal('createGroupModal');
     }
 
     // Open view group modal
     async function openViewGroupModal(groupId) {
         try {
-            // Fetch group details
             const response = await fetch(`${API_BASE_URL}/${groupId}`, {
                 credentials: 'same-origin',
                 headers: { 'Accept': 'application/json' }
@@ -1553,21 +1657,17 @@
 
             const group = await response.json();
 
-            // Set group name and description
             document.getElementById('viewGroupName').textContent = group.groupName;
             document.getElementById('viewGroupDescription').textContent = group.description || 'No description provided';
 
-            // Get selected documents
             const selectedDocuments = allDocuments.filter(doc =>
                 (group.documentIds || []).includes(doc.id)
             );
 
-            // Get selected users
             const selectedUsers = allUsers.filter(user =>
                 (group.userIds || []).includes(user.id)
             );
 
-            // Update counts
             document.getElementById('viewDocsCount').textContent = selectedDocuments.length;
             document.getElementById('viewUsersCount').textContent = selectedUsers.length;
 
@@ -1607,25 +1707,9 @@
                 });
             }
 
-            // Reset to first tab
-            const tabButtons = document.querySelectorAll('#viewGroupModal .tab-button');
-            const tabContents = document.querySelectorAll('#viewGroupModal .tab-content-section');
-            tabButtons.forEach((btn, idx) => {
-                if (idx === 0) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            tabContents.forEach((content, idx) => {
-                if (idx === 0) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-
-            viewGroupModal.show();
+            // Reset tabs and open modal
+            resetModalTabs('view');
+            openModal('viewGroupModal');
 
         } catch (error) {
             console.error('Error loading group for view:', error);
@@ -1633,10 +1717,9 @@
         }
     }
 
-    // Open edit group modal (with name, description, documents and users)
+    // Open edit group modal
     async function openEditGroupModal(groupId) {
         try {
-            // Fetch group details
             const response = await fetch(`${API_BASE_URL}/${groupId}`, {
                 credentials: 'same-origin',
                 headers: { 'Accept': 'application/json' }
@@ -1645,30 +1728,25 @@
             if (!response.ok) throw new Error('Failed to load group details');
 
             const group = await response.json();
-            currentEditGroupData = group; // Store full group data
+            currentEditGroupData = group;
 
-            // Set group name and description
             document.getElementById('editGroupId').value = group.id;
             document.getElementById('editGroupName').value = group.groupName;
             document.getElementById('editGroupDescription').value = group.description || '';
 
-            // ✅ NEW: Apply edition restrictions on name/description fields
+            // Apply edition restrictions on name/description fields
             const canEditDetails = editionPermissions.canEditGroupDetails || editionPermissions.edition === 'ED2';
             const groupNameInput = document.getElementById('editGroupName');
             const groupDescInput = document.getElementById('editGroupDescription');
 
             if (!canEditDetails) {
-                // Disable fields in ED1
                 groupNameInput.readOnly = true;
                 groupDescInput.readOnly = true;
-
-                // Add visual styling
                 groupNameInput.style.backgroundColor = '#f3f4f6';
                 groupNameInput.style.cursor = 'not-allowed';
                 groupDescInput.style.backgroundColor = '#f3f4f6';
                 groupDescInput.style.cursor = 'not-allowed';
 
-                // Add helper text if not already present
                 if (!document.getElementById('editNameRestriction')) {
                     const nameHelp = document.createElement('small');
                     nameHelp.id = 'editNameRestriction';
@@ -1680,7 +1758,6 @@
                     groupNameInput.parentElement.appendChild(nameHelp);
                 }
             } else {
-                // Enable fields in ED2
                 groupNameInput.readOnly = false;
                 groupDescInput.readOnly = false;
                 groupNameInput.style.backgroundColor = '';
@@ -1688,36 +1765,17 @@
                 groupDescInput.style.backgroundColor = '';
                 groupDescInput.style.cursor = '';
 
-                // Remove helper text if exists
                 const helpText = document.getElementById('editNameRestriction');
                 if (helpText) helpText.remove();
             }
 
-            // Populate documents with pre-selected items
+            // Populate documents and users with pre-selected items
             populateDocumentsList('edit', group.documentIds || []);
-
-            // Populate users with pre-selected items
             populateUsersList('edit', group.userIds || []);
 
-            // Reset to first tab
-            const tabButtons = document.querySelectorAll('#editGroupModal .tab-button');
-            const tabContents = document.querySelectorAll('#editGroupModal .tab-content-section');
-            tabButtons.forEach((btn, idx) => {
-                if (idx === 0) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
-            tabContents.forEach((content, idx) => {
-                if (idx === 0) {
-                    content.classList.add('active');
-                } else {
-                    content.classList.remove('active');
-                }
-            });
-
-            editGroupModal.show();
+            // Reset tabs and open modal
+            resetModalTabs('edit');
+            openModal('editGroupModal');
 
         } catch (error) {
             console.error('Error loading group for edit:', error);
@@ -1725,7 +1783,74 @@
         }
     }
 
-    // Handle edit group (name, description, documents and users)
+    // Open delete modal
+    function openDeleteModal(groupId, groupName) {
+        deleteGroupId = groupId;
+
+        document.getElementById('deleteModalMessage').innerHTML =
+            `Are you sure you want to delete the access group "<strong>${groupName}</strong>"? This action cannot be undone.`;
+
+        openModal('deleteModal');
+    }
+
+    // ==================== FORM HANDLERS ====================
+
+    // Handle create group
+    async function handleCreateGroup(e) {
+        e.preventDefault();
+
+        if (!editionPermissions.canCreateGroups) {
+            showEditionRestrictionAlert('create');
+            return;
+        }
+
+        const groupName = document.getElementById('createGroupName').value.trim();
+        const description = document.getElementById('createGroupDescription').value.trim();
+        const errorEl = getOrCreateErrorElement(document.getElementById('createGroupName'));
+
+        errorEl.textContent = '';
+
+        if (groupName.length < 3 || groupName.length > 100) {
+            errorEl.textContent = 'Group name must be between 3 and 100 characters.';
+            return;
+        }
+
+        const selectedDocs = Array.from(
+            document.querySelectorAll('#createDocumentsList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        const selectedUsers = Array.from(
+            document.querySelectorAll('#createUsersList input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        try {
+            const response = await fetch(API_BASE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    groupName: groupName,
+                    description: description,
+                    documentIds: selectedDocs,
+                    userIds: selectedUsers
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create group');
+            }
+
+            closeModal('createGroupModal');
+            await loadGroups();
+            showAlert('Access group created successfully!', 'success');
+
+        } catch (error) {
+            errorEl.textContent = error.message || 'Failed to create group.';
+        }
+    }
+
+    // Handle edit group
     async function handleEditGroup(e) {
         e.preventDefault();
 
@@ -1736,11 +1861,9 @@
 
         errorEl.textContent = '';
 
-        // ✅ NEW: Check if name/description were changed in ED1
         const canEditDetails = editionPermissions.canEditGroupDetails || editionPermissions.edition === 'ED2';
 
         if (!canEditDetails && currentEditGroupData) {
-            // In ED1, check if name or description was changed
             if (groupName !== currentEditGroupData.groupName ||
                 description !== (currentEditGroupData.description || '')) {
                 showAlert('Editing group name and description requires Professional Edition. ' +
@@ -1754,12 +1877,10 @@
             return;
         }
 
-        // Get selected documents
         const selectedDocs = Array.from(
             document.querySelectorAll('#editDocumentsList input[type="checkbox"]:checked')
         ).map(cb => parseInt(cb.value));
 
-        // Get selected users
         const selectedUsers = Array.from(
             document.querySelectorAll('#editUsersList input[type="checkbox"]:checked')
         ).map(cb => parseInt(cb.value));
@@ -1782,7 +1903,7 @@
                 throw new Error(errorData.message || 'Failed to update group');
             }
 
-            editGroupModal.hide();
+            closeModal('editGroupModal');
             await loadGroups();
             showAlert('Group updated successfully!', 'success');
 
@@ -1791,17 +1912,7 @@
         }
     }
 
-    // Open delete modal
-    function openDeleteModal(groupId, groupName) {
-        deleteGroupId = groupId;
-
-        document.getElementById('deleteModalMessage').innerHTML =
-            `Are you sure you want to delete the access group "<strong>${groupName}</strong>"? This action cannot be undone.`;
-
-        deleteModal.show();
-    }
-
-    // ✅ UPDATED: Handle delete group with edition check
+    // Handle delete group
     async function handleDeleteGroup() {
         if (!deleteGroupId) return;
 
@@ -1817,18 +1928,111 @@
             }
 
             showAlert('Access group deleted successfully!', 'success');
-            deleteModal.hide();
+            closeModal('deleteModal');
             deleteGroupId = null;
             await loadGroups();
 
         } catch (error) {
             console.error('Error deleting group:', error);
             showAlert(error.message || 'Failed to delete group. Please try again.', 'danger');
-            deleteModal.hide();
+            closeModal('deleteModal');
         }
     }
 
-    // Handle search
+    // ==================== POPULATE LISTS ====================
+
+    function populateDocumentsList(prefix, selectedDocIds = []) {
+        const container = document.getElementById(`${prefix}DocumentsList`);
+        container.innerHTML = '';
+
+        if (allDocuments.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-3">No documents available</p>';
+            return;
+        }
+
+        allDocuments.forEach(doc => {
+            const isChecked = selectedDocIds.includes(doc.id);
+            const item = document.createElement('div');
+            item.className = 'document-checkbox-item';
+            item.innerHTML = `
+                <input type="checkbox" id="${prefix}Doc${doc.id}"
+                       value="${doc.id}" ${isChecked ? 'checked' : ''}
+                       onchange="updateSelectedCount('${prefix}', 'documents')">
+                <label for="${prefix}Doc${doc.id}">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    ${escapeHtml(doc.title)}
+                </label>
+            `;
+            container.appendChild(item);
+        });
+
+        updateSelectedCount(prefix, 'documents');
+    }
+
+    function populateUsersList(prefix, selectedUserIds = []) {
+        const container = document.getElementById(`${prefix}UsersList`);
+        container.innerHTML = '';
+
+        if (allUsers.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center p-3">No users available</p>';
+            return;
+        }
+
+        allUsers.forEach(user => {
+            const isChecked = selectedUserIds.includes(user.id);
+            const item = document.createElement('div');
+            item.className = 'user-checkbox-item';
+            item.innerHTML = `
+                <input type="checkbox" id="${prefix}User${user.id}"
+                       value="${user.id}" ${isChecked ? 'checked' : ''}
+                       onchange="updateSelectedCount('${prefix}', 'users')">
+                <label for="${prefix}User${user.id}">
+                    <i class="bi bi-person me-2"></i>
+                    ${escapeHtml(user.username)} <span class="text-muted">(${escapeHtml(user.role)})</span>
+                </label>
+            `;
+            container.appendChild(item);
+        });
+
+        updateSelectedCount(prefix, 'users');
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+
+    function updateSelectedCount(prefix, type) {
+        const container = document.getElementById(`${prefix}${capitalizeFirst(type)}List`);
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+        const count = checkboxes.length;
+
+        const countElement = document.getElementById(`${prefix}${type === 'documents' ? 'Docs' : 'Users'}Count`);
+        if (countElement) {
+            countElement.textContent = count;
+        }
+    }
+
+    function filterCheckboxList(containerId, searchTerm) {
+        const container = document.getElementById(containerId);
+        const items = container.querySelectorAll('.document-checkbox-item, .user-checkbox-item');
+
+        searchTerm = searchTerm.toLowerCase();
+
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    function toggleSelectAll(containerId, checked) {
+        const container = document.getElementById(containerId);
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox.parentElement.style.display !== 'none') {
+                checkbox.checked = checked;
+            }
+        });
+    }
+
     function handleSearch(e) {
         const searchTerm = e.target.value.toLowerCase();
         const groupCards = document.querySelectorAll('.group-card');
@@ -1841,11 +2045,9 @@
             if (isVisible) visibleCount++;
         });
 
-        // Update the All Groups count to show filtered results
         document.getElementById('allGroupsCount').textContent = visibleCount;
     }
 
-    // Helper function to show inline error message
     function getOrCreateErrorElement(input) {
         let errorEl = input.parentElement.querySelector('.inline-error');
         if (!errorEl) {
@@ -1855,7 +2057,7 @@
         }
         return errorEl;
     }
-    // Date formatting function
+
     function formatDate(dateString) {
         if (!dateString || dateString === 'N/A') return 'N/A';
 
@@ -1873,7 +2075,6 @@
         }
     }
 
-    // Show alert message
     function showAlert(message, type) {
         const alertContainer = document.getElementById('alertContainer');
         const alertDiv = document.createElement('div');
@@ -1892,19 +2093,16 @@
 
         alertContainer.appendChild(alertDiv);
 
-        // Auto-dismiss after 5 seconds
         setTimeout(() => {
             alertDiv.remove();
         }, 5000);
     }
 
-    // Show/hide loading spinner
     function showLoading(show) {
         document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
         document.getElementById('groupsContainer').style.display = show ? 'none' : 'block';
     }
 
-    // Escape HTML to prevent XSS
     function escapeHtml(text) {
         if (!text) return '';
         const map = {
@@ -1917,7 +2115,6 @@
         return String(text).replace(/[&<>"']/g, m => map[m]);
     }
 
-    // Capitalize first letter
     function capitalizeFirst(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }

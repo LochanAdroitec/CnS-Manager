@@ -33,7 +33,7 @@
             text-align: right; cursor: pointer; position: relative;
         }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-        .stat-card.active {border: 2px solid #1e3a5f;box-shadow: 0 0 12px rgba(30, 58, 95, 0.4);}
+
         .stat-card.active::after { content: '✓'; position: absolute; top: 5px; left: 10px; font-size: 20px; font-weight: bold; }
         .stat-number { font-size: 2rem; font-weight: bold; padding-left:0px; padding-right:5px; }
         .stat-label { font-size: 0.9rem; opacity: 0.9; padding-left:0px; padding-top:15px; padding-right:5px; }
@@ -125,6 +125,17 @@
         .btn-warning:hover { background-color: #e0a800; border-color: #d39e00; color: #000; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(255, 193, 7, 0.4); }
         .bi-lock-fill { animation: lockPulse 2s ease-in-out infinite; }
         @keyframes lockPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .library-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            margin-right: 0px;
+            transition: transform 0.3s ease;
+        }
+        .stat-card.active {
+border: 2px solid white;
+box-shadow: 0 0 15px rgba(255,255,255,0.6);
+}
     </style>
 </head>
 <body>
@@ -137,7 +148,9 @@
         <!-- Breadcrumb -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="mb-1"><i class="bi bi-activity"></i> Activity Logs</h2>
+                <h2 class="mb-1"><img src="/images/Activity_logs_black_fill.png"
+                                      class="library-icon"
+                                      alt="Document Library Icon"> Activity Logs</h2>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-0">
                         <li class="breadcrumb-item">
@@ -214,6 +227,9 @@
                         <input type="date" id="startDate" class="form-control" style="width:160px;" onchange="filterByDateRange()" />
                         <span class="muted-small">to</span>
                         <input type="date" id="endDate" class="form-control" style="width:160px;" onchange="filterByDateRange()" />
+                        <button class="btn btn-outline-secondary" id="clearDateBtn" style="display:none;" onclick="clearDateFilters()" title="Clear dates">
+                            <i class="bi bi-x-circle me-1"></i> Clear
+                        </button>
                         <button class="btn" style="background-color: #1e3a5f; color:#ffffff;" onclick="downloadLogsAsCSV()">
                             <i class="bi bi-download me-1"></i> Download
                         </button>
@@ -251,7 +267,7 @@
         <!-- Activity list card -->
         <div class="logs-card mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="mb-0">Activity Log <small class="text-muted">(<span id="visibleLogsCount" th:text="${totalLogs}">0</span>)</small></h5>
+                <h5 class="mb-0"><i class="bi bi-activity"></i> Activity Log <small class="text-muted">(<span id="visibleLogsCount" th:text="${totalLogs}">0</span>)</small></h5>
                 <div class="muted-small">Showing recent activity</div>
             </div>
 
@@ -272,9 +288,11 @@
                     </tr>
 
                     <tr th:each="log : ${logs}"
-                        th:attr="data-timestamp=${log.timestamp},
-                                 data-action=${log.action},
-                                 data-user-id=${log.user != null ? log.user.id : ''}">
+                        th:attr="
+        data-timestamp=${log.timestamp},
+        data-date=${#temporals.format(log.timestamp,'yyyy-MM-dd')},
+        data-action=${log.action},
+        data-user-id=${log.user != null ? log.user.id : ''}">
                         <td th:text="${log.logId}">1</td>
 
                         <td>
@@ -384,7 +402,7 @@
 <script th:inline="javascript">var contextPath = /*[[@{/}]]*/ '/';</script>
 
 <script>
-    let currentFilter = 'all';
+    let activeFilters = new Set(['all']);
     let isProfessional = [[${isProfessionalEdition and hasValidLicense}]];
 
     // ==================== CENTER MODAL ====================
@@ -402,6 +420,7 @@
         modal.style.transform = 'none';
     }
 
+    // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function() {
         const table = document.getElementById('activityLogsTable');
         if (table) {
@@ -428,13 +447,27 @@
             };
             scrollTopBtn.addEventListener("click", function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
         }
+
+        // Sort table ascending on page load
+        sortTable('desc');
     });
 
+    // ==================== MODAL EVENTS ====================
     const modalCloseBtn = document.getElementById('modalCloseBtn');
-    if (modalCloseBtn) { modalCloseBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); closeUserModal(); }); }
+    if (modalCloseBtn) {
+        modalCloseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeUserModal();
+        });
+    }
 
     const modalOverlay = document.getElementById('modalOverlay');
-    if (modalOverlay) { modalOverlay.addEventListener('click', function(e) { if (e.target === modalOverlay) closeUserModal(); }); }
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) closeUserModal();
+        });
+    }
 
     window.addEventListener('resize', function() {
         const modal = document.getElementById('userDetailsModal');
@@ -451,6 +484,7 @@
         });
     }
 
+    // ==================== USER DETAILS MODAL ====================
     function showUserDetails(userId) {
         const modal = document.getElementById('userDetailsModal');
         const overlay = document.getElementById('modalOverlay');
@@ -496,82 +530,209 @@
         if (overlay) overlay.classList.remove('active');
     }
 
+    // ==================== SORT TABLE ASCENDING ====================
+    function sortTable(order) {
+    const tbody = document.querySelector('#activityLogsTable tbody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    if (rows.length <= 1) return;
+
+    const firstRowCells = rows[0].querySelectorAll('td');
+    if (firstRowCells.length < 5) return;
+
+    rows.sort((a, b) => {
+        const tsA = a.getAttribute('data-timestamp') || '';
+        const tsB = b.getAttribute('data-timestamp') || '';
+        return order === 'asc' ? tsA.localeCompare(tsB) : tsB.localeCompare(tsA);
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+
     // ==================== FILTER BY STAT CARD ====================
     function filterByStatCard(card) {
         const filter = card.getAttribute('data-filter');
-        document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        currentFilter = filter;
+
+        if (filter === 'all') {
+            activeFilters.clear();
+            activeFilters.add('all');
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            applyFilters();
+            return;
+        }
+
+        // Remove 'all' when selecting specific filters
+        activeFilters.delete('all');
+        document.querySelector('[data-filter="all"]').classList.remove('active');
+
+        // Toggle the clicked filter
+        if (activeFilters.has(filter)) {
+            activeFilters.delete(filter);
+            card.classList.remove('active');
+        } else {
+            activeFilters.add(filter);
+            card.classList.add('active');
+        }
+
+        // If nothing selected, revert to 'all'
+        if (activeFilters.size === 0) {
+            activeFilters.add('all');
+            document.querySelector('[data-filter="all"]').classList.add('active');
+        }
+
         applyFilters();
     }
 
-    function filterByDateRange() {
-        if (!isProfessional) return;
-        applyFilters();
+    // ==================== DATE RANGE CHANGE ====================
+function filterByDateRange() {
+    if (!isProfessional) return;
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const hasDate = (startDateInput && startDateInput.value) || (endDateInput && endDateInput.value);
+
+    sortTable(hasDate ? 'asc' : 'desc');
+    toggleClearDateButton();
+    applyFilters();
+}
+
+    // ==================== CLEAR DATES ====================
+function clearDateFilters() {
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    if (startDateInput) startDateInput.value = '';
+    if (endDateInput) endDateInput.value = '';
+    sortTable('desc');
+    toggleClearDateButton();
+    applyFilters();
+}
+
+    function toggleClearDateButton() {
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const clearBtn = document.getElementById('clearDateBtn');
+        if (!clearBtn) return;
+
+        const hasDate = (startDateInput && startDateInput.value) || (endDateInput && endDateInput.value);
+        clearBtn.style.display = hasDate ? 'inline-flex' : 'none';
     }
 
     // ==================== APPLY FILTERS ====================
-    function applyFilters() {
-        const searchInput = document.getElementById('searchInput');
-        const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput   = document.getElementById('endDate');
-        const startDate = startDateInput && startDateInput.value ? new Date(startDateInput.value) : null;
-        const endDate   = endDateInput   && endDateInput.value   ? new Date(endDateInput.value)   : null;
-        if (endDate) endDate.setHours(23, 59, 59, 999);
+function applyFilters() {
+    const searchInput = document.getElementById('searchInput');
+    const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
 
-        const allRows = document.querySelectorAll('#activityLogsTable tbody tr');
-        let visibleCount = 0;
+    let startDate = null;
+    let endDate = null;
 
-        allRows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            if (cells.length < 5) return;
-            const idCell = cells[0].textContent.trim();
-            if (!idCell || idCell.toLowerCase().includes('no logs')) return;
-
-            let show = true;
-            const dateText = cells[4].children[0]?.textContent?.trim() || cells[4].textContent.trim();
-            const logDate = parseDateFromText(dateText);
-
-            // Date range (ED2 only)
-            if (isProfessional && logDate) {
-                if (startDate && logDate < startDate) show = false;
-                if (endDate   && logDate > endDate)   show = false;
-            }
-
-            // Stat card filters
-            const action = row.getAttribute('data-action') || '';
-            if (currentFilter === 'today' && logDate) {
-                if (logDate.getTime() !== today.getTime()) show = false;
-            } else if (currentFilter === 'success') {
-                if (action.includes('FAILED') || action.includes('FAIL')) show = false;
-            } else if (currentFilter === 'failures') {
-                if (!action.includes('FAILED') && !action.includes('FAIL')) show = false;
-            } else if (currentFilter === 'downloads') {
-                if (action !== 'DOCUMENT_DOWNLOAD') show = false;
-            } else if (currentFilter === 'settings') {
-                // ✅ NEW: filter for all SETTINGS_ actions
-                if (!action.startsWith('SETTINGS_')) show = false;
-            }
-
-            // Search (ED2 only)
-            if (searchQuery && show) {
-                let searchText = '';
-                for (let i = 0; i < cells.length - 1; i++) searchText += cells[i].textContent.toLowerCase() + ' ';
-                if (!searchText.includes(searchQuery)) show = false;
-            }
-
-            row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
-        });
-
-        const visibleLogsCount = document.getElementById('visibleLogsCount');
-        if (visibleLogsCount) visibleLogsCount.textContent = visibleCount;
+    if (isProfessional && startDateInput && startDateInput.value) {
+        startDate = new Date(startDateInput.value);
+        startDate.setHours(0, 0, 0, 0);
     }
 
+    if (isProfessional && endDateInput && endDateInput.value) {
+        endDate = new Date(endDateInput.value);
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    if (startDate && !endDate) {
+        endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const rows = document.querySelectorAll('#activityLogsTable tbody tr');
+    let visibleCount = 0;
+
+    // Split filters into THREE categories
+    const hasTimeFilter = activeFilters.has('today');
+
+    const statusFilters = new Set();
+    if (activeFilters.has('success'))  statusFilters.add('success');
+    if (activeFilters.has('failures')) statusFilters.add('failures');
+
+    const categoryFilters = new Set();
+    if (activeFilters.has('downloads')) categoryFilters.add('downloads');
+    if (activeFilters.has('settings'))  categoryFilters.add('settings');
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 5) return;
+
+        const idCell = cells[0].textContent.trim();
+        if (!idCell || idCell.toLowerCase().includes('no logs')) return;
+
+        const action = row.getAttribute('data-action') || '';
+        const dateText = cells[4].children[0]?.textContent?.trim();
+        const logDate = parseDateFromText(dateText);
+
+        const isFailed = action.includes('FAILED') || action.includes('FAIL');
+      const isDownload = action === 'DOCUMENT_DOWNLOAD' || action === 'DOCUMENT_DOWNLOAD_FAILED';
+        const isSettings = action.startsWith('SETTINGS_');
+
+        let show = true;
+
+        // --- DATE RANGE filter (ED2 only) - always AND ---
+        if (show && startDate && logDate) {
+            const logDateTime = new Date(logDate);
+            logDateTime.setHours(0, 0, 0, 0);
+            if (logDateTime < startDate) show = false;
+        }
+        if (show && endDate && logDate) {
+            const logDateTime = new Date(logDate);
+            logDateTime.setHours(23, 59, 59, 999);
+            if (logDateTime > endDate) show = false;
+        }
+
+        // --- STAT CARD FILTERS ---
+        if (show && !activeFilters.has('all')) {
+
+            // TIME filter (AND) — must be today
+            if (hasTimeFilter) {
+                if (!logDate || logDate.getTime() !== today.getTime()) {
+                    show = false;
+                }
+            }
+
+            // STATUS filter (AND) — must match success/failure status
+            if (show && statusFilters.size > 0) {
+                let matchesStatus = false;
+                if (statusFilters.has('success') && !isFailed) matchesStatus = true;
+                if (statusFilters.has('failures') && isFailed) matchesStatus = true;
+                if (!matchesStatus) show = false;
+            }
+
+            // CATEGORY filter (AND with above, OR among categories)
+            if (show && categoryFilters.size > 0) {
+                let matchesCategory = false;
+                if (categoryFilters.has('downloads') && isDownload) matchesCategory = true;
+                if (categoryFilters.has('settings') && isSettings) matchesCategory = true;
+                if (!matchesCategory) show = false;
+            }
+        }
+
+        // --- SEARCH filter - always AND ---
+        if (show && searchQuery) {
+            let text = '';
+            cells.forEach(c => text += c.textContent.toLowerCase() + ' ');
+            if (!text.includes(searchQuery)) show = false;
+        }
+
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
+    });
+
+    const counter = document.getElementById('visibleLogsCount');
+    if (counter) counter.textContent = visibleCount;
+}
+
+    // ==================== PARSE DATE ====================
     function parseDateFromText(dateText) {
         if (!dateText) return null;
         const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -589,37 +750,47 @@
         return null;
     }
 
+    // ==================== CSV DOWNLOAD ====================
     function downloadLogsAsCSV() {
         if (!isProfessional) { alert("CSV Export is only available in Professional Edition (ED2)."); return; }
         const table = document.querySelector("#activityLogsTable");
         if (!table) { alert("No logs table found!"); return; }
-        const startDateInput = document.querySelector("#startDate");
-        const endDateInput   = document.querySelector("#endDate");
-        const startDate = startDateInput && startDateInput.value ? new Date(startDateInput.value) : null;
-        const endDate   = endDateInput   && endDateInput.value   ? new Date(endDateInput.value)   : null;
-        if (endDate) endDate.setHours(23, 59, 59, 999);
+
         let csvContent = "";
         const rows = table.querySelectorAll("tr");
+
         rows.forEach((row, index) => {
             const cols = row.querySelectorAll("th, td");
             if (cols.length === 0) return;
-            if (index === 0) { csvContent += Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",") + "\n"; return; }
+
+            if (index === 0) {
+                csvContent += Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",") + "\n";
+                return;
+            }
+
             const idCell = cols[0]?.textContent.trim();
             if (!idCell || idCell.toLowerCase().includes('no logs')) return;
+
+            // Only export visible (filtered) rows
             if (row.style.display === 'none') return;
-            const dateText = cols[4]?.children[0]?.textContent?.trim() || cols[4]?.textContent?.trim();
-            if (!dateText) return;
-            const logDate = parseDateFromText(dateText);
-            if ((!startDate || logDate >= startDate) && (!endDate || logDate <= endDate)) {
-                csvContent += Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",") + "\n";
-            }
+
+            csvContent += Array.from(cols).map(col => `"${col.textContent.trim().replace(/"/g, '""')}"`).join(",") + "\n";
         });
-        if (csvContent.trim() === "" || csvContent.split("\n").length <= 2) { alert("No logs found for the selected date range!"); return; }
+
+        if (csvContent.trim() === "" || csvContent.split("\n").length <= 2) {
+            alert("No logs found for the current filters!");
+            return;
+        }
+
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        const s = startDate ? startDateInput.value : 'All';
-        const e = endDate   ? endDateInput.value   : 'All';
+
+        const startDateInput = document.querySelector("#startDate");
+        const endDateInput = document.querySelector("#endDate");
+        const s = startDateInput && startDateInput.value ? startDateInput.value : 'All';
+        const e = endDateInput && endDateInput.value ? endDateInput.value : 'All';
+
         link.href = url;
         link.download = `Activity_Logs_${s}_to_${e}.csv`;
         document.body.appendChild(link);

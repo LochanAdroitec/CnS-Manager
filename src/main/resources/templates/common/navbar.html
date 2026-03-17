@@ -5,7 +5,7 @@
 </head>
 <body>
 <!-- Top Navbar Fragment -->
-<nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f; height: 70px; z-index: 1050;">
+<nav th:fragment="navbar" class="navbar navbar-dark fixed-top" style="background-color: #1e3a5f; height: 70px; z-index: 1050; overflow: visible;">
     <!--
         ✅ KEY FIX: This inline script runs BEFORE the browser paints anything.
         It applies the collapsed class immediately so there is zero visual flash
@@ -35,7 +35,9 @@
 
         <!-- Center: Title -->
         <span class="navbar-brand mb-0 h1 mx-auto" style="font-size:25px;">
-            <i class="bi bi-book"></i> Document Manager
+            <img src="/images/DMS_logo_fill.png"
+                 style="width: 35px; height: 35px; object-fit: contain; margin-right: 0px;"
+                 alt="Document Library Icon"> Document Manager
         </span>
 
         <!-- Right side: Profile dropdown -->
@@ -54,7 +56,7 @@
                 </div>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><a class="dropdown-item" th:href="@{/profile}"><i class="bi bi-person-fill me-2"></i>Profile</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" th:href="@{/logout}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
             </ul>
